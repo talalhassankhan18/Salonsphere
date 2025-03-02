@@ -2,43 +2,50 @@ import { NextRequest, NextResponse } from "next/server";
 import { decrypt } from "@/lib/session";
 import { cookies } from "next/headers";
 
-// Define protected and public routes
-const protectedRoutes = ["/salons"];
-const publicRoutes = ["/login", "/signup"];
+const protectedRoutes = new Set(["/salons", "/vendor"]);
+const publicRoutes = new Set(["/login", "/register"]);
+
+// Enable debugging via .env variable
+const DEBUG = process.env.DEBUG_MIDDLEWARE === "true";
 
 export default async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
-  const isProtectedRoute = protectedRoutes.includes(path);
-  const isPublicRoute = publicRoutes.includes(path);
+  const isProtectedRoute = protectedRoutes.has(path);
+  const isPublicRoute = publicRoutes.has(path);
 
-  // Check the session cookie
-  const cookie = (await cookies()).get("session")?.value;
-  const session = await decrypt(cookie);
+  // Retrieve session cookie
+  const sessionCookie = req.cookies.get("session")?.value;
 
-  // If trying to access a protected route and no valid session exists, redirect to login
+  let session = null;
+  if (sessionCookie) {
+    try {
+      session = await decrypt(sessionCookie);
+    } catch (error) {
+      console.error("❌ Middleware Error: Failed to decrypt session", error);
+    }
+  }
+
+  if (DEBUG) {
+    console.log(`🛠 Middleware Debug - Path: ${path}`);
+    console.log(`🛠 Middleware Debug - Session:`, session);
+  }
+
+  // Redirect unauthorized users from protected routes to login
   if (isProtectedRoute && !session?.userId) {
+    if (DEBUG) console.log("🔒 Unauthorized! Redirecting to /login.");
     return NextResponse.redirect(new URL("/login", req.nextUrl));
   }
 
-  // If trying to access a public route and user is authenticated, redirect to salons page
-  if (
-    isPublicRoute &&
-    session?.userId &&
-    !req.nextUrl.pathname.startsWith("/login") &&
-    !req.nextUrl.pathname.startsWith("/signup")
-  ) {
-    return NextResponse.redirect(new URL("/salons", req.nextUrl)); // Redirect to salons if logged in
+  // Redirect logged-in users away from public routes to /salons
+  if (isPublicRoute && session?.userId) {
+    if (DEBUG) console.log("✅ Already authenticated! Redirecting to /salons.");
+    return NextResponse.redirect(new URL("/salons", req.nextUrl));
   }
 
   return NextResponse.next();
 }
 
-// Specify routes the middleware should apply to
+// Apply middleware only to specific routes
 export const config = {
-  matcher: [
-    "/((?!api|_next/static|_next/image|.*\\.png$).*)",
-    "/login",
-    "/signup",
-    "/",
-  ],
+  matcher: ["/login", "/register", "/salons", "/vendor"],
 };

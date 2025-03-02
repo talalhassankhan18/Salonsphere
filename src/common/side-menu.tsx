@@ -1,142 +1,143 @@
 "use client";
-import { cn } from "@/lib/utils";
 import Link from "next/link";
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { FaArrowRight } from "react-icons/fa";
 import DefaultAvatar from "@/assets/images/default-avatar.png";
+import { MdClose } from "react-icons/md";
 
 const SideMenu = ({
-	isLoggedIn,
-	handleLogout,
+  isLoggedIn,
+  handleLogout,
 }: { isLoggedIn: boolean; handleLogout: () => void }) => {
-	const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
-	const Menu = ({ className }: { className?: string }) => {
-		return (
-			<ul tabIndex={0} className={cn("", className)}>
-				<li>
-					<Link className="text-base" href="/" onClick={() => setIsOpen(false)}>
-						<FaArrowRight className="size-4" /> Home
-					</Link>
-				</li>
-				<li>
-					<Link
-						className="text-base"
-						href="/salons"
-						onClick={() => setIsOpen(false)}
-					>
-						<FaArrowRight className="size-4" /> Salons
-					</Link>
-				</li>
-				<li>
-					<Link
-						className="text-base"
-						href="/selfcare-products"
-						onClick={() => setIsOpen(false)}
-					>
-						<FaArrowRight className="size-4" /> Products
-					</Link>
-				</li>
-				<li>
-					<Link
-						className="text-base"
-						href="/signup"
-						onClick={() => setIsOpen(false)}
-					>
-						<FaArrowRight className="size-4" /> Register your salon
-					</Link>
-				</li>
-				<li>
-					<Link
-						className="text-base"
-						href="/coming-soon"
-						onClick={() => setIsOpen(false)}
-					>
-						<FaArrowRight className="size-4" /> Register your gym
-					</Link>
-				</li>
-				<li>
-					{isLoggedIn ? (
-						<div
-							onClick={() => {
-								handleLogout();
-								setIsOpen(false);
-							}}
-							className="text-base cursor-pointer"
-						>
-							<div className="w-7 rounded-full mr-2">
-								<img
-									alt="Tailwind CSS Navbar component"
-									src={DefaultAvatar.src}
-								/>
-							</div>
-							Logout
-						</div>
-					) : (
-						<Link
-							className="text-base"
-							href="/login"
-							onClick={() => setIsOpen(false)}
-						>
-							<div className="w-7 rounded-full mr-2">
-								<img
-									alt="Tailwind CSS Navbar component"
-									src={DefaultAvatar.src}
-								/>
-							</div>
-							Login
-						</Link>
-					)}
-				</li>
-			</ul>
-		);
-	};
-	return (
-		<>
-			{/* desktop */}
-			<div className="dropdown dropdown-end hidden md:block">
-				<div
-					tabIndex={0}
-					role="button"
-					className="btn btn-ghost btn-circle avatar"
-				>
-					<GiHamburgerMenu className="size-5" />
-				</div>
-				<Menu className="menu dropdown-content z-[2] mt-3 w-64 rounded-box bg-base-100 p-2 shadow" />
-			</div>
+  const handleToggle = () => setIsOpen(!isOpen);
+  const closeMenu = () => setIsOpen(false);
 
-			{/* mobile */}
-			<div className="drawer z-50 md:hidden">
-				{/* <div className="drawer lg:drawer-open"> */}
-				<input
-					id="my-drawer-2"
-					type="checkbox"
-					checked={isOpen}
-					onChange={() => setIsOpen(!isOpen)}
-					className="drawer-toggle"
-				/>
-				<div className="drawer-content flex flex-col items-center justify-center">
-					{/* Page content here */}
-					<label
-						htmlFor="my-drawer-2"
-						tabIndex={0}
-						className="btn btn-ghost btn-circle avatar drawer-button"
-					>
-						<GiHamburgerMenu className="size-5" />
-					</label>
-				</div>
-				<div className="drawer-side">
-					<label
-						htmlFor="my-drawer-2"
-						aria-label="close sidebar"
-						className="drawer-overlay"
-					></label>
-					<Menu className="menu bg-base-200 text-base-content min-h-full w-80 p-4" />
-				</div>
-			</div>
-		</>
-	);
+  // Close mobile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const menu = document.getElementById("mobile-menu");
+      if (menu && !menu.contains(event.target as Node)) {
+        closeMenu();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isOpen]);
+
+  const Menu = ({ className }: { className?: string }) => (
+    <ul className={`space-y-3 ${className}`}>
+      <li>
+        <Link href="/" className="flex items-center gap-2 text-base" onClick={closeMenu}>
+          <FaArrowRight className="text-xl" /> Home
+        </Link>
+      </li>
+      <li>
+        <Link href="/salons" className="flex items-center gap-2 text-base" onClick={closeMenu}>
+          <FaArrowRight className="text-xl" /> Salons
+        </Link>
+      </li>
+      <li>
+        <Link href="/selfcare-products" className="flex items-center gap-2 text-base" onClick={closeMenu}>
+          <FaArrowRight className="text-xl" /> Products
+        </Link>
+      </li>
+      <li>
+        <Link href="/register" className="flex items-center gap-2 text-base" onClick={closeMenu}>
+          <FaArrowRight className="text-xl" /> Register Your Salon
+        </Link>
+      </li>
+      <li>
+        {isLoggedIn ? (
+          <button
+            onClick={() => {
+              handleLogout();
+              closeMenu();
+            }}
+            className="flex items-center gap-2 text-base w-full text-left cursor-pointer"
+          >
+            <img alt="User Avatar" src={DefaultAvatar.src} className="w-7 rounded-full" />
+            Logout
+          </button>
+        ) : (
+          <Link href="/login" className="flex items-center gap-2 text-base" onClick={closeMenu}>
+            <FaArrowRight className="text-xl" /> Login as Salon
+          </Link>
+        )}
+      </li>
+      <li>
+        <Link href="/ContactUs" className="flex items-center gap-2 text-base" onClick={closeMenu}>
+          <FaArrowRight className="text-xl" /> Contact Us
+        </Link>
+      </li>
+      <li>
+        <Link href="/Vendor" className="flex items-center gap-2 text-base" onClick={closeMenu}>
+          <FaArrowRight className="text-xl" /> For Business
+        </Link>
+      </li>
+      <li>
+        <Link href="/cart" className="flex items-center gap-2 text-base" onClick={closeMenu}>
+          <FaArrowRight className="text-xl" />View Cart
+        </Link>
+      </li>
+    </ul>
+  );
+
+  return (
+    <>
+      {/* Desktop Menu */}
+      <div className="hidden md:block relative">
+        <button
+          onClick={handleToggle}
+          className="btn btn-ghost btn-circle avatar"
+          aria-label="Open menu"
+        >
+          <GiHamburgerMenu className="text-2xl" />
+        </button>
+        {isOpen && (
+          <div className="absolute right-0 mt-2 w-64 bg-white shadow-lg rounded-md p-4 z-50">
+            <Menu />
+          </div>
+        )}
+      </div>
+
+      {/* Mobile Drawer Menu */}
+      <div className="md:hidden">
+        <button
+          onClick={handleToggle}
+          className="btn btn-ghost btn-circle avatar"
+          aria-label="Open mobile menu"
+        >
+          <GiHamburgerMenu className="text-2xl" />
+        </button>
+        {isOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex" id="mobile-menu">
+            <div className="w-80 min-h-full bg-white shadow-lg p-4 overflow-y-auto">
+              <Menu />
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={closeMenu}
+                  className="flex items-center space-x-2 p-2 bg-transparent hover:bg-gray-200 rounded-full focus:outline-none"
+                  aria-label="Close menu"
+                >
+                  <MdClose size={24} className="text-primary" />
+                  <span className="text-primary font-bold">Close</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </>
+  );
 };
 
 export default SideMenu;

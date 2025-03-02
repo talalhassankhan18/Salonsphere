@@ -1,84 +1,133 @@
 "use client";
 
-import React, { useActionState } from "react";
-import { loginUser } from "./actions";
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
+import { loginUser } from "./actions";
+import GetStartedImage from "@/assets/images/getstarted.jpg";
+import { FaUser, FaLock, FaArrowLeft } from "react-icons/fa";
 
-import Logo from "@/assets/images/logo.png";
+export default function LoginPage() {
+  const router = useRouter();
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-export default function LoginForm() {
-  const [data, action, isPending] = useActionState(loginUser, undefined);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setError("");
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    if (!formData.email || !formData.password) {
+      setError("All fields are required.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await loginUser({}, formData);
+
+      if (response.success) {
+        router.push("/Salondashboard");
+      } else {
+        setError(response.message);
+      }
+    } catch (error) {
+      setError("An error occurred during login.");
+    }
+
+    setLoading(false);
+  };
 
   return (
-    <div className="flex items-center justify-center p-5 min-h-screen bg-gradient-to-r from-[#ffc759] to-[#ebe9f7]">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-2xl">
-        <div className="flex justify-evenly">
-          <h2 className="text-3xl font-bold text-center text-[#333] mb-6">
-            Log In
-          </h2>
-          <img src={Logo.src} alt="logo" className="h-10 hidden md:block " />
-        </div>
+    <div className="flex min-h-screen bg-base-100">
+      {/* Left Section: Login Form */}
+      <div className="w-1/2 flex flex-col justify-center items-center px-12 relative">
+        {/* Back Button (Upper Left Corner) */}
+        <button
+          onClick={() => router.back()}
+          className="absolute top-4 left-4 text-[#231F20] hover:bg-[#231F20] hover:text-[#FFFFFF] transition duration-200 px-4 py-2 rounded-md"
+        >
+          Back
+        </button>
 
-        <form action={action} className="p-5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 ">
-            {/* Email Field */}
-            <div className="mb-4 md:col-span-2">
-              <label htmlFor="email" className="block text-lg text-[#333] mb-2">
-                Email
-              </label>
+
+        {/* Branding */}
+        <h2 className="text-5xl font-extrabold text-primary mb-2">SalonSphere</h2>
+        <p className="text-base text-gray-600 italic mb-6">"Where Beauty Meets Excellence"</p>
+
+        {/* Form Card */}
+        <div className="bg-white/80 shadow-xl border border-gray-200 rounded-2xl p-10 w-full max-w-md backdrop-blur-lg transform transition-all duration-300 hover:shadow-2xl">
+          <h1 className="text-3xl font-bold text-gray-800 mb-3 text-center">Welcome Back!</h1>
+          <p className="text-gray-500 mb-6 text-center">Log in to continue managing your business.</p>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Email Input */}
+            <div className="relative">
+              <FaUser className="absolute left-4 top-4 text-gray-500" />
               <input
                 type="email"
-                id="email"
                 name="email"
-                className="w-full p-3 border-2 border-[#ccc] rounded-lg  focus:outline-none focus:ring-2 focus:ring-[#ffc759] "
+                value={formData.email}
+                onChange={handleChange}
                 placeholder="Enter your email"
-                required
+                className="w-full p-4 pl-12 border border-gray-300 rounded-lg bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary transition duration-200 hover:border-gray-400"
               />
             </div>
 
-            {/* Password Field */}
-            <div className="mb-4 md:col-span-2">
-              <label
-                htmlFor="password"
-                className="block text-lg text-[#333] mb-2"
-              >
-                Password
-              </label>
+            {/* Password Input */}
+            <div className="relative">
+              <FaLock className="absolute left-4 top-4 text-gray-500" />
               <input
                 type="password"
-                id="password"
                 name="password"
-                className="w-full p-3 border-2 border-[#ccc] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffc759]"
+                value={formData.password}
+                onChange={handleChange}
                 placeholder="Enter your password"
-                required
+                className="w-full p-4 pl-12 border border-gray-300 rounded-lg bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary transition duration-200 hover:border-gray-400"
               />
             </div>
-          </div>
 
-          {/* Error Message */}
-          {data?.message && (
-            <p className="text-red-500 text-sm mb-4">{data?.message}</p>
-          )}
+            {/* Error Message */}
+            {error && <p className="text-error text-sm text-center">{error}</p>}
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={isPending}
-            aria-disabled={isPending}
-            className="w-full p-3 bg-[#ffc759] text-white text-lg rounded-lg hover:bg-[#f8b03c] transition duration-300"
-          >
-            {isPending ? "Logging In..." : "Log In"}
-          </button>
-        </form>
+            {/* Login Button */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-4 rounded-lg font-semibold text-lg bg-primary text-primary-content shadow-md transition-all duration-300 transform hover:bg-secondary hover:text-primary-content hover:scale-[1.02]"
+            >
+              {loading ? "Processing..." : "Log in"}
+            </button>
+          </form>
 
-        <div className="mt-4 text-center">
-          <p className="text-[#333]">
+          {/* Signup Link */}
+          <p className="mt-4 text-gray-600 text-sm text-center">
             Don't have an account?{" "}
-            <Link href="/signup" className="text-[#ffc759] hover:underline">
-              Sign Up
+            <Link href="/register" className="text-primary font-semibold hover:underline">
+              Sign up
             </Link>
           </p>
+
+          {/* Footer */}
+          <div className="flex justify-between text-sm text-gray-500 mt-6">
+            <Link href="/" className="hover:text-primary">Language</Link>
+            <Link href="/support" className="hover:text-primary">Support</Link>
+          </div>
         </div>
+      </div>
+
+      {/* Right Section: Background Image */}
+      <div className="w-1/2 relative">
+        <Image src={GetStartedImage} alt="Get Started" fill className="object-cover rounded-l-lg" />
+        <div className="absolute inset-0 bg-black/40"></div>
       </div>
     </div>
   );

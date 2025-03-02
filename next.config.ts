@@ -3,29 +3,21 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   experimental: {
     serverActions: {
-      bodySizeLimit: "1mb",
-      allowedOrigins: ["*"],
+      bodySizeLimit: "10mb", // Corrected placement
     },
   },
+  redirects: async () => [
+    {
+      source: "/about",
+      destination: "/",
+      permanent: true,
+    },
+    {
+      source: "/blog/:slug",
+      destination: "/news/:slug",
+      permanent: true,
+    },
+  ],
 };
 
 export default nextConfig;
-
-module.exports = {
-  async redirects() {
-    return [
-      // Basic redirect
-      {
-        source: "/about",
-        destination: "/",
-        permanent: true,
-      },
-      // Wildcard path matching
-      {
-        source: "/blog/:slug",
-        destination: "/news/:slug",
-        permanent: true,
-      },
-    ];
-  },
-};

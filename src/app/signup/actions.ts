@@ -1,42 +1,49 @@
-// app/actions.ts
 "use server";
 
 import dbConnect from "@/lib/mongoose";
-import User from "@/mongoose-models/User";
+import Vendor from "@/mongoose-models/Vendor"; // Updated to use Vendor
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { createSession, verifySession } from "@/lib/session";
 import { redirect } from "next/navigation";
+import crypto from "crypto"; // For generating unique registration numbers
 
-export async function banUser() {
-  const session = await verifySession();
-}
-
-export async function createUser(prevState: unknown, formData: FormData) {
+export async function createVendor(prevState: unknown, formData: FormData) {
   const schema = z.object({
-    name: z.string().min(1, "Name is required"),
+    firstName: z.string().min(1, "First Name is required"),
+    lastName: z.string().min(1, "Last Name is required"),
     email: z.string().email("Invalid email address"),
     password: z.string().min(6, "Password must be at least 6 characters"),
-    gender: z.enum(["Male", "Female", "Unisex"]),
-    age: z.preprocess(
-      (val) => Number.parseInt(val as string, 10),
-      z.number().min(0, "Age must be a positive number")
-    ),
+    mobileNumber: z
+      .string()
+      .regex(/^[0-9]+$/, "Mobile number must contain only digits")
+      .min(10, "Mobile number must be at least 10 digits"),
+    country: z.string().min(1, "Country is required"),
+    shopName: z.string().min(1, "Shop Name is required"),
     city: z.string().min(1, "City is required"),
     area: z.string().min(1, "Area is required"),
+    agreeToTerms: z.literal("on").refine(
+      (value) => value === "on",
+      "You must agree to the terms and conditions"
+    ),
+    registrationNumber: z
+      .string()
+      .regex(/^GL[A-Z0-9]{12}$/, "Invalid registration number format")
+      .optional(), // Mark as optional since it's generated on the backend
   });
 
   const result = schema.safeParse({
-    name: formData.get("name"),
+    firstName: formData.get("firstName"),
+    lastName: formData.get("lastName"),
     email: formData.get("email"),
     password: formData.get("password"),
-    gender: formData.get("gender"),
-    age: formData.get("age"),
+    mobileNumber: formData.get("mobileNumber"),
+    country: formData.get("country"),
+    shopName: formData.get("shopName"),
     city: formData.get("city"),
     area: formData.get("area"),
+    agreeToTerms: formData.get("agreeToTerms"),
   });
-
-  console.log(result);
 
   if (!result.success) {
     return {
@@ -45,38 +52,53 @@ export async function createUser(prevState: unknown, formData: FormData) {
     };
   }
 
-  const { name, email, password, gender, age, city, area } = result.data;
+  const {
+    firstName,
+    lastName,
+    email,
+    password,
+    mobileNumber,
+    country,
+    shopName,
+    city,
+    area,
+  } = result.data;
 
   try {
     await dbConnect();
 
-    // Check if user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return { message: "User with this email already exists.", errors: {} };
+    // Check if vendor already exists
+    const existingVendor = await Vendor.findOne({ email });
+    if (existingVendor) {
+      return { message: "Vendor with this email already exists.", errors: {} };
     }
 
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create new user
-    const user = new User({
-      name,
+    // Generate unique business registration number with 'GL' prefix
+    const registrationNumber = `GL${crypto.randomBytes(6).toString("hex").toUpperCase()}`;
+
+    // Create new vendor
+    const vendor = new Vendor({
+      firstName,
+      lastName,
       email,
       password: hashedPassword,
-      gender,
-      age,
-      location: {
-        city,
-        area,
-      },
+      mobileNumber,
+      country,
+      shopName,
+      city,
+      area,
+      registrationNumber, // Save the registration number
     });
 
-    await user.save();
-    await createSession(user.id);
+    await vendor.save();
+    await createSession(vendor.id);
   } catch (error) {
     console.error(error);
-    return { message: "Error creating user", errors: {} };
+    return { message: "Error creating vendor", errors: {} };
   }
-  return redirect("/");
+
+  return redirect("/login");
 }

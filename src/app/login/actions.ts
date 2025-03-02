@@ -1,58 +1,61 @@
-// app/actions.ts
 "use server";
 
-import { revalidatePath } from "next/cache";
 import dbConnect from "@/lib/mongoose";
-import User from "@/mongoose-models/User";
+import User from "@/mongoose-models/register";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
-import jwt from "jsonwebtoken";
-import { setCookie } from "cookies-next";
-import { createSession } from "@/lib/session";
-import { redirect } from "next/navigation";
+import { createSession, deleteSession } from "@/lib/session";
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
-
-export async function loginUser(prevState: unknown, formData: FormData) {
-  // Define schema for validation
+export async function loginUser(prevState: unknown, formData: { email: string; password: string }) {
+  // ✅ Validate Input
   const schema = z.object({
     email: z.string().email("Invalid email address"),
     password: z.string().min(6, "Password must be at least 6 characters"),
   });
 
-  // Parse and validate form data
-  const result = schema.safeParse({
-    email: formData.get("email"),
-    password: formData.get("password"),
-  });
-
+  const result = schema.safeParse(formData);
   if (!result.success) {
-    return {
-      message: "Unknown error occurred",
-      errors: result.error,
-    };
+    return { success: false, message: "Invalid email or password format." };
   }
 
   const { email, password } = result.data;
+
   try {
-    // Connect to the database
     await dbConnect();
-
-    // Check if the user exists
-    const user = await User.findOne({ email });
+    
+    // ✅ Find User in Database
+    const user = await User.findOne({ email }).select("+password"); // Ensure password field is selected
     if (!user) {
-      return { message: "User not found", errors: {} };
+      console.log("❌ User not found:", email);
+      return { success: false, message: "Invalid credentials." };
     }
 
-    // Check if the password matches
-    const isPasswordCorrect = await bcrypt.compare(password, user.password);
-    if (!isPasswordCorrect) {
-      return { message: "Incorrect password", errors: {} };
+    console.log("🔹 Entered Password:", password);
+    console.log("🔹 Stored Hashed Password:", user.password);
+
+    // ✅ Compare Entered Password with Hashed Password
+    const isMatch = await bcrypt.compare(password, user.password);
+    console.log("🔹 Password Match:", isMatch);
+
+    if (!isMatch) {
+      console.log("❌ Incorrect password for:", email);
+      return { success: false, message: "Invalid credentials." };
     }
+
+    // ✅ Create Session
     await createSession(user.id);
+
+    console.log("✅ Login successful for:", email);
+    return { success: true, message: "Login successful!" };
+
   } catch (error) {
-    console.error(error);
-    return { message: "Failed to log in", errors: {} };
+    console.error("⚠️ Error during login:", error);
+    return { success: false, message: "Something went wrong. Please try again later." };
   }
-  return redirect("/");
+}
+
+// ✅ Logout Function
+export async function logoutUser() {
+  await deleteSession();
+  return { success: true, message: "Logged out successfully!" };
 }

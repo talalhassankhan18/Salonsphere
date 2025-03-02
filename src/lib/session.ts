@@ -9,7 +9,7 @@ interface SessionPayload extends JWTPayload {
   expire: Date;
 }
 
-const key = new TextEncoder().encode(process.env.Secret || "Wisam");
+const key = new TextEncoder().encode(process.env.Secret || "SalonSphereSecretKey");
 
 const cookie = {
   name: "session",

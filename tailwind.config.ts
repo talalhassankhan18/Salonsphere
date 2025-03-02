@@ -2,54 +2,64 @@ import type { Config } from "tailwindcss";
 import daisyui from "daisyui";
 
 const config: Config = {
-	content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
-	theme: {},
-	plugins: [require("daisyui"), require("@tailwindcss/typography")],
-	daisyui: {
-		themes: [
-			// false: only light + dark | true: all themes | array: specific themes like this ["light", "dark", "cupcake"]
-			{
-				light: {
-					primary: "#ffc759",
-					"primary-content": "#ebe9f7",
-					secondary: "#73449d",
-					"secondary-content": "#ebe9f7",
-					accent: "#f87171",
-					"accent-content": "#ebe9f7",
-					neutral: "#0d0809",
-					"neutral-content": "#c8c6c6", 
-					"base-100": "#ffffff",
-					"base-200": "#F4F4F4",
-					"base-300": "#e7e7e7",
-					"base-content": "#141316",
-					info: "#00ccff",
-					"info-content": "#000f16",
-					success: "#49c55e",
-					"success-content": "#020e03",
-					warning: "#d37600",
-					"warning-content": "#100500",
-					error: "#d8112c",
-					"error-content": "#fed7d4",
-
-					"--rounded-box": "1rem", // border radius rounded-box utility class, used in card and other large boxes
-					"--rounded-btn": "0.5rem", // border radius rounded-btn utility class, used in buttons and similar element
-					"--rounded-badge": "1.9rem", // border radius rounded-badge utility class, used in badges and similar
-					"--animation-btn": "0.25s", // duration of animation when you click on button
-					"--animation-input": "0.2s", // duration of animation for inputs like checkbox, toggle, radio, etc
-					"--btn-focus-scale": "0.95", // scale transform of button when you focus on it
-					"--border-btn": "1px", // border width of buttons
-					"--tab-border": "1px", // border width of tabs
-					"--tab-radius": "0.5rem", // border radius of tabs
-				},
-			},
-		],
-		darkTheme: "dark", // name of one of the included themes for dark mode
-		base: true, // applies background color and foreground color for root element by default
-		styled: true, // include daisyUI colors and design decisions for all components
-		utils: true, // adds responsive and modifier utility classes
-		prefix: "", // prefix for daisyUI classnames (components, modifiers and responsive class names. Not colors)
-		logs: true, // Shows info about daisyUI version and used config in the console when building your CSS
-		themeRoot: ":root", // The element that receives theme color CSS variables
-	},
+  content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
+  theme: {},
+  plugins: [require("daisyui"), require("@tailwindcss/typography")],
+  daisyui: {
+    themes: [
+      // Light Theme
+      {
+        light: {
+          primary: "#B4004E", // Matches the pinkish-red in the UI
+          "primary-content": "#FFFFFF", // White text for primary elements
+          secondary: "#231F20", // Dark gray for secondary sections
+          "secondary-content": "#FFFFFF",
+          accent: "#D5AA68", // Golden shade for accents
+          "accent-content": "#1A1A1A", 
+          neutral: "#4A4A4A", // Neutral background (dark gray)
+          "neutral-content": "#FFFFFF", 
+          "base-100": "#FFFFFF", // Page background (white)
+          "base-200": "#F3F3F3", // Slightly off-white for subtle sections
+          "base-300": "#EAEAEA",
+          "base-content": "#1F1F1F", // Almost black text
+          info: "#88C0D0", // Light blue for info elements
+          "info-content": "#003344",
+          success: "#A3BE8C", // Light green for success
+          "success-content": "#002A00",
+          warning: "#EBCB8B", // Light yellow for warnings
+          "warning-content": "#3A3A00",
+          error: "#BF616A", // Soft red for errors
+          "error-content": "#3D0000",
+        },
+      },
+      // Dark Theme
+      {
+        dark: {
+			primary: "#FFD700", // Bright yellow for highlights (matches the logo)
+			"primary-content": "#1E1E1E", // Dark text for yellow buttons
+			secondary: "#9146FF", // Vibrant purple for links or secondary buttons
+			"secondary-content": "#FFFFFF", // White text for purple elements
+			accent: "#FF6B6B", // Coral red for active or hover states
+			"accent-content": "#1E1E1E", // Dark text on accent backgrounds
+			neutral: "#242424", // Deep gray for navbar and containers
+			"neutral-content": "#EAEAEA", // Light text for readability
+			"base-100": "#121212", // Dark black for the main background
+			"base-content": "#F8F9FA", // Off-white text for readability
+			info: "#4FC3F7", // Bright blue for informational highlights
+			success: "#4CAF50", // Green for positive actions
+			warning: "#FFA726", // Orange for warnings
+			error: "#E57373", // Red for errors
+		  },
+      },
+    ],
+    darkTheme: "dark", // Enable dark mode theme
+    base: true,
+    styled: true,
+    utils: true,
+    prefix: "",
+    logs: true,
+    themeRoot: ":root",
+  },
 };
+
 export default config;

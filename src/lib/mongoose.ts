@@ -1,42 +1,33 @@
 import mongoose from "mongoose";
 
+// Ensure MONGODB_URI exists (throws at runtime if missing)
+const MONGODB_URI = process.env.MONGODB_URI!;
+
 declare global {
-  var mongoose: {
+  var __mongoose: {
     conn: mongoose.Connection | null;
     promise: Promise<mongoose.Connection> | null;
   };
 }
-if (!global.mongoose) {
-  global.mongoose = { conn: null, promise: null };
-}
-const MONGODB_URI = process.env.MONGODB_URI!;
-if (!MONGODB_URI) {
-  throw new Error(
-    "Please define the MONGODB_URI environment variable inside .env file"
-  );
-}
+
+// Initialize global mongoose connection storage
+globalThis.__mongoose = globalThis.__mongoose || { conn: null, promise: null };
+
 async function dbConnect() {
-  if (global.mongoose.conn) {
-    return global.mongoose.conn;
+  if (globalThis.__mongoose.conn) return globalThis.__mongoose.conn;
+
+  if (!globalThis.__mongoose.promise) {
+    globalThis.__mongoose.promise = mongoose
+      .connect(MONGODB_URI, { bufferCommands: false })
+      .then((mongoose) => mongoose.connection)
+      .catch((err) => {
+        globalThis.__mongoose.promise = null; // Reset promise if connection fails
+        throw err;
+      });
   }
 
-  if (!global.mongoose.promise) {
-    const opts = {
-      bufferCommands: false,
-    };
-    global.mongoose.promise = mongoose
-      .connect(MONGODB_URI, opts)
-      .then((mongoose) => mongoose.connection);
-  }
-
-  try {
-    global.mongoose.conn = await global.mongoose.promise;
-  } catch (error) {
-    global.mongoose.promise = null;
-    throw error;
-  }
-
-  return global.mongoose.conn;
+  globalThis.__mongoose.conn = await globalThis.__mongoose.promise;
+  return globalThis.__mongoose.conn;
 }
 
 export default dbConnect;

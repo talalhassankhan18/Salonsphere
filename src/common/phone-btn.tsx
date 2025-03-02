@@ -8,13 +8,13 @@ const PhoneBtn = () => {
 		<button
 			className="btn btn-link text-neutral p-0"
 			onClick={() => {
-				navigator.clipboard.writeText("0331-2062376").then(() => {
+				navigator.clipboard.writeText("0319-2590810").then(() => {
 					toast.success("Copied to clipboard!");
 				});
 			}}
 		>
 			<BiSupport className="size-5" />
-			0331-2062376
+			0319-2590810
 		</button>
 	);
 };

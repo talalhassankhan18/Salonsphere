@@ -12,7 +12,7 @@ const BottomSlider = ({ srcs = [] }: Props) => {
 
 	return (
 		<div className="mb-6 md:mb-14">
-			<AutoSlider type="fade" delay={2000} srcs={_srcs} />
+			<AutoSlider type="fade" delay={5000} srcs={_srcs} />
 		</div>
 	);
 };

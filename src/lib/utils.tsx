@@ -121,3 +121,21 @@ export function mapReviews(review: ReviewType[]): CardType[] {
 		bgColor: "base-300",
 	}));
 }
+
+export async function fetchVendor() {
+	try {
+	  const res = await fetch("/api/vendor");
+	  console.log(res);
+	  if (!res.ok) throw new Error("Failed to fetch vendor data");
+	
+  
+	  const data = await res.json();
+	  
+	  return data;
+	} catch (error) {
+	  console.error("Error fetching vendor:", error);
+	  return null;
+	}
+  }
+  
+  

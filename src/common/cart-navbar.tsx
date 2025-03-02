@@ -10,23 +10,23 @@ const CartNavbar = () => {
 	if (!cartItems) return null;
 	return (
 		<div className="dropdown dropdown-end">
-			<div tabIndex={0} role="button" className="btn btn-ghost btn-circle">
+			<div tabIndex={0} role="button" className="btn btn-ghost btn-circle hover:bg-primary/20">
 				<div className="indicator">
-					<RiShoppingCart2Line className="mb-0.5 size-5" />
-					<span className="badge badge-sm indicator-item">
+					<RiShoppingCart2Line className="mb-0.5 size-5 text-primary" />
+					<span className="badge badge-sm indicator-item bg-secondary text-secondary-content">
 						{cartItems.length}
 					</span>
 				</div>
 			</div>
 			<div
 				tabIndex={0}
-				className="card card-compact dropdown-content z-[2] mt-3 w-52 bg-base-100 shadow"
+				className="card card-compact dropdown-content z-[2] mt-3 w-52 bg-base-100 shadow-lg border border-base-300"
 			>
 				<div className="card-body">
-					<span className="font-bold text-lg">{cartItems.length} Items</span>
-					<span className="text-info">Subtotal: {totalPrice()} PKR</span>
+					<span className="font-bold text-lg text-primary">{cartItems.length} Items</span>
+					<span className="text-secondary font-medium">Subtotal: {totalPrice()} PKR</span>
 					<div className="card-actions">
-						<Link href="/cart" className="btn btn-primary btn-block">
+						<Link href="/cart" className="btn btn-primary btn-block hover:btn-secondary transition-colors">
 							View cart
 						</Link>
 					</div>
