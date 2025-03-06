@@ -14,6 +14,7 @@ import ServiceOrders from "./Components/ServiceOrders";
 import Navbar from "./Components/navbar";
 import { fetchVendor } from "@/lib/utils";
 import { FaUserCircle } from "react-icons/fa";
+import { useAuth } from "@/app/context/AuthContext";  // Import useAuth
 import { useTheme } from "@/app/Salondashboard/Components/ThemeProvider";
 
 export default function SalonDashboard() {
@@ -22,6 +23,7 @@ export default function SalonDashboard() {
   const [loading, setLoading] = useState(true);
   const { theme } = useTheme();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { email, setEmail } = useAuth();  // Using Context API
 
   useEffect(() => {
     async function getVendor() {
@@ -89,7 +91,7 @@ export default function SalonDashboard() {
               bg-gradient-to-r from-primary to-accent text-primary-content"
           >
             <h1 className="text-2xl font-bold">
-              {loading ? "Loading..." : `Welcome, ${vendor?.businessName || "Admin"}!`}
+              {loading ? "Loading..." : `Welcome, ${email || "Admin"}!`}
             </h1>
             <div className="flex items-center gap-4">
               {vendor?.profileImage ? (
