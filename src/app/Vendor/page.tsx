@@ -11,7 +11,6 @@ const Home = () => {
   return (
     <div>
       <Navbar />
-      <div className="m-4 p-6"></div>
       <HeroSection />
       <FeaturesSection />
       <Testimonials />

@@ -10,13 +10,13 @@ import Link from "next/link";
 type Props = {
 	srcs?: string[];
 	type?:
-		| "slide"
-		| "fade"
-		| "cube"
-		| "coverflow"
-		| "flip"
-		| "creative"
-		| "cards";
+	| "slide"
+	| "fade"
+	| "cube"
+	| "coverflow"
+	| "flip"
+	| "creative"
+	| "cards";
 	delay?: number | null;
 };
 
@@ -34,7 +34,10 @@ const AutoSliderShopBrand = ({
 	return (
 		<div className="mt-4">
 			<Link href="/selfcare-products" className="prose lg:prose-xl">
-				<h2 className="mb-2 md:mb-3">Shop by Brands</h2>
+				<h3 className="mb-2 md:mb-3 relative text-secondary font-semibold text-lg bg-base-100">
+					<span className="absolute left-0 top-1/2 -translate-y-1/2 w-2 h-8 bg-primary rounded-sm"></span>
+					<span className="pl-4">Shop by Brands</span>
+				</h3>
 			</Link>
 			<Swiper
 				modules={modules}

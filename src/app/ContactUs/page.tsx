@@ -27,7 +27,7 @@ export default function ContactUs() {
     if (!formData.email) newErrors.email = "Email is required!";
     else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = "Invalid email format!";
     if (!formData.message) newErrors.message = "Message cannot be empty!";
-    
+
     setErrors(newErrors);
     return Object.values(newErrors).every((error) => error === "");
   };
@@ -44,10 +44,9 @@ export default function ContactUs() {
   return (
     <>
       <Navbar isLoggedIn={isLoggedIn} handleLogout={handleLogout} />
-      <div className="m-4 p-6"></div>
-      <section className="bg-gray-50 py-16">
-        <div className="container mx-auto flex flex-col md:flex-row items-center gap-10 bg-white shadow-lg rounded-lg overflow-hidden">
-          
+      <section className="bg-gray-50">
+        <div className="container mx-auto flex flex-col md:flex-row items-center gap-10 bg-white shadow-lg overflow-hidden">
+
           {/* Left Image Section */}
           <div className="hidden md:block md:w-1/2">
             <img src={ContactImage.src} alt="Contact Us" className="w-full h-full object-cover" />
@@ -55,7 +54,11 @@ export default function ContactUs() {
 
           {/* Right Contact Form Section */}
           <div className="w-full md:w-1/2 px-8 py-10">
-            <h2 className="text-3xl font-semibold text-primary mb-6 text-center">Get in Touch</h2>
+            <h2 className="pt-10 text-center text-4xl font-extrabold text-primary mb-2">Get in Touch</h2>
+            
+            <p className="text-gray-600 text-center mb-8">
+              Have questions or need assistance? Feel free to reach out, and we’ll get back to you as soon as possible.
+            </p>
 
             {/* Contact Details */}
             <div className="mb-6">
@@ -73,47 +76,46 @@ export default function ContactUs() {
               </div>
             </div>
 
-            {/* Contact Form */}
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label className="block text-gray-700 font-medium">Name</label>
+                <label className="block text-gray-700 font-medium mb-1">Name</label>
                 <input
                   type="text"
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 mt-1 border rounded-md focus:ring-primary focus:border-primary"
+                  className="w-full px-5 py-3 border rounded-lg focus:ring-primary focus:border-primary shadow-sm transition duration-300 focus:outline-none"
                   placeholder="Enter your name"
                 />
-                {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
+                {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
               </div>
               <div>
-                <label className="block text-gray-700 font-medium">Email</label>
+                <label className="block text-gray-700 font-medium mb-1">Email</label>
                 <input
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 mt-1 border rounded-md focus:ring-primary focus:border-primary"
+                  className="w-full px-5 py-3 border rounded-lg focus:ring-primary focus:border-primary shadow-sm transition duration-300 focus:outline-none"
                   placeholder="Enter your email"
                 />
-                {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
+                {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
               </div>
               <div>
-                <label className="block text-gray-700 font-medium">Message</label>
+                <label className="block text-gray-700 font-medium mb-1">Message</label>
                 <textarea
                   name="message"
                   value={formData.message}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 mt-1 border rounded-md focus:ring-primary focus:border-primary"
+                  className="w-full px-5 py-3 border rounded-lg focus:ring-primary focus:border-primary shadow-sm transition duration-300 focus:outline-none"
                   placeholder="Enter your message"
                   rows={4}
                 />
-                {errors.message && <p className="text-red-500 text-sm">{errors.message}</p>}
+                {errors.message && <p className="text-red-500 text-sm mt-1">{errors.message}</p>}
               </div>
               <button
                 type="submit"
-                className="w-full bg-primary text-white py-2 rounded-md hover:bg-primary-dark transition duration-300"
+                className="w-full bg-primary text-white py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 hover:bg-primary-dark shadow-md"
               >
                 Send Message
               </button>

@@ -69,7 +69,7 @@ export default function LoginPage() {
           <div className="absolute top-2 left-2 sm:top-4 sm:left-4 z-50">
             <button
               onClick={() => router.back()}
-              className="bg-white text-black hover:bg-[#231F20] hover:text-white transition duration-200 px-2 py-1 sm:px-3 sm:py-1 text-[12px] sm:text-xs rounded-md shadow-md"
+              className="bg-white text-black hover:bg-[#231F20] hover:text-white transition duration-200 px-2 py-1 sm:px-3 sm:py-1 text-[12px] sm:text-xs rounded-md"
             >
               Back
             </button>

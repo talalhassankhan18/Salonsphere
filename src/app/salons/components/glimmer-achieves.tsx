@@ -18,7 +18,7 @@ const GlimmerAchieves = () => {
 				</p>
 
 				<p className="text-gray-600 text-sm md:text-base">
-					Appointments booked on Glimmer
+					Appointments booked on SalonSphere
 				</p>
 			</div>
 			<div className="mt-8 flex flex-col items-center justify-center space-y-8 text-center md:flex-row md:space-x-8 md:space-y-0">
@@ -30,7 +30,7 @@ const GlimmerAchieves = () => {
 				</div>
 				<div>
 					<p className="font-bold text-2xl md:text-3xl">120+ Areas</p>
-					<p className="text-gray-600 text-sm md:text-base">using Glimmer</p>
+					<p className="text-gray-600 text-sm md:text-base">using SalonSphere</p>
 				</div>
 				<div>
 					<p className="font-bold text-2xl md:text-3xl">10000+</p>

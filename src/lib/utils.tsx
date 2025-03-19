@@ -67,25 +67,26 @@ export function mapProducts(Products: ProductType[]): CardType[] {
 export function mapSalons(salonsExample: SalonType[]): CardType[] {
 	return salonsExample.map((salon) => ({
 		top: {
-			left: <h2 className="font-bold text-2xl text-base-100">{salon.name}</h2>,
+			left: <h2 className="font-semibold text-2xl text-secondary drop-shadow-md">{salon.name}</h2>,
 			right: (
-				<span className="flex items-center text-base-100">
-					<FaRegStar /> &nbsp; {salon.rating}
+				<span className="flex items-center text-secondary font-medium text-lg">
+					<FaRegStar className="text-primary" /> &nbsp; {salon.rating}
 				</span>
 			),
 		},
 		bottom: {
-			left: <p className="text-base-100 text-sm">{salon.address}</p>,
+			left: <p className="text-gray-600 text-sm italic">{salon.address}</p>,
 		},
 		actionBtn: {
 			right: (
-				<button className="btn btn-base bg-base-100 text-base-content capitalize">
+				<button className="w-full bg-secondary text-white py-3 rounded-md shadow-md hover:scale-105 hover:shadow-lg transition-all">
 					Book Now
 				</button>
 			),
 		},
 		image: <CardImage route={`/salons/${salon.name}`} src={salon.image} />,
-		bgColor: "secondary",
+		bgColor: "white",
+		className: "rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden border border-[#D5AA68]",
 	}));
 }
 
@@ -118,7 +119,8 @@ export function mapReviews(review: ReviewType[]): CardType[] {
 		},
 		actionBtn: {},
 		image: null,
-		bgColor: "base-300",
+		bgColor: "white",
+		className: "rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden p-4",
 	}));
 }
 

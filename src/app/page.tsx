@@ -8,6 +8,9 @@ import SeftcareCardList from "./components/selfcare-card-list";
 import FakeReviewList from "./components/fake-review-list";
 import Navbar from "../common/navbar"
 import Footer from "@/common/footer";
+import Starting from "../common/starting"
+import HowItWorks from "./components/Howitworks";
+import CallToAction from "./components/Calltoaction";
 
 export default function Home() {
   const [isLoggedIn, setIsLoggedIn] = React.useState(false);
@@ -19,11 +22,14 @@ export default function Home() {
   return (
     <>
       <Navbar isLoggedIn={isLoggedIn} handleLogout={handleLogout} />
-      <div className="m-4 p-6"></div>
+      {/* <div className="m-4 p-6"></div> */}
       <Hero />
       <SalonCardList />
       <SeftcareCardList />
+      {/* <Starting /> */}
       <BottomSlider />
+      <HowItWorks />
+      <CallToAction />
       <GymBanner />
       <FakeReviewList />
       <Footer />

@@ -1,6 +1,6 @@
 "use client";
 import * as React from "react";
-import GymBanner1 from "@/assets/images/gym-banner.webp";
+import GymBanner1 from "@/assets/images/gym-banner.png";
 import AutoSlider from "@/common/auto-slider";
 type Props = {
 	srcs?: string[];

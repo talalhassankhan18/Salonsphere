@@ -1,8 +1,8 @@
 "use client";
 import * as React from "react";
-import HeroImg1 from "@/assets/selfcare-slider/selfcare-slider-1.png";
-import HeroImg2 from "@/assets/selfcare-slider/selfcare-slider-2.png";
-import HeroImg3 from "@/assets/selfcare-slider/selfcare-slider-3.png";
+import HeroImg1 from "@/assets/selfcare-slider/selfcare-slider-4.png";
+import HeroImg2 from "@/assets/selfcare-slider/selfcare-slider-4.png";
+import HeroImg3 from "@/assets/selfcare-slider/selfcare-slider-4.png";
 import AutoSlider from "@/common/auto-slider";
 import CategoryNavMenu from "@/common/category-nav-menu";
 type Props = {
@@ -14,7 +14,7 @@ const Hero = ({ srcs = [] }: Props) => {
   return (
 
     <div className="mb-6 md:mb-14">
-      <div className="mb-6 md:mb-14">
+      <div className="mb-2 md:mb-2">
       <CategoryNavMenu/>
       </div>
       <AutoSlider srcs={_srcs} />

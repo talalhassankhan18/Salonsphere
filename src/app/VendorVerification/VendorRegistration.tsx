@@ -59,16 +59,16 @@ export default function VendorRegistration() {
         <div className="bg-white p-10 rounded-lg shadow-2xl w-full max-w-6xl">
           <div className="flex flex-col md:flex-row items-center justify-between mb-6">
             <div className="text-center md:text-left">
-              <h2 className="text-5xl font-extrabold text-primary mb-2">SalonSphere</h2>
-              <p className="text-lg text-gray-600 italic">"Where Beauty Meets Excellence"</p>
-              <h3 className="text-2xl font-extrabold text-primary mb-2">Review and Confirm</h3>
+              <h2 className="text-4xl font-extrabold text-primary mb-2">SalonSphere</h2>
+              <p className="text-xl text-gray-600 italic">"Where Beauty Meets Excellence"</p>
+              <h3 className="text-xl font-extrabold text-primary mb-2">Review and Confirm</h3>
               <hr className="border-t-2 border-gray-300 mt-2" />
             </div>
 
             <div className="flex flex-col items-center">
               <label className="cursor-pointer relative">
                 <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-                <div className="w-32 h-32 rounded-full border-4 border-[#D4A76A] flex items-center justify-center overflow-hidden shadow-lg">
+                <div className="w-32 h-32 rounded-full border-4 border-[#D4A76A] flex items-center justify-center overflow-hidden shadow-lg mt-4">
                   {previewImage ? (
                     <img src={previewImage} alt="Profile" className="w-full h-full object-cover" />
                   ) : (
@@ -136,10 +136,43 @@ export default function VendorRegistration() {
       </div>
 
       <style jsx>{`
-        .form-label { display: block; font-size: 1rem; font-weight: 600; margin-bottom: 5px; color: #231F20; }
-        .form-input { width: 100%; padding: 10px; border: 2px solid #ccc; border-radius: 8px; background-color: #F3F3F3; transition: border-color 0.3s; }
-        .form-input:focus { border-color: #B4004E; box-shadow: 0px 0px 5px rgba(180, 0, 78, 0.5); }
-      `}</style>
+  .form-label { 
+    display: block; 
+    font-size: 0.875rem; 
+    font-weight: 600; 
+    margin-bottom: 4px; 
+    color: #231F20; 
+  }
+  .form-input { 
+    width: 100%; 
+    padding: 6px 10px; /* Reduced padding */
+    border: 2px solid #ccc; 
+    border-radius: 6px; /* Slightly smaller */
+    background-color: #F3F3F3; 
+    transition: border-color 0.3s; 
+    height: 38px; /* Reduced height */
+  }
+  .form-input:focus { 
+    border-color: #B4004E; 
+    box-shadow: 0px 0px 5px rgba(180, 0, 78, 0.5); 
+  }
+  .submit-button { 
+    width: 100%; 
+    margin-top: 6px; 
+    padding: 10px 0; /* Reduced button padding */
+    background-color: #B4004E; 
+    color: white; 
+    font-size: 1rem; 
+    font-weight: 600; 
+    border-radius: 6px; /* Slightly smaller */
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2); 
+    transition: background-color 0.3s; 
+  }
+  .submit-button:hover { 
+    background-color: #90003D; 
+  }
+`}</style>
+
     </>
   );
 }

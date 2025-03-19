@@ -1,11 +1,13 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import { usePathname } from "next/navigation";
 import Logo from "@/assets/images/logo.png";
 import Link from "next/link";
 import CartNavbar from "./cart-navbar";
 import PhoneBtn from "./phone-btn";
 import SideMenu from "./side-menu";
+import { FiSearch, FiHeart} from "react-icons/fi"; // Icons
+
 
 const Navbar = ({
   isLoggedIn,
@@ -14,9 +16,12 @@ const Navbar = ({
   const pathname = usePathname();
 
   const getLinkClasses = (path: string) =>
-    `px-3 py-1.5 rounded-md transition duration-300 hover:text-primary-content hover:bg-primary ${
-      pathname === path ? "underline text-primary" : ""
+    `relative py-2 transition-all duration-300 
+    ${pathname === path
+      ? "text-black font-semibold after:content-[''] after:absolute after:left-0 after:bottom-0 after:w-full after:h-[2px] after:bg-black"
+      : "text-gray-600 hover:text-black hover:after:content-[''] hover:after:absolute hover:after:left-0 hover:after:bottom-0 hover:after:w-full hover:after:h-[2px] hover:after:bg-black"
     }`;
+      const [search, setSearch] = useState("");
 
   return (
     <nav className="bg-base-100 shadow-md font-poppins fixed top-0 left-0 w-full z-50">
@@ -27,10 +32,15 @@ const Navbar = ({
         </Link>
 
         {/* Desktop Navigation */}
-        <ul className="hidden md:flex items-center space-x-5 text-[15px] font-medium text-base-content">
-          <li>
-            <Link href="/" className={getLinkClasses("/")}>Home</Link>
+        <ul className="hidden md:flex items-center space-x-6 text-sm font-medium">
+          <li className="relative group">
+            <Link
+              href="/"
+            >
+              Home
+            </Link>
           </li>
+
           <li>
             <Link href="/salons" className={getLinkClasses("/salons")}>
               Salons
@@ -46,6 +56,11 @@ const Navbar = ({
               For Business
             </Link>
           </li>
+          <li>
+            <Link href="/ContactUs" className={getLinkClasses("/ContactUs")}>
+              Contact Us
+            </Link>
+          </li>
           {isLoggedIn ? (
             <li>
               <button onClick={handleLogout} className={getLinkClasses("/logout")}>
@@ -55,21 +70,32 @@ const Navbar = ({
           ) : (
             <li>
               <Link href="/login" className={getLinkClasses("/login")}>
-                Login as Salon
+                Login
               </Link>
             </li>
           )}
-          <li>
-            <Link href="/ContactUs" className={getLinkClasses("/ContactUs")}>
-              Contact Us
-            </Link>
-          </li>
-          
-          {/* Phone & Cart Icons - Aligned Properly */}
-          <li className="flex items-center space-x-4">
-            <PhoneBtn />
+                  {/* Search Bar & Icons */}
+        <div className="flex items-center space-x-4">
+          {/* Search Input */}
+          <div className="relative hidden md:block">
+            <input
+              type="text"
+              placeholder="What are you looking for?"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="bg-gray-100 text-sm px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400"
+            />
+            <FiSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+          </div>
+
+          {/* Wishlist & Cart Icons */}
+          <FiHeart className="text-xl cursor-pointer hover:text-gray-700" />
+                    {/* Phone & Cart Icons - Aligned Properly */}
+                    <li className="flex items-center space-x-4">
+            {/* <PhoneBtn /> */}
             <CartNavbar />
           </li>
+        </div>
         </ul>
 
         {/* Mobile Navigation */}

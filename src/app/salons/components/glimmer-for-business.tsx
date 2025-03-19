@@ -9,14 +9,14 @@ const GlimmerForBusiness = () => {
 				{/* Heading */}
 				<div className="mb-4 text-left">
 					<h1 className="font-bold text-4xl text-black sm:text-5xl">
-						Glimmer for Business
+						SalonSphere for Business
 					</h1>
 				</div>
 
 				{/* Subtitle */}
 				<div className="mb-4 max-w-md text-left">
 					<p className="text-gray-600 text-lg sm:text-xl">
-						Join Glimmer to showcase your services and attract more clients
+						Join SalonSphere to showcase your services and attract more clients
 						effortlessly.
 					</p>
 				</div>

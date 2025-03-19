@@ -90,7 +90,7 @@ const Cart = () => {
 											<td>
 												<div className="flex items-center">
 													<button
-														className="btn btn-sm"
+														className="btn btn-sm btn-base-100"
 														onClick={() => updateQuantity(item.id, -1)}
 														disabled={item.quantity <= 1}
 														aria-label="Decrease quantity"
@@ -99,7 +99,7 @@ const Cart = () => {
 													</button>
 													<span className="mx-2" aria-label="Quantity">{item.quantity}</span>
 													<button
-														className="btn btn-sm"
+														className="btn btn-sm btn-base-100"
 														onClick={() => updateQuantity(item.id, 1)}
 														disabled={item.quantity >= 10}
 														aria-label="Increase quantity"
@@ -110,7 +110,7 @@ const Cart = () => {
 											</td>
 											<td>
 												<button
-													className="btn btn-sm btn-error"
+													className="btn btn-sm btn-primary"
 													onClick={() => removeItem(item.id)}
 												>
 													<span role="img" aria-label="remove">

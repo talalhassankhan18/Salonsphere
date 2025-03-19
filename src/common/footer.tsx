@@ -23,10 +23,10 @@ const Footer = () => {
 				<div className="col-span-3 text-white md:col-span-1">
 					<img src={Logo.src} alt="logo" className="h-[50px]" />
 					<p className="max-w-md text-sm md:text-base">
-						Glimmer is a one-stop platform for beauty enthusiasts, offering easy
+						SalonSphere is a one-stop platform for beauty enthusiasts, offering easy
 						salon bookings and a curated selection of self-care products. We
 						partner with top beauty brands to bring you quality products and
-						services, all in one place. Let your beauty shine with Glimmer!
+						services, all in one place. Let your beauty shine with SalonSphere!
 					</p>
 				</div>
 			</aside>
@@ -113,12 +113,12 @@ const Footer = () => {
 				<h2 className="mt-3 font-bold text-2xl text-white">Contact us</h2>
 				<div className="flex flex-row items-center opacity-90 transition-all duration-100 ease-in-out hover:text-white hover:opacity-100">
 					<Link
-						href="https://wa.me/0331-2062376"
+						href="https://wa.me/03192590810"
 						target="_blank"
 						className="flex items-center"
 					>
 						<FaWhatsapp aria-hidden="true" className="mr-1" />
-						<p>0331-2062376</p>
+						<p>0319-2590810</p>
 					</Link>
 				</div>
 				<div className="flex flex-row items-center opacity-90 transition-all duration-100 ease-in-out hover:text-white hover:opacity-100">
@@ -128,7 +128,7 @@ const Footer = () => {
 						className="flex items-center"
 					>
 						<FaEnvelope aria-hidden="true" className="mr-1 " />
-						<p>info@glimmer.com.pk</p>
+						<p>info@SalonSphere.com.pk</p>
 					</Link>
 				</div>
 			</nav>

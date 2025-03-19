@@ -1,7 +1,7 @@
 "use client";
 import * as React from "react";
-import BottomSliderImg1 from "@/assets/images/bottom-slider-img-1.webp";
-import BottomSliderImg12 from "@/assets/images/bottom-slider-img-2.webp";
+import BottomSliderImg1 from "@/assets/images/bottom-slider-img-1.png";
+import BottomSliderImg12 from "@/assets/images/bottom-slider-img-1.jpg";
 import AutoSlider from "@/common/auto-slider";
 type Props = {
 	srcs?: string[];

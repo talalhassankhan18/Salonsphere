@@ -11,29 +11,29 @@ const FakeReview = ({
 	return (
 		<div
 			className={cn(
-				"prose flex flex-col justify-between rounded-lg p-4",
+				"flex flex-col justify-between rounded-2xl border border-secondary bg-white p-5 shadow-md hover:shadow-lg transition-all duration-300",
 				className,
 			)}
 		>
-			<div>
-				<div className="mb-2 flex">
+			<div className="space-y-2">
+				<div className="flex flex-wrap">
 					{[...Array(review.stars)].map((_, index) => (
-						<FaStar key={index} className="mr-3 size-5 text-primary" />
+						<FaStar key={index} className="mr-1 text-primary size-5" />
 					))}
 				</div>
-				<h2 className="m-0 mb-2">{review.title}</h2>
-				<p className="m-0 mb-4">{review.description}</p>
+				<h2 className="text-lg font-semibold text-secondary">{review.title}</h2>
+				<p className="text-gray-600 text-sm leading-relaxed">{review.description}</p>
 			</div>
-			<div className="flex gap-4">
+			<div className="mt-4 flex items-center gap-3">
 				<img
 					src={review.image}
 					alt="Reviewer"
-					className="m-0 h-[50px] w-[50px] rounded-full"
+					className="h-12 w-12 rounded-full border border-gray-300 shadow-sm"
 				/>
 
 				<div>
-					<p className="m-0 font-bold">{review.name}</p>
-					<p className="m-0 text-sm">{review.city}</p>
+					<p className="text-base font-bold text-secondary">{review.name}</p>
+					<p className="text-sm text-gray-500">{review.city}</p>
 				</div>
 			</div>
 		</div>
