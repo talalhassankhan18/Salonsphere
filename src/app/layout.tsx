@@ -28,13 +28,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" data-theme="light">
+    <html lang="en" data-theme="light" title="SalonSphere">
       <body
         className={`${poppinsRegular.variable} ${poppinsBold.variable} container mx-auto bg-base-100 antialiased`}
       >
-        <CartStoreProvider>  
-          <Providers>  
-            {children}  
+        <CartStoreProvider>
+          <Providers>
+            {children}
             <ToastComponent />
             <CookieBanner />
           </Providers>

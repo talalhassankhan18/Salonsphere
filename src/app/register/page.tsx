@@ -6,15 +6,30 @@ import Link from "next/link";
 import Image from "next/image";
 import GetStartedImage from "@/assets/images/getstarted.jpg";
 import { createUser } from "@/app/register/actions"; // Ensure this import is correct
-import { FaUser, FaLock, FaEnvelope, FaEye, FaEyeSlash, FaArrowLeft, FaGlobe, FaHeadset } from "react-icons/fa";
-import { useAuth } from "@/app/context/AuthContext";  // Import useAuth
+import {
+  FaUser,
+  FaLock,
+  FaEnvelope,
+  FaEye,
+  FaEyeSlash,
+  FaArrowLeft,
+  FaGlobe,
+  FaHeadset,
+} from "react-icons/fa";
+import { useAuth } from "@/app/context/AuthContext"; // Import useAuth
 import Logo from "@/assets/images/logo.png";
 
-const validDomains = ["gmail.com", "outlook.com", "yahoo.com", "icloud.com", "hotmail.com"];
+const validDomains = [
+  "gmail.com",
+  "outlook.com",
+  "yahoo.com",
+  "icloud.com",
+  "hotmail.com",
+];
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { email, setEmail } = useAuth();  // Using Context API
+  const { email, setEmail } = useAuth(); // Using Context API
 
   const [formData, setFormData] = useState({
     email: "",
@@ -41,7 +56,8 @@ export default function RegisterPage() {
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    if (!emailRegex.test(email)) return "Invalid email format (e.g., example@domain.com)";
+    if (!emailRegex.test(email))
+      return "Invalid email format (e.g., example@domain.com)";
 
     const domain = email.split("@")[1];
     if (!validDomains.includes(domain)) {
@@ -85,11 +101,9 @@ export default function RegisterPage() {
 
       const response = await createUser({}, formData);
       if (response.success) {
-        setEmail(formData.email);  // Store email in context
-        router.push("/VendorVerification");  // Redirect to next form
-      }
-
-      else {
+        setEmail(formData.email); // Store email in context
+        router.push("/order-tracking"); // Redirect to next form
+      } else {
         setError(response.message);
       }
     } catch (error) {
@@ -102,7 +116,12 @@ export default function RegisterPage() {
     <div className="relative flex min-h-screen bg-base-100">
       {/* Background Image for Mobile */}
       <div className="absolute inset-0 w-full h-full md:hidden">
-        <Image src={GetStartedImage} alt="Background" fill className="object-cover" />
+        <Image
+          src={GetStartedImage}
+          alt="Background"
+          fill
+          className="object-cover"
+        />
         <div className="absolute inset-0 bg-black/40"></div>
       </div>
 
@@ -110,13 +129,17 @@ export default function RegisterPage() {
       <div className="relative flex w-full flex-col md:flex-row-reverse">
         {/* Right Half - Background Image (Hidden on Mobile) */}
         <div className="hidden md:block md:w-1/2 relative">
-          <Image src={GetStartedImage} alt="Background" fill className="object-cover" />
+          <Image
+            src={GetStartedImage}
+            alt="Background"
+            fill
+            className="object-cover"
+          />
           <div className="absolute inset-0 bg-black/40"></div>
         </div>
 
         {/* Left Half - Registration Form (Now Centered on All Screens) */}
         <div className="relative w-full md:w-1/2 flex justify-center items-center px-6 sm:px-8 md:px-12 lg:px-16 min-h-screen">
-
           {/* Back Button */}
           <div className="absolute top-2 left-2 sm:top-4 sm:left-4 z-50">
             <button
@@ -130,18 +153,22 @@ export default function RegisterPage() {
 
           {/* Form Card */}
           <div className="bg-white/90 shadow-lg border border-gray-200 rounded-xl p-6 w-full max-w-xs sm:max-w-sm md:max-w-md backdrop-blur-md transform transition-all duration-300 hover:shadow-xl flex flex-col items-center">
-
             {/* Logo Centered */}
             <div className="mb-4">
               <Image src={Logo} alt="Logo" width={200} height={200} />
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-3 text-center">Create an Account</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-3 text-center">
+              Create an Account
+            </h1>
             <p className="text-gray-500 mb-5 text-center text-sm sm:text-base">
               Sign up to manage your business effortlessly.
             </p>
 
-            <form onSubmit={handleSubmit} className="w-full space-y-3 sm:space-y-4">
+            <form
+              onSubmit={handleSubmit}
+              className="w-full space-y-3 sm:space-y-4"
+            >
               <div className="relative">
                 <FaEnvelope className="absolute left-3 top-3 text-gray-500 sm:left-4 sm:top-4" />
                 <input
@@ -198,7 +225,12 @@ export default function RegisterPage() {
                   type="checkbox"
                   name="agreeToTerms"
                   checked={formData.agreeToTerms === "on"}
-                  onChange={(e) => setFormData({ ...formData, agreeToTerms: e.target.checked ? "on" : "off" })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      agreeToTerms: e.target.checked ? "on" : "off",
+                    })
+                  }
                   className="mr-2"
                 />
                 <label htmlFor="agreeToTerms" className="text-gray-600">
@@ -206,8 +238,12 @@ export default function RegisterPage() {
                 </label>
               </div>
 
-              {error && <p className="text-red-500 text-xs sm:text-sm">{error}</p>}
-              {success && <p className="text-green-600 text-xs sm:text-sm">{success}</p>}
+              {error && (
+                <p className="text-red-500 text-xs sm:text-sm">{error}</p>
+              )}
+              {success && (
+                <p className="text-green-600 text-xs sm:text-sm">{success}</p>
+              )}
 
               <button
                 type="submit"
@@ -240,5 +276,4 @@ export default function RegisterPage() {
       </div>
     </div>
   );
-
-}  
+}

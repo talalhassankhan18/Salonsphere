@@ -6,7 +6,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { loginUser } from "./actions";
 import GetStartedImage from "@/assets/images/getstarted.jpg";
-import { FaEnvelope, FaLock, FaEye, FaEyeSlash, FaGlobe, FaHeadset } from "react-icons/fa";
+import {
+  FaEnvelope,
+  FaLock,
+  FaEye,
+  FaEyeSlash,
+  FaGlobe,
+  FaHeadset,
+} from "react-icons/fa";
 import Logo from "@/assets/images/logo.png";
 
 export default function LoginPage() {
@@ -36,7 +43,7 @@ export default function LoginPage() {
       const response = await loginUser({}, formData);
 
       if (response.success) {
-        router.push("/Salondashboard");
+        router.push("/order-tracking");
       } else {
         setError(response.message);
       }
@@ -51,7 +58,12 @@ export default function LoginPage() {
     <div className="relative flex min-h-screen bg-base-100">
       {/* Background Image for Mobile */}
       <div className="absolute inset-0 w-full h-full md:hidden">
-        <Image src={GetStartedImage} alt="Background" fill className="object-cover" />
+        <Image
+          src={GetStartedImage}
+          alt="Background"
+          fill
+          className="object-cover"
+        />
         <div className="absolute inset-0 bg-black/40"></div>
       </div>
 
@@ -59,7 +71,12 @@ export default function LoginPage() {
       <div className="relative flex w-full flex-col md:flex-row-reverse">
         {/* Right Half - Background Image (Hidden on Mobile) */}
         <div className="hidden md:block md:w-1/2 relative">
-          <Image src={GetStartedImage} alt="Background" fill className="object-cover" />
+          <Image
+            src={GetStartedImage}
+            alt="Background"
+            fill
+            className="object-cover"
+          />
           <div className="absolute inset-0 bg-black/40"></div>
         </div>
 
@@ -82,10 +99,17 @@ export default function LoginPage() {
               <Image src={Logo} alt="Logo" width={200} height={200} />
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-3 text-center">Welcome Back</h1>
-            <p className="text-gray-500 mb-5 text-center text-sm sm:text-base">Sign in to continue</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-3 text-center">
+              Welcome Back
+            </h1>
+            <p className="text-gray-500 mb-5 text-center text-sm sm:text-base">
+              Sign in to continue
+            </p>
 
-            <form onSubmit={handleSubmit} className="w-full space-y-3 sm:space-y-4">
+            <form
+              onSubmit={handleSubmit}
+              className="w-full space-y-3 sm:space-y-4"
+            >
               <div className="relative">
                 <FaEnvelope className="absolute left-3 top-3 text-gray-500 sm:left-4 sm:top-4" />
                 <input
@@ -117,7 +141,9 @@ export default function LoginPage() {
                 </button>
               </div>
 
-              {error && <p className="text-red-500 text-xs sm:text-sm">{error}</p>}
+              {error && (
+                <p className="text-red-500 text-xs sm:text-sm">{error}</p>
+              )}
 
               <button
                 type="submit"
@@ -126,11 +152,14 @@ export default function LoginPage() {
               >
                 {loading ? "Processing..." : "Log In"}
               </button>
-              
+
               {/* Sign Up Link */}
               <p className="mt-4 text-gray-600 text-sm text-center">
-                Don't have an account? {" "}
-                <Link href="/register" className="text-blue-600 hover:underline">
+                Don't have an account?{" "}
+                <Link
+                  href="/register"
+                  className="text-blue-600 hover:underline"
+                >
                   Sign up
                 </Link>
               </p>
@@ -152,4 +181,4 @@ export default function LoginPage() {
       </div>
     </div>
   );
-}  
+}

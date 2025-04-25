@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "composite": true,
+    "baseUrl": ".",
     "target": "ES2017",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
@@ -20,8 +22,23 @@
     ],
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+    "noImplicitAny": false,
+    "noUnusedParameters": false,
+    "noUnusedLocals": false,
+    "strictNullChecks": false
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/app/signup"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "src/app/signup",
+    "./tsconfig.app.json",
+    "./tsconfig.node.json",
+    "src/app/Booking/App.jsx",
+    "src/app/Booking/App.jsx",
+    "src/app/Superadmin/App.jsx"
+  ],
   "exclude": ["node_modules"]
 }
