@@ -32,13 +32,13 @@ export default function RootLayout({
       <body
         className={`${poppinsRegular.variable} ${poppinsBold.variable} container mx-auto bg-base-100 antialiased`}
       >
-        <Providers>
-          <CartStoreProvider>  
+        <CartStoreProvider>  
+          <Providers>  
             {children}  
             <ToastComponent />
             <CookieBanner />
-          </CartStoreProvider>
-        </Providers>
+          </Providers>
+        </CartStoreProvider>
       </body>
     </html>
   );

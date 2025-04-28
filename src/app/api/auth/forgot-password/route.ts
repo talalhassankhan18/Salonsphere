@@ -1,28 +1,55 @@
-import { NextRequest, NextResponse } from 'next/server';
-import crypto from 'crypto';
-import User from '@/mongoose-models/User';
-import dbConnect from '@/dbConnect';
-import { sendPasswordResetEmail } from '@/lib/emailService';
+import { NextResponse } from "next/server";
+import dbConnect from "@/dbConnect";
+import Salon from "@/mongoose-models/Salon";
+import { sendPasswordResetEmail } from "@/lib/email/emailService";
 
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   await dbConnect();
-  const { email } = await req.json();
 
   try {
-    const user = await User.findOne({ email });
-    if (!user) {
-      return NextResponse.json({ message: 'If an account exists, a reset link will be sent' }, { status: 200 });
+    const { email } = await req.json();
+    if (!email) {
+      return NextResponse.json({ error: "Email is required" }, { status: 400 });
     }
 
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    user.resetToken = resetToken;
-    user.resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
-    await user.save();
+    const salon = await Salon.findOne({ email: email.toLowerCase() });
+    if (!salon) {
+      // Don't reveal email non-existence for security
+      return NextResponse.json(
+        { success: true, message: "If the email exists, a reset link has been sent" },
+        { status: 200 }
+      );
+    }
 
-    await sendPasswordResetEmail(email, resetToken);
+    // Generate reset token
+    const resetToken = Math.random().toString(36).slice(2);
+    const expires = new Date(Date.now() + 3600000); // 1 hour
 
-    return NextResponse.json({ message: 'If an account exists, a reset link will be sent' }, { status: 200 });
-  } catch (error) {
-    return NextResponse.json({ message: 'Failed to process request' }, { status: 500 });
+    // Save token and expiry
+    await Salon.updateOne(
+      { email: email.toLowerCase() },
+      {
+        verificationCode: resetToken,
+        verificationCodeExpires: expires,
+      }
+    );
+
+    // Send reset email
+    await sendPasswordResetEmail({
+      to: email,
+      name: salon.name || "User", // Fallback to "User" if name is missing
+      resetToken,
+    });
+
+    return NextResponse.json(
+      { success: true, message: "If the email exists, a reset link has been sent" },
+      { status: 200 }
+    );
+  } catch (error: any) {
+    console.error("Forgot password error:", error);
+    return NextResponse.json(
+      { error: "Failed to process request" },
+      { status: 500 }
+    );
   }
 }

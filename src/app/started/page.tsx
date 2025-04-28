@@ -77,7 +77,7 @@ export default function GetStartedPage() {
           {/* Professionals Option */}
           <div className="w-full mb-4 md:mb-6">
             <Link
-              href="/register"
+              href="/salon/login"
               className="w-full flex items-center justify-between p-4 md:p-8 border border-neutral rounded-lg shadow-sm transition-all duration-200 
                         hover:shadow-lg hover:bg-primary hover:text-primary-content group bg-white md:bg-transparent"
             >

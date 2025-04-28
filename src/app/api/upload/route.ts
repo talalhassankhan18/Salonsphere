@@ -1,48 +1,17 @@
-import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
-import { existsSync } from "fs";
+import { NextResponse } from "next/server";
 
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: "10mb", // Increase size limit to 10MB
-    },
-  },
-};
-
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   try {
-    // Parse form data
-    const body = await req.formData();
-    const file = body.get("file") as File;
-
+    // Mock response (replace with actual file upload logic, e.g., Cloudinary)
+    const formData = await req.formData();
+    const file = formData.get("file");
     if (!file) {
       return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
     }
-
-    // Validate file size (max 10MB)
-    const MAX_SIZE = 10 * 1024 * 1024; // 10MB
-    if (file.size > MAX_SIZE) {
-      return NextResponse.json({ error: "File size exceeds 10MB" }, { status: 400 });
-    }
-
-    // Define upload path
-    const uploadDir = path.join(process.cwd(), "public/uploads");
-    if (!existsSync(uploadDir)) {
-      await mkdir(uploadDir, { recursive: true });
-    }
-
-    const filePath = path.join(uploadDir, file.name);
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
-    // Save file
-    await writeFile(filePath, buffer);
-
-    return NextResponse.json({ message: "File uploaded successfully", url: `/uploads/${file.name}` });
-  } catch (error) {
-    console.error("Upload error:", error);
+    // Simulate uploaded URL
+    return NextResponse.json({ url: `https://example.com/uploads/${Date.now()}.jpg` });
+  } catch (error: any) {
+    console.error("Upload error:", error.message);
     return NextResponse.json({ error: "Upload failed" }, { status: 500 });
   }
 }

@@ -1,50 +1,36 @@
-// types/next-auth.d.ts
-import { DefaultSession, DefaultUser } from "next-auth";
-import { JWT } from "next-auth/jwt";
+import { DefaultSession } from "next-auth";
 
 declare module "next-auth" {
-  interface User extends DefaultUser {
+  interface User {
     id: string;
-    _id: string;
-    name: string;
     email: string;
-    role: "admin" | "salon_admin" | "customer" | "super_admin" | "salonOwner";
-    registrationStatus: "started" | "completed";
-    emailVerified: boolean | null;
-    salon?: string;
+    name?: string | null;
+    username?: string | null;
+    role: "admin" | "salon_admin" | "customer" | "super_admin";
+    authMethod: string;
+    image?: string | null;
   }
 
-  interface Session extends DefaultSession {
+  interface Session {
     user: {
       id: string;
-      _id: string;
-      name: string;
       email: string;
-      role: "admin" | "salon_admin" | "customer" | "super_admin" | "salonOwner";
-      registrationStatus: "started" | "completed";
-      emailVerified: boolean | null;
-      salon?: string;
-    };
+      name?: string | null;
+      username?: string | null;
+      role: "admin" | "salon_admin" | "customer" | "super_admin";
+      authMethod: string;
+      image?: string | null;
+    } & DefaultSession["user"];
   }
 }
 
-
-declare module "next-auth" {
-  interface Session {
-    user: CustomUser;
-  }
-
-  interface User extends CustomUser {}
-}
 declare module "next-auth/jwt" {
   interface JWT {
     id: string;
-    _id: string;
-    name: string;
     email: string;
-    role: "admin" | "salon_admin" | "customer" | "super_admin" | "salonOwner";
-    registrationStatus: "started" | "completed";
-    emailVerified: boolean | null;
-    salon?: string;
+    name?: string | null;
+    username?: string | null;
+    role: "admin" | "salon_admin" | "customer" | "super_admin";
+    authMethod: string;
   }
 }

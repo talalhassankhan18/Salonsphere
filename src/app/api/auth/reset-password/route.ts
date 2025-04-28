@@ -1,29 +1,55 @@
-import { NextRequest, NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
-import User from '@/mongoose-models/User';
-import dbConnect from '@/dbConnect';
+import { NextResponse } from "next/server";
+import dbConnect from "@/dbConnect";
+import Salon from "@/mongoose-models/Salon";
+import { hash } from "bcryptjs";
 
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   await dbConnect();
-  const { token, password } = await req.json();
-
-  if (!token || !password) {
-    return NextResponse.json({ message: 'Token and password are required' }, { status: 400 });
-  }
 
   try {
-    const user = await User.findOne({ resetToken: token, resetTokenExpiry: { $gt: new Date() } });
-    if (!user) {
-      return NextResponse.json({ message: 'Invalid or expired reset token' }, { status: 400 });
+    const { token, password } = await req.json();
+
+    if (!token || !password) {
+      return NextResponse.json(
+        { error: "Token and new password are required" },
+        { status: 400 }
+      );
     }
 
-    user.password = await bcrypt.hash(password, 10);
-    user.resetToken = undefined;
-    user.resetTokenExpiry = undefined;
-    await user.save();
+    const salon = await Salon.findOne({
+      verificationCode: token,
+      verificationCodeExpires: { $gt: new Date() },
+    });
 
-    return NextResponse.json({ message: 'Password reset successfully' }, { status: 200 });
+    if (!salon) {
+      console.log("No salon found for token:", token);
+      return NextResponse.json(
+        { error: "Invalid or expired token" },
+        { status: 400 }
+      );
+    }
+
+    // Hash the password before saving
+    const saltRounds = 10;
+    const hashedPassword = await hash(password, saltRounds);
+    console.log("Hashed password:", hashedPassword);
+
+    // Update password and clear token
+    salon.password = hashedPassword;
+    salon.verificationCode = undefined;
+    salon.verificationCodeExpires = undefined;
+    await salon.save();
+    console.log("Salon saved successfully for email:", salon.email);
+
+    return NextResponse.json(
+      { success: true, message: "Password reset successful" },
+      { status: 200 }
+    );
   } catch (error) {
-    return NextResponse.json({ message: 'Failed to reset password' }, { status: 500 });
+    console.error("Reset password error:", error);
+    return NextResponse.json(
+      { error: "Failed to reset password" },
+      { status: 500 }
+    );
   }
 }

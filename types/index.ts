@@ -9,33 +9,9 @@ export interface ApiResponse<T = any> {
 	token?: string;
 }
 
-// ✅ Register Step 1
-export interface RegisterStep1Data {
-	name: string;
-	email: string;
-	password: string;
-}
 
-export interface RegisterStep1Response {
-	token: string;
-	userId: string;
-}
 
-// ✅ Salon Info
-export interface SalonData {
-	salonName: string;
-	salonAddress: string;
-	salonStreet?: string;
-	salonArea?: string;
-	salonCity?: string;
-	salonProvince?: string;
-	salonZip?: string;
-	salonPhone: string;
-}
 
-export interface RegisterStep2Payload {
-	salonData: SalonData;
-}
 
 // ✅ Selfcare Items
 export interface SelfcareItemsType {

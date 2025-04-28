@@ -1,6 +1,6 @@
 import cron from 'node-cron';
 import User from '../mongoose-models/User';
-import { sendReminderEmail } from '../lib/emailService';
+import { sendReminderEmail } from '../lib/email/emailService';
 import logger from '../lib/logger';
 
 const checkIncompleteRegistrations = async (): Promise<void> => {

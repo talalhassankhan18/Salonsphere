@@ -1,18 +1,34 @@
+export const validatePhone = (phone: string): boolean => {
+  if (!phone) {
+    console.log("Phone validation failed: Empty input"); // Debug log
+    return false;
+  }
+
+  // Remove spaces, dashes, parentheses, and any non-digit/non-+ characters
+  const cleanedPhone = phone.replace(/[^+\d]/g, "");
+
+  // Accept +92, 0, or no prefix followed by 9+ digits
+  const phoneRegex = /^(\+92|0)?\d{9,}$/;
+
+  console.log("Validating phone:", phone, "Cleaned:", cleanedPhone, "Result:", phoneRegex.test(cleanedPhone)); // Debug log
+
+  return phoneRegex.test(cleanedPhone);
+};
+
 export const validateEmail = (email: string): boolean => {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email);
-  };
-  
-  export const validatePhone = (phone: string): boolean => {
-    const re = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/;
-    return re.test(phone);
-  };
-  
-  export const checkPasswordStrength = (password: string): number => {
-    let strength = 0;
-    if (password.length >= 8) strength += 1;
-    if (/[A-Z]/.test(password)) strength += 1;
-    if (/[0-9]/.test(password)) strength += 1;
-    if (/[^A-Za-z0-9]/.test(password)) strength += 1;
-    return strength;
-  };
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+export const validatePassword = (password: string): boolean => {
+  const minLength = 8;
+  const hasUpperCase = /[A-Z]/.test(password);
+  const hasLowerCase = /[a-z]/.test(password);
+  const hasNumber = /\d/.test(password);
+  return password.length >= minLength && hasUpperCase && hasLowerCase && hasNumber;
+};
+
+export const validateUsername = (username: string): boolean => {
+  const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+  return usernameRegex.test(username);
+};
