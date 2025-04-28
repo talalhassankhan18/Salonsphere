@@ -8,7 +8,7 @@ import {
   ReviewType,
   SalonType,
   SelfcareItemsType,
-} from "@/types";
+} from "../../types";
 import salon1 from "@/assets/salons/salon-1.png";
 import salon2 from "@/assets/salons/salon-2.png";
 import salon3 from "@/assets/salons/salon-3.png";

@@ -1,115 +1,132 @@
-"use client";
-import React, { useState, useEffect } from "react";
-import Sidebar from "./Components/sidebar";
-import Profile from "./Components/profile";
-import Portfolio from "./Components/portfolio";
-import Reviews from "./Components/reviews";
-import Settings from "./Components/settings";
-import Appointments from "./Components/appointments";
-import Analytics from "./Components/analytics";
-import Orders from "./Components/orders";
-import Products from "./Components/products";
-import ProductOrders from "./Components/ProductOrders";
-import ServiceOrders from "./Components/ServiceOrders";
-import Navbar from "./Components/navbar";
-import { fetchVendor } from "@/lib/utils";
-import { FaUserCircle } from "react-icons/fa";
-import { useAuth } from "@/app/context/AuthContext";  // Import useAuth
-import { useTheme } from "@/app/Salondashboard/Components/ThemeProvider";
+'use client';
 
-export default function SalonDashboard() {
-  const [activeSection, setActiveSection] = useState("Profile");
-  const [vendor, setVendor] = useState<{ businessName: string; profileImage?: string } | null>(null);
-  const [loading, setLoading] = useState(true);
-  const { theme } = useTheme();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const { email, setEmail } = useAuth();  // Using Context API
+import React, { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import { toast } from 'react-hot-toast';
+
+interface Salon {
+  _id: string;
+  name: string;
+  address: string;
+  city: string;
+  province: string;
+  zip: string;
+  phone: string;
+}
+
+const SalonDashboard: React.FC = () => {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [salon, setSalon] = useState<Salon | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    async function getVendor() {
-      try {
-        const data = await fetchVendor();
-        if (data) {
-          setVendor(data);
-        }
-      } catch (error) {
-        console.error("Error fetching vendor data:", error);
-      } finally {
-        setLoading(false);
+    if (status === 'unauthenticated') {
+      router.push('/Login');
+    } else if (status === 'authenticated' && session?.user) {
+      if (session.user.registrationStatus !== 'completed') {
+        router.push('/register?step=2');
+      } else if (!['salonOwner', 'salon_admin'].includes(session.user.role)) {
+        router.push('/dashboard');
+      } else {
+        fetchSalonData();
       }
     }
-    getVendor();
-  }, []);
+  }, [status, session, router]);
 
-  const renderSection = () => {
-    switch (activeSection) {
-      case "Profile":
-        return <Profile />;
-      case "Portfolio":
-        return <Portfolio />;
-      case "Reviews":
-        return <Reviews />;
-      case "Settings":
-        return <Settings />;
-      case "Appointments":
-        return <Appointments />;
-      case "Analytics":
-        return <Analytics />;
-      case "Orders":
-        return <Orders />;
-      case "Products":
-        return <Products />;
-      case "Product Orders":
-        return <ProductOrders />;
-      case "Service Orders":
-        return <ServiceOrders />;
-      default:
-        return <Profile />;
+  const fetchSalonData = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`/api/salons?userId=${session?.user._id}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch salon data');
+      }
+      const data = await response.json();
+      setSalon(data);
+    } catch (error) {
+      toast.error('Failed to load salon data. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  if (status === 'loading' || isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!session?.user) {
+    return null;
+  }
+
   return (
-    <div className="flex h-screen bg-base-100 text-base-content transition-all duration-300">
-      {/* Sidebar */}
-      <Sidebar
-        setActiveSection={setActiveSection}
-        activeSection={activeSection}
-        isOpen={isSidebarOpen}
-        setIsOpen={setIsSidebarOpen}
-      />
-
-      {/* Main Content - Ensuring Scrollbar is on the Right Side */}
-      <div className="flex-1 flex flex-col md:ml-64 pt-20 h-screen overflow-hidden">
-        {/* Navbar */}
-        <Navbar toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
-
-        {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto pr-4 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
-          {/* Header */}
-          <header
-            className="flex justify-between items-center p-6 rounded-lg shadow-lg transition-all 
-              bg-gradient-to-r from-primary to-accent text-primary-content"
-          >
-            <h1 className="text-2xl font-bold">
-              {loading ? "Loading..." : `Welcome, ${email || "Admin"}!`}
-            </h1>
-            <div className="flex items-center gap-4">
-              {vendor?.profileImage ? (
-                <img
-                  src={vendor.profileImage}
-                  alt="Shop Logo"
-                  className="w-14 h-14 rounded-full border-2 border-white shadow-lg"
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div className="px-4 py-6 sm:px-0">
+          <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+            <div className="px-4 py-5 sm:px-6">
+              <div className="flex items-center">
+                <Image
+                  src="/assets/images/logo.png"
+                  alt="SalonSphere Logo"
+                  width={50}
+                  height={50}
+                  className="rounded-full mr-4"
                 />
-              ) : (
-                <FaUserCircle className="text-4xl" />
-              )}
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">
+                    Welcome, {session.user.name}!
+                  </h1>
+                  <p className="mt-1 text-sm text-gray-600">
+                    Manage your salon operations with ease
+                  </p>
+                </div>
+              </div>
             </div>
-          </header>
-
-          {/* Main Content */}
-          <div className="mt-6 p-6 bg-base-200 shadow-lg rounded-lg">{renderSection()}</div>
+            <div className="border-t border-gray-200">
+              <dl>
+                {salon ? (
+                  <>
+                    <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                      <dt className="text-sm font-medium text-gray-500">Salon Name</dt>
+                      <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                        {salon.name}
+                      </dd>
+                    </div>
+                    <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                      <dt className="text-sm font-medium text-gray-500">Address</dt>
+                      <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                        {salon.address}, {salon.city}, {salon.province} {salon.zip}
+                      </dd>
+                    </div>
+                    <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                      <dt className="text-sm font-medium text-gray-500">Phone</dt>
+                      <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                        {salon.phone}
+                      </dd>
+                    </div>
+                  </>
+                ) : (
+                  <div className="px-4 py-5 sm:px-6">
+                    <p className="text-sm text-gray-600">
+                      No salon information available.
+                    </p>
+                  </div>
+                )}
+              </dl>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default SalonDashboard;

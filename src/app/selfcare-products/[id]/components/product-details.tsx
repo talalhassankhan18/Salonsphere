@@ -1,7 +1,7 @@
 "use client";
 import { mapProductToCartItem } from "@/store/cartStore";
 import { useCartStoreContext } from "@/store/cartStoreContext";
-import { CartItem } from "@/types";
+import { CartItem } from "../../../../../types";
 import React, { useState } from "react";
 import HotDeals from "./Hot-deals";
 import toast from "react-hot-toast";

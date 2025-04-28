@@ -1,65 +1,68 @@
-// dbConnect.ts
-import mongoose from "mongoose";
+import mongoose, { ConnectOptions } from 'mongoose';
+
+interface CachedMongoose {
+  conn: typeof mongoose | null;
+  promise: Promise<typeof mongoose> | null;
+}
 
 declare global {
-  namespace NodeJS {
-    interface Global {
-      mongoose: {
-        conn: mongoose.Connection | null;
-        promise: Promise<mongoose.Connection> | null;
-      };
-    }
-  }
+  // eslint-disable-next-line no-var
+  var mongoose: CachedMongoose;
 }
 
-if (!global.mongoose) {
-  global.mongoose = { conn: null, promise: null };
-}
+const MONGODB_URI = process.env.MONGODB_URI as string | undefined;
+const DB_NAME = process.env.DB_NAME as string | undefined;
 
-const MONGODB_URI = process.env.MONGODB_URI ?? '';
-const DB_NAME = process.env.DB_NAME ?? '';
-const PORT = process.env.PORT ?? '';
-
+// Validate environment variables
 if (!MONGODB_URI) {
-  throw new Error("Please define the MONGODB_URI environment variable inside .env.local");
+  throw new Error('MONGODB_URI environment variable is not defined');
 }
 
-const fullUri = `${MONGODB_URI}:${PORT}/${DB_NAME}`; // Full URI including port and database name
+if (!DB_NAME) {
+  throw new Error('DB_NAME environment variable is not defined');
+}
 
-async function dbConnect() {
-  if (global.mongoose.conn) {
-    console.log("Reusing existing MongoDB connection");
-    return global.mongoose.conn;
+// Type assertion is safe here because we validated above
+const validatedMONGODB_URI: string = MONGODB_URI;
+const validatedDB_NAME: string = DB_NAME;
+
+let cached = global.mongoose;
+
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
+}
+
+async function dbConnect(): Promise<typeof mongoose> {
+  if (cached.conn) {
+    return cached.conn;
   }
 
-  if (!global.mongoose.promise) {
-    const opts = {
+  if (!cached.promise) {
+    const opts: ConnectOptions = {
+      dbName: validatedDB_NAME,
       bufferCommands: false,
-      useNewUrlParser: true, 
-      useUnifiedTopology: true 
+      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
     };
 
-    global.mongoose.promise = mongoose
-      .connect(fullUri, opts) // Use the full URI
-      .then((mongoose) => {
-        console.log("New MongoDB connection established");
-        return mongoose.connection;
-      })
-      .catch((error) => {
-        console.error("Failed to connect to MongoDB", error);
-        global.mongoose.promise = null; // Reset the promise so future calls can try again
-        throw error;
-      });
+    console.log(`Connecting to MongoDB at ${validatedMONGODB_URI} with dbName: ${validatedDB_NAME}`);
+    cached.promise = mongoose.connect(validatedMONGODB_URI, opts).then((mongooseInstance) => {
+      console.log('MongoDB connected successfully');
+      return mongooseInstance;
+    });
   }
 
   try {
-    global.mongoose.conn = await global.mongoose.promise;
+    cached.conn = await cached.promise;
   } catch (error) {
-    console.error("Error waiting for MongoDB connection", error);
-    throw error;
+    cached.promise = null;
+    const err = error as Error; // Type assertion for catch block
+    console.error('MongoDB connection error:', err.message);
+    throw new Error(`Failed to connect to MongoDB: ${err.message}`);
   }
 
-  return global.mongoose.conn;
+  return cached.conn;
 }
 
 export default dbConnect;

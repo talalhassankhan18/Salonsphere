@@ -1,43 +1,176 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-:root {
-	/* light theme consts */
-	/* --background: #ffffff;
-  --foreground: #171717; */
+
+@layer base {
+  :root {
+    /* Light theme */
+    --background: 0 0% 100%; /* base-100: #FFFFFF */
+    --foreground: 0 0% 12.2%; /* base-content: #1F1F1F */
+
+    --card: 0 0% 100%; /* base-100: #FFFFFF */
+    --card-foreground: 0 0% 12.2%; /* base-content: #1F1F1F */
+
+    --popover: 0 0% 100%; /* base-100: #FFFFFF */
+    --popover-foreground: 0 0% 12.2%; /* base-content: #1F1F1F */
+
+    --primary: 335 100% 35.3%; /* primary: #B4004E */
+    --primary-foreground: 0 0% 100%; /* primary-content: #FFFFFF */
+
+    --secondary: 0 2.6% 12.5%; /* secondary: #231F20 */
+    --secondary-foreground: 0 0% 100%; /* secondary-content: #FFFFFF */
+
+    --muted: 0 0% 95.3%; /* base-200: #F3F3F3 */
+    --muted-foreground: 0 0% 29%; /* neutral: #4A4A4A */
+
+    --accent: 36 56.3% 65.1%; /* accent: #D5AA68 */
+    --accent-foreground: 0 0% 10.2%; /* accent-content: #1A1A1A */
+
+    --destructive: 354 42.9% 56.1%; /* error: #BF616A */
+    --destructive-foreground: 0 100% 12%; /* error-content: #3D0000 */
+
+    --border: 0 0% 91.8%; /* base-300: #EAEAEA */
+    --input: 0 0% 91.8%; /* base-300: #EAEAEA */
+    --ring: 335 100% 35.3%; /* primary: #B4004E */
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 100%; /* base-100: #FFFFFF */
+    --sidebar-foreground: 0 0% 12.2%; /* base-content: #1F1F1F */
+    --sidebar-primary: 335 100% 35.3%; /* primary: #B4004E */
+    --sidebar-primary-foreground: 0 0% 100%; /* primary-content: #FFFFFF */
+    --sidebar-accent: 36 56.3% 65.1%; /* accent: #D5AA68 */
+    --sidebar-accent-foreground: 0 0% 10.2%; /* accent-content: #1A1A1A */
+    --sidebar-border: 0 0% 91.8%; /* base-300: #EAEAEA */
+    --sidebar-ring: 335 100% 35.3%; /* primary: #B4004E */
+
+    /* Additional colors from your scheme */
+    --info: 193 53.8% 68.2%; /* info: #88C0D0 */
+    --info-foreground: 195 100% 13.3%; /* info-content: #003344 */
+    --success: 92 29.8% 64.3%; /* success: #A3BE8C */
+    --success-foreground: 120 100% 8.2%; /* success-content: #002A00 */
+    --warning: 41 71.4% 72.5%; /* warning: #EBCB8B */
+    --warning-foreground: 60 100% 11.4%; /* warning-content: #3A3A00 */
+    --error: 354 42.9% 56.1%; /* error: #BF616A */
+    --error-foreground: 0 100% 12%; /* error-content: #3D0000 */
+    --neutral: 0 0% 29%; /* neutral: #4A4A4A */
+    --neutral-foreground: 0 0% 100%; /* neutral-content: #FFFFFF */
+    --base-200: 0 0% 95.3%; /* base-200: #F3F3F3 */
+    --base-300: 0 0% 91.8%; /* base-300: #EAEAEA */
 }
+  .dark {
+    /* Dark theme */
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
 
-@media (prefers-color-scheme: dark) {
-	/* dark theme consts */
-	:root {
-		/* --background: #0a0a0a;
-    --foreground: #ededed; */
-	}
-}
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
 
-body {
-	color: var(--foreground);
-	background: var(--background);
-	font-family: "Poppins", sans-serif;
-}
-  
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
 
-/* .swiper-button-next::before,
-.swiper-button-next::after,
-.swiper-button-prev::before,
-.swiper-button-prev::after {
-	display: none;
-} */
+    --primary: 327 83% 53.3%;
+    --primary-foreground: 222.2 47.4% 11.2%;
 
-.no-scrollbar {
-	scrollbar-width: none; /* For Firefox */
-	-ms-overflow-style: none; /* For Internet Explorer and Edge */
-}
+    --secondary: 327 47.4% 11.2%;
+    --secondary-foreground: 327 40% 96.1%;
 
-.no-scrollbar::-webkit-scrollbar {
-	display: none; /* For Chrome, Safari, and Opera */
-}
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
 
-.placeholder-center::placeholder {
-	text-align: center;
+    --accent: 327 47.4% 11.2%;
+    --accent-foreground: 327 40% 96.1%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 327 83% 53.3%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    color: var(--foreground);
+    background: var(--background);
+    font-family: "Inter", "Poppins", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Glass morphism */
+  .glass {
+    @apply bg-white/60 dark:bg-black/60 backdrop-blur-lg border border-white/20 dark:border-black/20 shadow-glass;
+  }
+
+  /* Transition classes */
+  .page-transition-enter {
+    @apply opacity-0;
+  }
+
+  .page-transition-enter-active {
+    @apply opacity-100 transition-opacity duration-300;
+  }
+
+  .page-transition-exit {
+    @apply opacity-100;
+  }
+
+  .page-transition-exit-active {
+    @apply opacity-0 transition-opacity duration-300;
+  }
+
+  /* Dashboard layout */
+  .dashboard-layout {
+    @apply flex min-h-screen bg-background;
+  }
+
+  .dashboard-content {
+    @apply flex-1 p-6 md:p-8 overflow-auto;
+  }
+
+  /* Cards */
+  .stats-card {
+    @apply glass rounded-xl p-6 transition-all duration-300 hover:shadow-lg;
+  }
+
+  /* Hover effects */
+  .hover-lift {
+    @apply transition-transform duration-300 hover:-translate-y-1;
+  }
+
+  /* Buttons */
+  .btn-primary {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg px-4 py-2 transition-all duration-300;
+  }
+
+  .btn-secondary {
+    @apply bg-secondary text-secondary-foreground hover:bg-secondary/90 rounded-lg px-4 py-2 transition-all duration-300;
+  }
+
+  .btn-outline {
+    @apply border border-input bg-transparent hover:bg-accent hover:text-accent-foreground rounded-lg px-4 py-2 transition-all duration-300;
+  }
+
+  /* Scrollbar utilities */
+  .no-scrollbar {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
+
+  /* Placeholder center alignment */
+  .placeholder-center::placeholder {
+    text-align: center;
+  }
 }

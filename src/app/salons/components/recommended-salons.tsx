@@ -1,6 +1,6 @@
 import CardList from "@/common/card-list";
 import { SalonsData } from "@/data";
-import { SalonType } from "@/types";
+import { SalonType } from "../../../../types";
 import Link from "next/link";
 import React from "react";
 

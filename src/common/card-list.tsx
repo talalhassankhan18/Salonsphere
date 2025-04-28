@@ -7,7 +7,7 @@ import {
 	ProductType,
 	ReviewType,
 	SalonType,
-} from "@/types";
+} from "../../types";
 import CardListWrapper from "./card-list-wrapper";
 import { mapSalons, mapProducts } from "@/lib/utils";
 

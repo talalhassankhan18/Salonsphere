@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, startTransition } from "react";
-import { saveSubscription } from "./actions";
 import { CheckCircle, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation"; // Import useRouter
 
@@ -53,7 +52,7 @@ export default function SubscriptionPage() {
     startTransition(async () => {
       setSelectedPlan(planName);
       try {
-        await saveSubscription(planName, billingCycle);
+      
         alert(`Subscription updated to: ${planName} (${billingCycle})`);
         router.push("/SelectServices"); // Redirect to services page
       } catch (error) {

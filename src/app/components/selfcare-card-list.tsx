@@ -1,6 +1,6 @@
 import CardList from "@/common/card-list";
 import { SelfCareProductsData } from "@/data";
-import { ProductType } from "@/types";
+import { ProductType } from "../../../types";
 import Link from "next/link"; 
 
 type Props = {

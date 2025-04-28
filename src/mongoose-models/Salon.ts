@@ -1,54 +1,29 @@
-import mongoose, { Schema, Document, Types } from "mongoose";
+import mongoose, { Document, Schema } from 'mongoose';
 
-interface Salon extends Document {
+export interface ISalon extends Document {
   name: string;
+  address: string;
   city: string;
-  area: string;
-  rating: number;
-  reviewsCount: number;
-  about: string;
-  images: string[];
-  openingHours: {
-    open: string;
-    close: string;
-    days: string;
-  };
-  location: {
-    address: string;
-    city: string;
-    area: string;
-  };
-  services: Types.ObjectId[];
-  contactLink: string;
+  province: string;
+  zip: string;
+  phone: string;
+  owner: mongoose.Schema.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
 
-// Define the salon schema
-const salonSchema = new Schema<Salon>(
+const salonSchema = new Schema<ISalon>(
   {
     name: { type: String, required: true },
+    address: { type: String, required: true },
     city: { type: String, required: true },
-    area: { type: String, required: true },
-    rating: { type: Number, required: true, default: 0 },
-    reviewsCount: { type: Number, default: 0 },
-    about: { type: String },
-    images: [{ type: String }],
-    openingHours: {
-      open: { type: String, required: true },
-      close: { type: String, required: true },
-      days: { type: String, required: true },
-    },
-    location: {
-      address: { type: String, required: true },
-      city: { type: String, required: true },
-      area: { type: String, required: true },
-    },
-    services: [{ type: mongoose.Schema.Types.ObjectId, ref: "Service" }],
-    contactLink: { type: String },
+    province: { type: String, required: true },
+    zip: { type: String, required: true },
+    phone: { type: String, required: true },
+    owner: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   },
   { timestamps: true }
 );
 
-export default mongoose.models.salon ||
-  mongoose.model<Salon>("Salon", salonSchema);
+const Salon = mongoose.models.Salon || mongoose.model<ISalon>('Salon', salonSchema);
+export default Salon;

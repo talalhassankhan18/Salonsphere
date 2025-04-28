@@ -1,5 +1,5 @@
 import CardList from "@/common/card-list";
-import { SalonType } from "@/types";
+import { SalonType } from "../../../types";
 import Link from "next/link";
 import { SalonsData } from "@/data";
 

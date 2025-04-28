@@ -2,7 +2,7 @@
 
 import { createContext, useContext, ReactNode, useEffect } from "react";
 import { CartState, useCartStore } from "@/store/cartStore";
-import { CartItem } from "@/types";
+import { CartItem } from "../../types";
 
 const CartStoreContext = createContext<CartState | null>(null);
 

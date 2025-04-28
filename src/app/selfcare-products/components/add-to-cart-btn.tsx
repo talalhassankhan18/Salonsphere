@@ -1,7 +1,7 @@
 "use client";
 import { mapProductToCartItem } from "@/store/cartStore";
 import { useCartStoreContext } from "@/store/cartStoreContext";
-import { ProductType } from "@/types";
+import { ProductType } from "../../../../types";
 import { RiShoppingCart2Line } from "react-icons/ri";
 
 const AddToCartBtn = ({ product }: { product: ProductType }) => {

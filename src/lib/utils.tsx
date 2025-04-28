@@ -6,7 +6,7 @@ import {
 	ProductType,
 	ReviewType,
 	SalonType,
-} from "@/types";
+} from "../../types";
 import { FaRegStar, FaStar } from "react-icons/fa";
 import AddToCartBtn from "@/app/selfcare-products/components/add-to-cart-btn";
 import CardImage from "@/app/selfcare-products/components/card-image";

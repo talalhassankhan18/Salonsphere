@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import { FaStar } from "react-icons/fa";
-import { ReviewType } from "@/types";
+import { ReviewType } from "../../../types";
 import { cn } from "@/lib/utils";
 
 const FakeReview = ({

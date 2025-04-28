@@ -1,88 +1,54 @@
-// User.ts
-import dbConnect from "@/lib/mongoose";
-import mongoose, { Schema, Model } from "mongoose";
-import { NextApiRequest, NextApiResponse } from "next";
+import mongoose, { Document, Schema } from 'mongoose';
+import bcrypt from 'bcryptjs';
 
-export interface GlimmerUser {
-    _id: mongoose.Types.ObjectId;
-    name: string;
-    email: string;
-    password: string;
-    gender: string;
-    age: number;
-    location: {
-        city: string;
-        area: string;
-    };
-    role: string;
-    createdAt: Date;
-    updatedAt: Date;
+export interface IUser extends Document {
+  name: string;
+  email: string;
+  password?: string;
+  role: 'admin' | 'salon_owner' | 'customer';
+  registrationStatus: 'started' | 'completed';
+  emailVerified: boolean;
+  salon?: mongoose.Schema.Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
+  comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
-const UserSchema: Schema<GlimmerUser> = new Schema<GlimmerUser>(
-    {
-        name: { type: String, required: true },
-        email: { type: String, required: true, unique: true },
-        password: { type: String, required: true },
-        gender: {
-            type: String,
-            enum: ["Male", "Female", "unisex"],
-            required: true,
-        },
-        age: { type: Number, required: true, min: 0 },
-        location: {
-            city: { type: String, required: true },
-            area: { type: String, required: true },
-        },
-        role: { 
-            type: String, 
-            enum: ["user", "vendor", "admin"], 
-            default: "user", 
-            required: true 
-        },
+const userSchema = new Schema<IUser>(
+  {
+    name: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    password: { type: String },
+    role: {
+      type: String,
+      enum: ['admin', 'salon_owner', 'customer'],
+      default: 'salon_owner',
     },
-    { timestamps: true },
+    registrationStatus: {
+      type: String,
+      enum: ['started', 'completed'],
+      default: 'started',
+    },
+    emailVerified: { type: Boolean, default: false },
+    salon: { type: Schema.Types.ObjectId, ref: 'Salon' },
+  },
+  { timestamps: true }
 );
 
-const User: Model<GlimmerUser> =
-    mongoose.models.User || mongoose.model<GlimmerUser>("User", UserSchema);
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
+  if (this.password) {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+  }
+  next();
+});
 
-export async function handler(req: NextApiRequest, res: NextApiResponse) {
-    await dbConnect();
+userSchema.methods.comparePassword = async function (
+  candidatePassword: string
+) {
+  return await bcrypt.compare(candidatePassword, this.password || '');
+};
 
-    if (req.method === "GET") {
-        try {
-            const users = await User.find();
-            res.status(200).json(users);
-        } catch (error) {
-            res.status(500).json({ message: "Error fetching users", error });
-        }
-    }
-    
-    if (req.method === "POST") {
-        try {
-            const user = new User({
-                name: req.body.name,
-                email: req.body.email,
-                password: req.body.password,
-                gender: req.body.gender,
-                age: req.body.age,
-                location: {
-                    city: req.body.location?.city,
-                    area: req.body.location?.area,
-                },
-                role: req.body.role || "user", 
-            });
-
-            const result = await user.save();
-            res.status(201).json(result);
-        } catch (error) {
-            console.error("Error creating user:", error);
-            res.status(500).json({ message: "Error creating user", error });
-        }
-    } else {
-        res.status(405).json({ message: "Method not allowed" });
-    }
-}
-
+const User = mongoose.models.User || mongoose.model<IUser>('User', userSchema);
 export default User;

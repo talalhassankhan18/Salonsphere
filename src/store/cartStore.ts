@@ -1,5 +1,5 @@
 "use client";
-import { CartItem, ProductType } from "@/types";
+import { CartItem, ProductType } from "../../types";
 import { create } from "zustand";
 import { produce } from "immer";
 
