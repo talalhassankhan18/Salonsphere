@@ -34,7 +34,7 @@ export default function LoginPage() {
 
     try {
       const baseUrl =
-        process.env.NEXT_PUBLIC_NEXTAUTH_URL || "http://localhost:3000";
+        process.env.NEXT_PUBLIC_NEXTAUTH_URL;
       const callbackUrl = `${baseUrl}/salon/dashboard`;
 
       // Validate URL
