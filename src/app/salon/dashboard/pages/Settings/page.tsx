@@ -1,119 +1,675 @@
-"use client"
-import React, { useState } from 'react';
-import DashboardLayout from '../../components/layout/DashboardLayout';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Separator } from '../../components/ui/separator';
-import { Switch } from '../../components/ui/switch';
-import { Checkbox } from '../../components/ui/checkbox';
-import { Label } from '../../components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../../components/ui/card';
-import { toast } from '../../hooks/use-toast';
-import { 
-  UserCircle, 
-  Lock, 
-  Bell, 
-  CreditCard, 
-  Settings as SettingsIcon, 
-  Banknote, 
-  Check, 
-  X,
-  Palette,
+"use client";
+import React, { useState, useEffect } from "react";
+import { useSession, SessionProvider } from "next-auth/react";
+import DashboardLayout from "../../components/layout/DashboardLayout";
+import Link from "next/link";
+import { Session } from "next-auth"; // Import Session type
+
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from "../../components/ui/tabs";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Separator } from "../../components/ui/separator";
+import { Checkbox } from "../../components/ui/checkbox";
+import { Label } from "../../components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "../../components/ui/card";
+import { toast } from "@/hooks/use-toast";
+import {
+  Lock,
   Building,
   Clock,
-  Shield,
-  Calendar,
-  Users
-} from 'lucide-react';
+  Check,
+  Plus,
+} from "lucide-react";
+
+// Interface for businessHours
+interface BusinessHour {
+  day: string;
+  isOpen: boolean;
+  openTime: string | null;
+  closeTime: string | null;
+}
+
+// Interface for scheduling
+interface Scheduling {
+  businessHours: BusinessHour[];
+  appointmentBuffer: number;
+  allowOnlineBooking: boolean;
+  requireConfirmation: boolean;
+}
+
+// Interface for salon details
+interface SalonDetails {
+  _id: string;
+  salonName: string;
+  address: string;
+  salonType: "female" | "male" | "unisex";
+  avatar?: string;
+  email: string;
+  name: string;
+  phone: string;
+  username: string;
+  scheduling: Scheduling;
+}
 
 const Settings: React.FC = () => {
-  const [isNotificationsEnabled, setIsNotificationsEnabled] = useState<boolean>(true);
-  const [isMarketingEmailsEnabled, setIsMarketingEmailsEnabled] = useState<boolean>(false);
-  const [isAppointmentRemindersEnabled, setIsAppointmentRemindersEnabled] = useState<boolean>(true);
-  const [isPromotionalUpdatesEnabled, setIsPromotionalUpdatesEnabled] = useState<boolean>(true);
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  // Explicitly type the session
+  const { data: session, status } = useSession() as {
+    data: Session | null;
+    status: "loading" | "authenticated" | "unauthenticated";
+  };
+  const salonId = session?.user?.salonId ?? null;
 
-  const handleSaveProfile = (): void => {
-    toast({
-      title: "Profile updated",
-      description: "Your profile has been updated successfully",
-    });
+  const [salon, setSalon] = useState<SalonDetails | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isSavingSalon, setIsSavingSalon] = useState<boolean>(false);
+  const [isSavingSchedule, setIsSavingSchedule] = useState<boolean>(false);
+
+  // Form state for salon settings
+  const [salonForm, setSalonForm] = useState({
+    salonName: "",
+    phone: "",
+    address: "",
+    salonType: "unisex" as "female" | "male" | "unisex",
+    email: "",
+    name: "",
+    username: "",
+  });
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+
+  // Form state for password
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+
+  // Form state for scheduling
+  const [schedulingForm, setSchedulingForm] = useState<Scheduling>({
+    businessHours: [
+      { day: "Monday", isOpen: true, openTime: "09:00", closeTime: "18:00" },
+      { day: "Tuesday", isOpen: true, openTime: "09:00", closeTime: "18:00" },
+      { day: "Wednesday", isOpen: true, openTime: "09:00", closeTime: "18:00" },
+      { day: "Thursday", isOpen: true, openTime: "09:00", closeTime: "18:00" },
+      { day: "Friday", isOpen: true, openTime: "09:00", closeTime: "18:00" },
+      { day: "Saturday", isOpen: true, openTime: "10:00", closeTime: "16:00" },
+      { day: "Sunday", isOpen: false, openTime: null, closeTime: null },
+    ],
+    appointmentBuffer: 15,
+    allowOnlineBooking: true,
+    requireConfirmation: true,
+  });
+
+  // Fetch salon details on mount
+  useEffect(() => {
+    console.log("Session status:", status, "Session user:", session?.user);
+    async function fetchSalonDetails() {
+      if (status === "loading" || !salonId) {
+        console.log("Skipping fetch: status loading or no salonId");
+        return;
+      }
+
+      try {
+        setLoading(true);
+        console.log("Fetching salon details for ID:", salonId);
+        const response = await fetch(`/api/salon/${salonId}`, {
+          method: "GET",
+          credentials: "include",
+        });
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          console.error("Fetch error response:", errorData);
+          throw new Error(
+            errorData.error ||
+              `Failed to fetch salon details (Status: ${response.status})`
+          );
+        }
+        const data: SalonDetails = await response.json();
+        console.log("Fetched salon data:", data);
+        setSalon(data);
+        setSalonForm({
+          salonName: data.salonName || "",
+          phone: data.phone || "",
+          address: data.address || "",
+          salonType: data.salonType || "unisex",
+          email: data.email || "",
+          name: data.name || "",
+          username: data.username || "",
+        });
+        setAvatarPreview(data.avatar || "/default-salon-image.jpg");
+        setSchedulingForm({
+          businessHours:
+            data.scheduling?.businessHours.map((hour) => ({
+              ...hour,
+              openTime: hour.isOpen ? convertTo24Hour(hour.openTime) : null,
+              closeTime: hour.isOpen ? convertTo24Hour(hour.closeTime) : null,
+            })) || schedulingForm.businessHours,
+          appointmentBuffer: data.scheduling?.appointmentBuffer || 15,
+          allowOnlineBooking: data.scheduling?.allowOnlineBooking ?? true,
+          requireConfirmation: data.scheduling?.requireConfirmation ?? true,
+        });
+      } catch (err: any) {
+        console.error("Error fetching salon details:", err);
+        setError(err.message || "Failed to load salon details");
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: err.message || "Failed to load salon details",
+        });
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchSalonDetails();
+  }, [salonId, status]);
+
+  // Handle avatar file change
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!["image/jpeg", "image/png", "image/jpg"].includes(file.type)) {
+        toast({
+          variant: "destructive",
+          title: "Invalid file type",
+          description: "Profile image must be JPEG or PNG",
+        });
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          variant: "destructive",
+          title: "File too large",
+          description: "Profile image must be less than 5MB",
+        });
+        return;
+      }
+      setAvatarFile(file);
+      console.log("Selected avatar:", file.name, file.type, file.size);
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setAvatarPreview(event.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
-  const handleSavePassword = (): void => {
-    toast({
-      title: "Password updated",
-      description: "Your password has been updated successfully",
-    });
+  // Update salon form state
+  const handleSalonFormChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { id, value } = e.target;
+    if (id === "phone" && value && !/^\d{0,10}$/.test(value)) {
+      toast({
+        variant: "destructive",
+        title: "Invalid phone number",
+        description: "Phone number must be up to 10 digits",
+      });
+      return;
+    }
+    if (id === "email" && value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+      toast({
+        variant: "destructive",
+        title: "Invalid email",
+        description: "Please enter a valid email address",
+      });
+      return;
+    }
+    setSalonForm((prev) => ({
+      ...prev,
+      [id]: value,
+    }));
   };
 
-  const handleSaveNotifications = (): void => {
-    toast({
-      title: "Notifications updated",
-      description: "Your notification settings have been updated",
-    });
+  // Save salon settings
+  const handleSaveSalon = async () => {
+    if (!salonId) {
+      console.error("No salonId available in session:", session?.user);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Salon ID is missing. Please log in again.",
+      });
+      return;
+    }
+
+    if (status !== "authenticated") {
+      console.error("User not authenticated, status:", status);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "You are not authenticated. Please log in.",
+      });
+      return;
+    }
+
+    // Validate required fields
+    if (!salonForm.salonName) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Salon name is required",
+      });
+      return;
+    }
+    if (
+      !salonForm.email ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(salonForm.email)
+    ) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Valid email is required",
+      });
+      return;
+    }
+    if (!salonForm.phone || !/^\d{10}$/.test(salonForm.phone)) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Valid 10-digit phone number is required",
+      });
+      return;
+    }
+
+    try {
+      setIsSavingSalon(true);
+      const formData = new FormData();
+      formData.append("salonName", salonForm.salonName);
+      formData.append("phone", salonForm.phone);
+      formData.append("address", salonForm.address || "");
+      formData.append("salonType", salonForm.salonType);
+      formData.append("email", salonForm.email);
+      formData.append("name", salonForm.name || "");
+      formData.append("username", salonForm.username || "");
+      if (avatarFile) {
+        console.log(
+          "Appending avatar to FormData:",
+          avatarFile.name,
+          avatarFile.type,
+          avatarFile.size
+        );
+        formData.append("avatar", avatarFile);
+      } else {
+        console.log("No avatar file selected");
+      }
+
+      console.log("Sending FormData for salon settings:");
+      for (const [key, value] of formData.entries()) {
+        console.log(`FormData: ${key} =`, value);
+      }
+
+      const response = await fetch(`/api/salon/${salonId}`, {
+        method: "PUT",
+        body: formData,
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        let errorData;
+        try {
+          errorData = await response.json();
+          console.error("Server error response:", errorData);
+        } catch (jsonError) {
+          console.error("Failed to parse server response:", jsonError);
+          errorData = { error: `Server error (Status: ${response.status})` };
+        }
+        throw new Error(
+          errorData.error ||
+            `Failed to update salon settings (Status: ${response.status})`
+        );
+      }
+
+      const updatedSalon: SalonDetails = await response.json();
+      setSalon(updatedSalon);
+      setSalonForm({
+        salonName: updatedSalon.salonName || "",
+        phone: updatedSalon.phone || "",
+        address: updatedSalon.address || "",
+        salonType: updatedSalon.salonType || "unisex",
+        email: updatedSalon.email || "",
+        name: updatedSalon.name || "",
+        username: updatedSalon.username || "",
+      });
+      setAvatarFile(null);
+      setAvatarPreview(updatedSalon.avatar || "/default-salon-image.jpg");
+
+      toast({
+        title: "Salon settings updated",
+        description: "Your salon settings have been updated successfully",
+      });
+    } catch (err: any) {
+      console.error("Error updating salon settings:", err);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: err.message || "Failed to update salon settings",
+      });
+    } finally {
+      setIsSavingSalon(false);
+    }
   };
 
-  const handleSaveBilling = (): void => {
-    toast({
-      title: "Billing info updated",
-      description: "Your billing information has been updated",
-    });
+  // Update password form state
+  const handlePasswordFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPasswordForm((prev) => ({
+      ...prev,
+      [e.target.id]: e.target.value,
+    }));
   };
 
-  const handleSaveSalon = (): void => {
-    toast({
-      title: "Salon settings updated",
-      description: "Your salon settings have been updated successfully",
-    });
+  // Save password
+  const handleSavePassword = async () => {
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "New password and confirm password do not match",
+      });
+      return;
+    }
+    if (passwordForm.newPassword.length < 8) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "New password must be at least 8 characters",
+      });
+      return;
+    }
+
+    if (!salonId) {
+      console.error("No salonId available in session:", session?.user);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Salon ID is missing. Please log in again.",
+      });
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append("currentPassword", passwordForm.currentPassword);
+      formData.append("newPassword", passwordForm.newPassword);
+
+      const response = await fetch(`/api/salon/${salonId}`, {
+        method: "PUT",
+        body: formData,
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        let errorData;
+        try {
+          errorData = await response.json();
+          console.error("Server error response:", errorData);
+        } catch (jsonError) {
+          console.error("Failed to parse server response:", jsonError);
+          errorData = { error: `Server error (Status: ${response.status})` };
+        }
+        throw new Error(
+          errorData.error ||
+            `Failed to update password (Status: ${response.status})`
+        );
+      }
+
+      setPasswordForm({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+      toast({
+        title: "Password updated",
+        description: "Your password has been updated successfully",
+      });
+    } catch (err: any) {
+      console.error("Error updating password:", err);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: err.message || "Failed to update password",
+      });
+    }
   };
 
-  const handleSaveSchedule = (): void => {
-    toast({
-      title: "Schedule settings updated",
-      description: "Your scheduling preferences have been updated",
-    });
+  // Update scheduling form state
+  const handleSchedulingChange = (
+    field: keyof Scheduling,
+    value: any,
+    day?: string
+  ) => {
+    if (field === "businessHours" && day) {
+      setSchedulingForm((prev) => ({
+        ...prev,
+        businessHours: prev.businessHours.map((hour) =>
+          hour.day === day
+            ? {
+                ...hour,
+                ...value,
+                openTime:
+                  value.isOpen !== undefined
+                    ? value.isOpen
+                      ? value.openTime || hour.openTime || "09:00"
+                      : null
+                    : value.openTime !== undefined
+                    ? value.openTime || null
+                    : hour.openTime,
+                closeTime:
+                  value.isOpen !== undefined
+                    ? value.isOpen
+                      ? value.closeTime || hour.closeTime || "18:00"
+                      : null
+                    : value.closeTime !== undefined
+                    ? value.closeTime || null
+                    : hour.closeTime,
+              }
+            : hour
+        ),
+      }));
+    } else {
+      setSchedulingForm((prev) => ({
+        ...prev,
+        [field]: value,
+      }));
+    }
   };
 
-  const handleSavePrivacy = (): void => {
-    toast({
-      title: "Privacy settings updated",
-      description: "Your privacy settings have been updated successfully",
-    });
+  // Save scheduling settings
+  const handleSaveSchedule = async () => {
+    if (!salonId) {
+      console.error("No salonId available in session:", session?.user);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Salon ID is missing. Please log in again.",
+      });
+      return;
+    }
+
+    if (status !== "authenticated") {
+      console.error("User not authenticated, status:", status);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "You are not authenticated. Please log in.",
+      });
+      return;
+    }
+
+    // Validate business hours
+    for (const hour of schedulingForm.businessHours) {
+      if (hour.isOpen) {
+        if (!hour.openTime || !hour.closeTime) {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: `Open and close times are required for ${hour.day} if open`,
+          });
+          return;
+        }
+        if (!/^[0-2][0-9]:[0-5][0-9]$/.test(hour.openTime)) {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: `Invalid open time format for ${hour.day} (e.g., 09:00)`,
+          });
+          return;
+        }
+        if (!/^[0-2][0-9]:[0-5][0-9]$/.test(hour.closeTime)) {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: `Invalid close time format for ${hour.day} (e.g., 18:00)`,
+          });
+          return;
+        }
+        const open = new Date(`1970-01-01T${hour.openTime}:00`);
+        const close = new Date(`1970-01-01T${hour.closeTime}:00`);
+        if (open >= close) {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: `Close time must be after open time for ${hour.day}`,
+          });
+          return;
+        }
+      } else {
+        if (hour.openTime !== null || hour.closeTime !== null) {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: `Open and close times must be null for ${hour.day} if closed`,
+          });
+          return;
+        }
+      }
+    }
+    if (
+      schedulingForm.appointmentBuffer < 0 ||
+      schedulingForm.appointmentBuffer > 60
+    ) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Appointment buffer must be between 0 and 60 minutes",
+      });
+      return;
+    }
+
+    try {
+      setIsSavingSchedule(true);
+      const formData = new FormData();
+      const formattedScheduling = {
+        ...schedulingForm,
+        businessHours: schedulingForm.businessHours.map((hour) => ({
+          ...hour,
+          openTime:
+            hour.isOpen && hour.openTime ? formatTime(hour.openTime) : null,
+          closeTime:
+            hour.isOpen && hour.closeTime ? formatTime(hour.closeTime) : null,
+        })),
+      };
+      formData.append("scheduling", JSON.stringify(formattedScheduling));
+
+      console.log(
+        "Sending FormData for scheduling settings:",
+        formattedScheduling
+      );
+
+      const response = await fetch(`/api/salon/${salonId}`, {
+        method: "PUT",
+        body: formData,
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        let errorData;
+        try {
+          errorData = await response.json();
+          console.error("Server error response:", errorData);
+        } catch (jsonError) {
+          console.error("Failed to parse server response:", jsonError);
+          errorData = { error: `Server error (Status: ${response.status})` };
+        }
+        throw new Error(
+          errorData.error ||
+            `Failed to update scheduling settings (Status: ${response.status})`
+        );
+      }
+
+      const updatedSalon: SalonDetails = await response.json();
+      setSalon(updatedSalon);
+      setSchedulingForm({
+        businessHours:
+          updatedSalon.scheduling?.businessHours.map((hour) => ({
+            ...hour,
+            openTime: hour.isOpen ? convertTo24Hour(hour.openTime) : null,
+            closeTime: hour.isOpen ? convertTo24Hour(hour.closeTime) : null,
+          })) || schedulingForm.businessHours,
+        appointmentBuffer: updatedSalon.scheduling?.appointmentBuffer || 15,
+        allowOnlineBooking: updatedSalon.scheduling?.allowOnlineBooking ?? true,
+        requireConfirmation:
+          updatedSalon.scheduling?.requireConfirmation ?? true,
+      });
+
+      toast({
+        title: "Scheduling updated",
+        description:
+          "Your scheduling preferences have been updated successfully",
+      });
+    } catch (err: any) {
+      console.error("Error updating scheduling settings:", err);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: err.message || "Failed to update scheduling settings",
+      });
+    } finally {
+      setIsSavingSchedule(false);
+    }
   };
 
-  const toggleTheme = (): void => {
-    setTheme(theme === 'light' ? 'dark' : 'light');
-    toast({
-      title: "Theme changed",
-      description: `Theme switched to ${theme === 'light' ? 'dark' : 'light'} mode`,
-    });
+  // Helper to convert HH:MM to HH:MM AM/PM
+  const formatTime = (time: string): string => {
+    const [hours, minutes] = time.split(":").map(Number);
+    const period = hours >= 12 ? "PM" : "AM";
+    const formattedHours = hours % 12 || 12;
+    return `${formattedHours}:${minutes.toString().padStart(2, "0")} ${period}`;
   };
 
-  const handleSwitchChange = (setter: React.Dispatch<React.SetStateAction<boolean>>) => 
-    (checked: boolean): void => setter(checked);
+  // Helper to convert HH:MM AM/PM to HH:MM
+  const convertTo24Hour = (time: string | null): string | null => {
+    if (!time) return null;
+    const [timePart, period] = time.split(" ");
+    let [hours, minutes] = timePart.split(":").map(Number);
+    if (period === "PM" && hours !== 12) hours += 12;
+    if (period === "AM" && hours === 12) hours = 0;
+    return `${hours.toString().padStart(2, "0")}:${minutes
+      .toString()
+      .padStart(2, "0")}`;
+  };
 
   return (
     <DashboardLayout title="Settings">
       <div className="space-y-6">
-        <Tabs defaultValue="profile" className="space-y-4">
-          <TabsList className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2">
-            <TabsTrigger value="profile">
-              <UserCircle className="mr-2 h-4 w-4" />
-              Profile
-            </TabsTrigger>
+        <Tabs defaultValue="salon" className="space-y-4">
+          <TabsList className="grid grid-cols-3 gap-2">
             <TabsTrigger value="password">
               <Lock className="mr-2 h-4 w-4" />
               Password
-            </TabsTrigger>
-            <TabsTrigger value="notifications">
-              <Bell className="mr-2 h-4 w-4" />
-              Notifications
-            </TabsTrigger>
-            <TabsTrigger value="billing">
-              <CreditCard className="mr-2 h-4 w-4" />
-              Billing
             </TabsTrigger>
             <TabsTrigger value="salon">
               <Building className="mr-2 h-4 w-4" />
@@ -123,76 +679,57 @@ const Settings: React.FC = () => {
               <Clock className="mr-2 h-4 w-4" />
               Scheduling
             </TabsTrigger>
-            <TabsTrigger value="privacy">
-              <Shield className="mr-2 h-4 w-4" />
-              Privacy
-            </TabsTrigger>
-            <TabsTrigger value="appearance">
-              <Palette className="mr-2 h-4 w-4" />
-              Appearance
-            </TabsTrigger>
           </TabsList>
-          
-          <TabsContent value="profile" className="space-y-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Profile Information</CardTitle>
-                <CardDescription>Update your profile information and how you appear to others</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="name">Name</Label>
-                    <Input id="name" defaultValue="John Doe" />
-                  </div>
-                  <div>
-                    <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" defaultValue="john.doe@example.com" />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="bio">Bio</Label>
-                    <Input id="bio" placeholder="Write a short bio about yourself" />
-                </div>
-                <div>
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input id="phone" placeholder="+1 (555) 123-4567" />
-                </div>
-                <div>
-                  <Label htmlFor="position">Professional Title/Position</Label>
-                  <Input id="position" placeholder="Hair Stylist, Salon Manager, etc." />
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button onClick={handleSaveProfile}>
-                  <Check className="mr-2 h-4 w-4" />
-                  Save Changes
-                </Button>
-              </CardFooter>
-            </Card>
-          </TabsContent>
 
           <TabsContent value="password" className="space-y-2">
             <Card>
               <CardHeader>
                 <CardTitle>Update Password</CardTitle>
-                <CardDescription>Change your password to keep your account secure</CardDescription>
+                <CardDescription>
+                  Change your password or request a reset link
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
                   <Label htmlFor="currentPassword">Current Password</Label>
-                  <Input id="currentPassword" type="password" />
+                  <Input
+                    id="currentPassword"
+                    type="password"
+                    value={passwordForm.currentPassword}
+                    onChange={handlePasswordFormChange}
+                  />
                 </div>
                 <div>
                   <Label htmlFor="newPassword">New Password</Label>
-                  <Input id="newPassword" type="password" />
+                  <Input
+                    id="newPassword"
+                    type="password"
+                    value={passwordForm.newPassword}
+                    onChange={handlePasswordFormChange}
+                  />
                 </div>
                 <div>
                   <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                  <Input id="confirmPassword" type="password" />
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    value={passwordForm.confirmPassword}
+                    onChange={handlePasswordFormChange}
+                  />
                 </div>
-                <div className="text-sm text-muted-foreground">
-                  Password should be at least 8 characters long and include numbers, symbols, and uppercase letters.
+                <div className="text-xs text-gray-400">
+                  Password should be at least 8 characters long.
+                </div>
+                <Separator />
+                <div>
+                  <div className="flex justify-end">
+                    <Link
+                      href="/salon/forgot-password"
+                      className="text-sm text-[#B4004E] hover:text-[#9a0042] font-medium transition-colors"
+                    >
+                      Forgot Password?
+                    </Link>
+                  </div>
                 </div>
               </CardContent>
               <CardFooter>
@@ -204,180 +741,146 @@ const Settings: React.FC = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="notifications" className="space-y-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Notification Settings</CardTitle>
-                <CardDescription>Manage your notification preferences</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="notifications" className="font-medium">Enable All Notifications</Label>
-                    <p className="text-sm text-muted-foreground">Master toggle for all notifications</p>
-                  </div>
-                  <Switch 
-                    id="notifications" 
-                    checked={isNotificationsEnabled}
-                    onCheckedChange={handleSwitchChange(setIsNotificationsEnabled)}
-                  />
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="appointmentReminders" className="font-medium">Appointment Reminders</Label>
-                    <p className="text-sm text-muted-foreground">Get notified before scheduled appointments</p>
-                  </div>
-                  <Switch 
-                    id="appointmentReminders"
-                    checked={isAppointmentRemindersEnabled}
-                    onCheckedChange={handleSwitchChange(setIsAppointmentRemindersEnabled)}
-                    disabled={!isNotificationsEnabled}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="marketingEmails" className="font-medium">Marketing Emails</Label>
-                    <p className="text-sm text-muted-foreground">Receive promotional emails and offers</p>
-                  </div>
-                  <Switch 
-                    id="marketingEmails"
-                    checked={isMarketingEmailsEnabled}
-                    onCheckedChange={handleSwitchChange(setIsMarketingEmailsEnabled)}
-                    disabled={!isNotificationsEnabled}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="promotionalUpdates" className="font-medium">Promotional Updates</Label>
-                    <p className="text-sm text-muted-foreground">Receive updates about new services and products</p>
-                  </div>
-                  <Switch 
-                    id="promotionalUpdates"
-                    checked={isPromotionalUpdatesEnabled}
-                    onCheckedChange={handleSwitchChange(setIsPromotionalUpdatesEnabled)}
-                    disabled={!isNotificationsEnabled}
-                  />
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button onClick={handleSaveNotifications}>
-                  <Check className="mr-2 h-4 w-4" />
-                  Save Settings
-                </Button>
-              </CardFooter>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="billing" className="space-y-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Billing Information</CardTitle>
-                <CardDescription>Update your billing details and payment methods</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="cardName">Name on Card</Label>
-                    <Input id="cardName" defaultValue="John Doe" />
-                  </div>
-                  <div>
-                    <Label htmlFor="cardNumber">Card Number</Label>
-                    <Input id="cardNumber" placeholder="**** **** **** ****" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="expiry">Expiry Date</Label>
-                    <Input id="expiry" placeholder="MM/YY" />
-                  </div>
-                  <div>
-                    <Label htmlFor="cvv">CVV</Label>
-                    <Input id="cvv" placeholder="CVV" />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="address">Billing Address</Label>
-                  <Input id="address" placeholder="123 Main Street" />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="city">City</Label>
-                    <Input id="city" placeholder="New York" />
-                  </div>
-                  <div>
-                    <Label htmlFor="zipCode">Zip/Postal Code</Label>
-                    <Input id="zipCode" placeholder="10001" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="state">State/Province</Label>
-                    <Input id="state" placeholder="NY" />
-                  </div>
-                  <div>
-                    <Label htmlFor="country">Country</Label>
-                    <Input id="country" placeholder="United States" />
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter className="flex gap-2">
-                <Button variant="outline">
-                  <CreditCard className="mr-2 h-4 w-4" />
-                  Add New Card
-                </Button>
-                <Button onClick={handleSaveBilling}>
-                  <Check className="mr-2 h-4 w-4" />
-                  Save Changes
-                </Button>
-              </CardFooter>
-            </Card>
-          </TabsContent>
-
           <TabsContent value="salon" className="space-y-2">
             <Card>
               <CardHeader>
                 <CardTitle>Salon Settings</CardTitle>
-                <CardDescription>Configure your salon information and business details</CardDescription>
+                <CardDescription>
+                  Configure your salon information and business details
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="salonName">Salon Name</Label>
-                    <Input id="salonName" placeholder="Beauty & Style Salon" />
+                {loading ? (
+                  <div className="text-center py-4">
+                    <p className="text-gray-500">Loading salon details...</p>
                   </div>
-                  <div>
-                    <Label htmlFor="salonPhone">Business Phone</Label>
-                    <Input id="salonPhone" placeholder="+1 (555) 123-4567" />
+                ) : error ? (
+                  <div className="text-center py-4">
+                    <p className="text-red-500">{error}</p>
                   </div>
-                </div>
-                <div>
-                  <Label htmlFor="salonAddress">Salon Address</Label>
-                  <Input id="salonAddress" placeholder="123 Main Street" />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="salonCity">City</Label>
-                    <Input id="salonCity" placeholder="New York" />
+                ) : !salon ? (
+                  <div className="text-center py-4">
+                    <p className="text-red-500">Salon not found.</p>
                   </div>
-                  <div>
-                    <Label htmlFor="salonZip">Zip/Postal Code</Label>
-                    <Input id="salonZip" placeholder="10001" />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="salonWebsite">Website</Label>
-                  <Input id="salonWebsite" placeholder="https://www.yoursalon.com" />
-                </div>
-                <div>
-                  <Label htmlFor="salonDescription">Business Description</Label>
-                  <Input id="salonDescription" placeholder="Tell clients about your salon and services" />
-                </div>
+                ) : (
+                  <>
+                    <div>
+                      <Label htmlFor="avatar">Profile Photo</Label>
+                      <div className="relative h-32 w-32 rounded-full overflow-hidden group">
+                        <img
+                          src={avatarPreview || "/default-salon-image.jpg"}
+                          alt="Salon avatar"
+                          className="w-full h-full object-cover"
+                        />
+                        <label
+                          htmlFor="avatar-upload"
+                          className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                        >
+                          <Plus className="text-white h-8 w-8" />
+                          <input
+                            id="avatar-upload"
+                            type="file"
+                            accept="image/jpeg,image/png,image/jpg"
+                            className="hidden"
+                            onChange={handleAvatarChange}
+                          />
+                        </label>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="salonName">Salon Name</Label>
+                        <Input
+                          id="salonName"
+                          value={salonForm.salonName}
+                          onChange={handleSalonFormChange}
+                          placeholder="Beauty & Style Salon"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="phone">Business Phone</Label>
+                        <Input
+                          id="phone"
+                          value={salonForm.phone}
+                          onChange={handleSalonFormChange}
+                          placeholder="1234567890"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="address">Salon Address</Label>
+                      <Input
+                        id="address"
+                        value={salonForm.address}
+                        onChange={handleSalonFormChange}
+                        placeholder="123 Main Street"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="salonType">Salon Type</Label>
+                      <select
+                        id="salonType"
+                        value={salonForm.salonType}
+                        onChange={handleSalonFormChange}
+                        className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="female">Female</option>
+                        <option value="male">Male</option>
+                        <option value="unisex">Unisex</option>
+                      </select>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="email">Email</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          value={salonForm.email}
+                          onChange={handleSalonFormChange}
+                          placeholder="salon@example.com"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="name">Owner Name</Label>
+                        <Input
+                          id="name"
+                          value={salonForm.name}
+                          onChange={handleSalonFormChange}
+                          placeholder="John Doe"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="username">Username</Label>
+                      <Input
+                        id="username"
+                        value={salonForm.username}
+                        onChange={handleSalonFormChange}
+                        placeholder="salon_username"
+                      />
+                    </div>
+                  </>
+                )}
               </CardContent>
               <CardFooter>
-                <Button onClick={handleSaveSalon}>
-                  <Check className="mr-2 h-4 w-4" />
-                  Save Salon Settings
+                <Button
+                  onClick={handleSaveSalon}
+                  disabled={
+                    loading ||
+                    !!error ||
+                    !salon ||
+                    isSavingSalon ||
+                    status !== "authenticated"
+                  }
+                >
+                  {isSavingSalon ? (
+                    "Saving..."
+                  ) : (
+                    <>
+                      <Check className="mr-2 h-4 w-4" />
+                      Save Salon Settings
+                    </>
+                  )}
                 </Button>
               </CardFooter>
             </Card>
@@ -387,169 +890,126 @@ const Settings: React.FC = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Scheduling Preferences</CardTitle>
-                <CardDescription>Configure your appointment scheduling preferences</CardDescription>
+                <CardDescription>
+                  Configure your appointment scheduling preferences
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="businessHours">Business Hours</Label>
-                    <div className="text-sm text-muted-foreground mb-2">Set your typical operating hours</div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <Input id="openTime" placeholder="9:00 AM" />
-                      <Input id="closeTime" placeholder="6:00 PM" />
+                <div className="space-y-4">
+                  <Label>Business Hours</Label>
+                  {schedulingForm.businessHours.map((hour) => (
+                    <div key={hour.day} className="flex items-center space-x-4">
+                      <Checkbox
+                        id={`${hour.day}-isOpen`}
+                        checked={hour.isOpen}
+                        onCheckedChange={(checked) =>
+                          handleSchedulingChange(
+                            "businessHours",
+                            {
+                              isOpen: checked,
+                              openTime: checked
+                                ? hour.openTime || "09:00"
+                                : null,
+                              closeTime: checked
+                                ? hour.closeTime || "18:00"
+                                : null,
+                            },
+                            hour.day
+                          )
+                        }
+                      />
+                      <Label htmlFor={`${hour.day}-isOpen`} className="w-24">
+                        {hour.day}
+                      </Label>
+                      <Input
+                        id={`${hour.day}-openTime`}
+                        type="time"
+                        value={hour.openTime || ""}
+                        onChange={(e) =>
+                          handleSchedulingChange(
+                            "businessHours",
+                            { openTime: e.target.value || null },
+                            hour.day
+                          )
+                        }
+                        disabled={!hour.isOpen}
+                        className="w-32"
+                      />
+                      <Input
+                        id={`${hour.day}-closeTime`}
+                        type="time"
+                        value={hour.closeTime || ""}
+                        onChange={(e) =>
+                          handleSchedulingChange(
+                            "businessHours",
+                            { closeTime: e.target.value || null },
+                            hour.day
+                          )
+                        }
+                        disabled={!hour.isOpen}
+                        className="w-32"
+                      />
                     </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="appointmentBuffer">Appointment Buffer</Label>
-                    <div className="text-sm text-muted-foreground mb-2">Minutes between appointments</div>
-                    <Input id="buffer" placeholder="15" type="number" min="0" max="60" />
-                  </div>
+                  ))}
                 </div>
-                <div className="space-y-2">
-                  <Label>Working Days</Label>
-                  <div className="grid grid-cols-4 gap-2">
-                    {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
-                      <div key={day} className="flex items-center space-x-2">
-                        <Checkbox id={day.toLowerCase()} defaultChecked={day !== 'Sunday'} />
-                        <Label htmlFor={day.toLowerCase()}>{day}</Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="allowOnlineBooking" defaultChecked />
-                  <Label htmlFor="allowOnlineBooking">Allow online appointment booking</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="requireConfirmation" defaultChecked />
-                  <Label htmlFor="requireConfirmation">Require manual confirmation of appointments</Label>
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button onClick={handleSaveSchedule}>
-                  <Check className="mr-2 h-4 w-4" />
-                  Save Scheduling Preferences
-                </Button>
-              </CardFooter>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="privacy" className="space-y-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Privacy Settings</CardTitle>
-                <CardDescription>Manage your privacy and data sharing preferences</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="dataSharing" className="font-medium">Data Sharing</Label>
-                    <p className="text-sm text-muted-foreground">Allow anonymous usage data to improve services</p>
-                  </div>
-                  <Switch id="dataSharing" defaultChecked />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="showProfile" className="font-medium">Public Profile</Label>
-                    <p className="text-sm text-muted-foreground">Make your profile visible to clients</p>
-                  </div>
-                  <Switch id="showProfile" defaultChecked />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="showPortfolio" className="font-medium">Portfolio Visibility</Label>
-                    <p className="text-sm text-muted-foreground">Allow your work portfolio to be publicly visible</p>
-                  </div>
-                  <Switch id="showPortfolio" defaultChecked />
-                </div>
-                <Separator />
-                <div className="space-y-2">
-                  <Label className="font-medium">Data Management</Label>
-                  <Button variant="outline" className="w-full">
-                    <Users className="mr-2 h-4 w-4" />
-                    Manage Client Data Access
-                  </Button>
-                  <Button variant="outline" className="w-full">
-                    Download My Data
-                  </Button>
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button onClick={handleSavePrivacy}>
-                  <Check className="mr-2 h-4 w-4" />
-                  Save Privacy Settings
-                </Button>
-              </CardFooter>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="appearance" className="space-y-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Appearance</CardTitle>
-                <CardDescription>Customize the look and feel of your dashboard</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="theme" className="font-medium">Theme</Label>
-                    <p className="text-sm text-muted-foreground">Choose between light and dark mode</p>
-                  </div>
-                  <Button variant="outline" size="sm" onClick={toggleTheme}>
-                    {theme === 'light' ? (
-                      <>
-                        <Bell className="mr-2 h-4 w-4" />
-                        Switch to Dark
-                      </>
-                    ) : (
-                      <>
-                        <Bell className="mr-2 h-4 w-4" />
-                        Switch to Light
-                      </>
-                    )}
-                  </Button>
-                </div>
-                <Separator />
                 <div>
-                  <Label className="font-medium">Color Palette</Label>
-                  <div className="grid grid-cols-5 gap-2 mt-2">
-                    {['Pink', 'Purple', 'Blue', 'Green', 'Orange'].map((color) => (
-                      <div 
-                        key={color}
-                        className={`h-10 rounded-md flex items-center justify-center cursor-pointer border-2 ${color.toLowerCase() === 'pink' ? 'border-primary' : 'border-transparent'}`}
-                        style={{
-                          backgroundColor: 
-                            color === 'Pink' ? 'hsl(327, 83%, 53.3%)' :
-                            color === 'Purple' ? '#8B5CF6' :
-                            color === 'Blue' ? '#0EA5E9' :
-                            color === 'Green' ? '#10B981' :
-                            '#F97316'
-                        }}
-                      >
-                        {color === 'Pink' && <Check className="h-4 w-4 text-white" />}
-                      </div>
-                    ))}
-                  </div>
+                  <Label htmlFor="appointmentBuffer">Appointment Buffer</Label>
+                  <Input
+                    id="appointmentBuffer"
+                    type="number"
+                    min="0"
+                    max="60"
+                    value={schedulingForm.appointmentBuffer}
+                    onChange={(e) =>
+                      handleSchedulingChange(
+                        "appointmentBuffer",
+                        Number(e.target.value)
+                      )
+                    }
+                    className="w-32"
+                  />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Minutes between appointments
+                  </p>
                 </div>
-                <div className="space-y-2">
-                  <Label className="font-medium">Font Size</Label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {['Small', 'Medium', 'Large'].map((size) => (
-                      <Button 
-                        key={size}
-                        variant={size === 'Medium' ? 'default' : 'outline'}
-                        className="w-full"
-                      >
-                        {size}
-                      </Button>
-                    ))}
-                  </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="allowOnlineBooking"
+                    checked={schedulingForm.allowOnlineBooking}
+                    onCheckedChange={(checked) =>
+                      handleSchedulingChange("allowOnlineBooking", checked)
+                    }
+                  />
+                  <Label htmlFor="allowOnlineBooking">
+                    Allow online appointment booking
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="requireConfirmation"
+                    checked={schedulingForm.requireConfirmation}
+                    onCheckedChange={(checked) =>
+                      handleSchedulingChange("requireConfirmation", checked)
+                    }
+                  />
+                  <Label htmlFor="requireConfirmation">
+                    Require manual confirmation of appointments
+                  </Label>
                 </div>
               </CardContent>
               <CardFooter>
-                <Button>
-                  <Check className="mr-2 h-4 w-4" />
-                  Save Appearance
+                <Button
+                  onClick={handleSaveSchedule}
+                  disabled={isSavingSchedule || status !== "authenticated"}
+                >
+                  {isSavingSchedule ? (
+                    "Saving..."
+                  ) : (
+                    <>
+                      <Check className="mr-2 h-4 w-4" />
+                      Save Scheduling Preferences
+                    </>
+                  )}
                 </Button>
               </CardFooter>
             </Card>
@@ -560,4 +1020,11 @@ const Settings: React.FC = () => {
   );
 };
 
-export default Settings;
+// Wrap the component in SessionProvider if not already wrapped in a parent
+const SettingsWithSession: React.FC = () => (
+  <SessionProvider>
+    <Settings />
+  </SessionProvider>
+);
+
+export default SettingsWithSession;

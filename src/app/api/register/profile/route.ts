@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/authOptions";
+import { authOptions } from "@/lib/authOptions";
 import dbConnect from "@/dbConnect";
 import Salon from "@/mongoose-models/Salon";
 
@@ -17,7 +17,9 @@ export async function POST(req: Request) {
   try {
     const salon = await Salon.findOne({ userId });
     if (!salon) {
-      console.log(`Salon not found for ID: ${userId} { email: ${session.user.email} }`);
+      console.log(
+        `Salon not found for ID: ${userId} { email: ${session.user.email} }`
+      );
       return NextResponse.json(
         { error: "Please complete basic information first" },
         { status: 400 }
@@ -28,7 +30,10 @@ export async function POST(req: Request) {
     const { description, logo, images } = body;
 
     if (!description || !logo || !images || images.length < 1) {
-      return NextResponse.json({ error: "Description, logo, and at least one image are required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Description, logo, and at least one image are required" },
+        { status: 400 }
+      );
     }
 
     if (description.length > 500) {
@@ -44,9 +49,15 @@ export async function POST(req: Request) {
 
     await salon.save();
 
-    return NextResponse.json({ message: "Profile updated successfully", salon }, { status: 200 });
+    return NextResponse.json(
+      { message: "Profile updated successfully", salon },
+      { status: 200 }
+    );
   } catch (error: any) {
     console.error("Error updating profile:", error.message);
-    return NextResponse.json({ error: error.message || "Failed to update profile" }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message || "Failed to update profile" },
+      { status: 500 }
+    );
   }
 }

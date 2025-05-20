@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/dbConnect";
 import Salon from "@/mongoose-models/Salon";
+import { IPlan } from "@/mongoose-models/Plan";
 
 export async function POST(req: Request) {
   await dbConnect();
 
   try {
     const { email } = await req.json();
+    const action = req.headers.get("x-action"); // Get action from header
     if (!email) {
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
     }
@@ -16,42 +18,81 @@ export async function POST(req: Request) {
       exists: !!salon,
       isVerified: salon?.isVerified,
       plan: salon?.plan,
+      pendingPlan: salon?.pendingPlan,
       paymentStatus: salon?.paymentStatus,
       isActive: salon?.isActive,
       lastStep: salon?.lastStep,
+      action,
     });
 
     if (!salon) {
       return NextResponse.json(
-        { error: "Salon not found", exists: false, nextStep: "/salon/register/basic-info" },
+        {
+          error: "Salon not found",
+          exists: false,
+          nextStep: "/salon/register/basic-info",
+        },
         { status: 404 }
       );
     }
 
-    let nextStep = "/salon/register/basic-info";
-    if (salon.paymentStatus === "completed" && salon.isActive) {
-      // Assume user is not authenticated; redirect to login
-      // Replace with actual auth check (e.g., NextAuth.js session)
-      nextStep = "/salon/login";
-      console.log(`Redirecting ${email} to /salon/login: Completed registration, not authenticated`);
-    } else if (salon.plan && salon.plan.name) {
-      nextStep = "/salon/register/payment";
-    } else if (salon.isVerified) {
-      nextStep = "/salon/register/plan-selection";
-    } else if (salon.email) {
-      nextStep = "/salon/register/verification";
+    // Determine the next step based on the salon's state
+    let nextStep = salon.lastStep || "/salon/register/basic-info";
+
+    // For upgrades
+    if (action === "upgrade") {
+      if (!salon.isVerified) {
+        nextStep = "/salon/register/verification";
+      } else if (!salon.plan || !salon.plan.name) {
+        nextStep = "/salon/register/plan-selection";
+      } else if (salon.pendingPlan && salon.paymentStatus === "pending") {
+        nextStep = "/salon/register/payment"; // Proceed to payment for pending upgrade
+      } else if (
+        salon.paymentStatus === "completed" &&
+        salon.isActive &&
+        !salon.pendingPlan
+      ) {
+        nextStep = "/salon/register/plan-selection"; // Allow selecting a new plan for upgrade
+      }
+    } else {
+      // Existing logic for non-upgrade flows (action: "set")
+      if (salon.paymentStatus === "completed" && salon.isActive === true) {
+        nextStep = "/salon/dashboard";
+      } else if (!salon.isVerified) {
+        nextStep = "/salon/register/verification";
+      } else if (!salon.plan || !salon.plan.name) {
+        nextStep = "/salon/register/plan-selection";
+      } else if (
+        salon.paymentStatus !== "completed" ||
+        typeof salon.paymentStatus === "undefined"
+      ) {
+        nextStep = "/salon/register/payment";
+      }
     }
 
-    if (nextStep === "/salon/register/payment" && (!salon.plan || !salon.plan.name)) {
-      console.warn(`Plan missing for ${email} at payment step`);
+    // Ensure the plan is valid for the payment step
+    if (
+      nextStep === "/salon/register/payment" &&
+      (!salon.plan || !salon.plan.name) &&
+      (!salon.pendingPlan || !salon.pendingPlan.name)
+    ) {
+      console.warn(`Invalid plan for ${email} at payment step`);
       return NextResponse.json(
         {
-          error: "Plan not set for payment step",
+          error: "Valid plan required for payment",
           exists: true,
           isVerified: salon.isVerified,
           nextStep: "/salon/register/plan-selection",
         },
         { status: 400 }
+      );
+    }
+
+    // Update lastStep in the database only if not upgrading
+    if (action !== "upgrade") {
+      await Salon.updateOne(
+        { email: email.toLowerCase() },
+        { lastStep: nextStep }
       );
     }
 
@@ -61,6 +102,7 @@ export async function POST(req: Request) {
       exists: true,
       isVerified: salon.isVerified,
       plan: salon.plan || null,
+      pendingPlan: salon.pendingPlan || null,
       paymentStatus: salon.paymentStatus,
       isActive: salon.isActive,
     });

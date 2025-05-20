@@ -6,6 +6,8 @@ import RegistrationStepper from "../../components/RegistrationStepper";
 import LoadingSpinner from "@/common/LoadingSpinner";
 import toast from "react-hot-toast";
 import { setSession } from "@/lib/session";
+import axios from "axios";
+import { validatePakistaniPhone, formatPakistaniPhone } from "@/lib/PhoneUtils";
 
 interface FormData {
   name: string;
@@ -16,6 +18,8 @@ interface FormData {
   password: string;
   confirmPassword: string;
   salonType: string;
+  latitude?: string;
+  longitude?: string;
 }
 
 interface FormErrors {
@@ -28,6 +32,7 @@ interface FormErrors {
   salonType?: string;
   password?: string;
   confirmPassword?: string;
+  avatar?: string;
 }
 
 export default function BasicInfoPage() {
@@ -42,14 +47,93 @@ export default function BasicInfoPage() {
     password: "",
     confirmPassword: "",
     salonType: "",
+    latitude: "",
+    longitude: "",
   });
+  const [avatar, setAvatar] = useState<File | null>(null);
   const [errors, setErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setFormData((prev) => ({ ...prev, phone: value }));
+    setErrors((prev) => ({ ...prev, phone: "" }));
+  };
+
+  const handleAddressChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const address = e.target.value;
+    setFormData((prev) => ({ ...prev, address, latitude: "", longitude: "" }));
+    setErrors((prev) => ({ ...prev, address: "" }));
+
+    if (address.trim()) {
+      try {
+        const query = `${encodeURIComponent(address)}, Pakistan`;
+        const response = await axios.get(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${query}&addressdetails=1&limit=1`
+        );
+        const data = response.data;
+        if (data.length > 0) {
+          setFormData((prev) => ({
+            ...prev,
+            latitude: data[0].lat,
+            longitude: data[0].lon,
+          }));
+        } else {
+          setErrors((prev) => ({
+            ...prev,
+            address: "Could not find coordinates for this address",
+          }));
+        }
+        // Respect Nominatim rate limit (1 request per second)
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      } catch (error) {
+        console.error("Geocoding error:", error);
+        setErrors((prev) => ({
+          ...prev,
+          address: "Failed to geocode address",
+        }));
+      }
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!["image/jpeg", "image/png", "image/jpg"].includes(file.type)) {
+        setErrors((prev) => ({
+          ...prev,
+          avatar: "Only JPEG or PNG images are allowed",
+        }));
+        setAvatar(null);
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        setErrors((prev) => ({
+          ...prev,
+          avatar: "Image size must be less than 5MB",
+        }));
+        setAvatar(null);
+        return;
+      }
+      setAvatar(file);
+      setErrors((prev) => ({ ...prev, avatar: "" }));
+    } else {
+      setErrors((prev) => ({
+        ...prev,
+        avatar: "Profile image is required",
+      }));
+      setAvatar(null);
+    }
   };
 
   const validateEmail = (email: string) => {
@@ -61,19 +145,26 @@ export default function BasicInfoPage() {
     const newErrors: FormErrors = {};
 
     if (!email) newErrors.email = "Email is required";
-    else if (!validateEmail(email)) newErrors.email = "Please enter a valid email address";
+    else if (!validateEmail(email))
+      newErrors.email = "Please enter a valid email address";
 
     if (!formData.name) newErrors.name = "Owner name is required";
     if (!formData.salonName) newErrors.salonName = "Salon name is required";
     if (!formData.phone) newErrors.phone = "Phone number is required";
-    else if (!/^\d{10}$/.test(formData.phone)) newErrors.phone = "Phone number must be 10 digits";
+    else if (!validatePakistaniPhone(formData.phone))
+      newErrors.phone =
+        "Phone number must be in Pakistani format (e.g., 03335759985)";
     if (!formData.username) newErrors.username = "Username is required";
     if (!formData.address) newErrors.address = "Address is required";
     if (!formData.salonType) newErrors.salonType = "Salon type is required";
     if (!formData.password) newErrors.password = "Password is required";
-    else if (formData.password.length < 6) newErrors.password = "Password must be at least 6 characters";
-    if (!formData.confirmPassword) newErrors.confirmPassword = "Confirm password is required";
-    else if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "Passwords do not match";
+    else if (formData.password.length < 6)
+      newErrors.password = "Password must be at least 6 characters";
+    if (!formData.confirmPassword)
+      newErrors.confirmPassword = "Confirm password is required";
+    else if (formData.password !== formData.confirmPassword)
+      newErrors.confirmPassword = "Passwords do not match";
+    if (!avatar) newErrors.avatar = "Profile image is required";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -95,20 +186,25 @@ export default function BasicInfoPage() {
     const toastId = toast.loading("Saving your information...");
 
     try {
+      const formDataToSend = new FormData();
+      formDataToSend.append("email", email);
+      formDataToSend.append("name", formData.name);
+      formDataToSend.append("salonName", formData.salonName);
+      formDataToSend.append("phone", formatPakistaniPhone(formData.phone));
+      formDataToSend.append("username", formData.username);
+      formDataToSend.append("address", formData.address);
+      formDataToSend.append("salonType", formData.salonType);
+      formDataToSend.append("password", formData.password);
+      formDataToSend.append("authMethod", "email");
+      formDataToSend.append("avatar", avatar!);
+      if (formData.latitude && formData.longitude) {
+        formDataToSend.append("latitude", formData.latitude);
+        formDataToSend.append("longitude", formData.longitude);
+      }
+
       const response = await fetch("/api/register/basic", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          name: formData.name,
-          salonName: formData.salonName,
-          phone: formData.phone,
-          username: formData.username,
-          address: formData.address,
-          salonType: formData.salonType,
-          password: formData.password,
-          authMethod: "email",
-        }),
+        body: formDataToSend,
       });
 
       const data = await response.json();
@@ -119,11 +215,21 @@ export default function BasicInfoPage() {
       }
 
       setSession("salon_registration_email", email);
-      toast.success("Basic information saved successfully!", { id: toastId, duration: 5000 });
-      router.push(`/salon/register/verification?email=${encodeURIComponent(email)}`);
+      toast.success("Basic information saved successfully!", {
+        id: toastId,
+        duration: 5000,
+      });
+      router.push(
+        `/salon/register/verification?email=${encodeURIComponent(email)}`
+      );
     } catch (err: any) {
-      toast.error(err.message || "Failed to save basic information", { id: toastId });
-      setErrors((prev) => ({ ...prev, email: err.message || "Failed to save basic information" }));
+      toast.error(err.message || "Failed to save basic information", {
+        id: toastId,
+      });
+      setErrors((prev) => ({
+        ...prev,
+        email: err.message || "Failed to save basic information",
+      }));
     } finally {
       setIsLoading(false);
     }
@@ -151,7 +257,10 @@ export default function BasicInfoPage() {
         <div className="bg-white shadow-lg rounded-xl p-8 transform transition-all duration-300 hover:shadow-xl">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Email <span className="text-red-500">*</span>
               </label>
               <input
@@ -174,7 +283,10 @@ export default function BasicInfoPage() {
             </div>
 
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="name"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Owner Name <span className="text-red-500">*</span>
               </label>
               <input
@@ -194,7 +306,10 @@ export default function BasicInfoPage() {
             </div>
 
             <div>
-              <label htmlFor="salonName" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="salonName"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Salon Name <span className="text-red-500">*</span>
               </label>
               <input
@@ -214,7 +329,32 @@ export default function BasicInfoPage() {
             </div>
 
             <div>
-              <label htmlFor="salonType" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="avatar"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Profile Image <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="file"
+                name="avatar"
+                accept="image/jpeg,image/png,image/jpg"
+                onChange={handleFileChange}
+                className={`mt-1 w-full px-4 py-3 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#B4004E] focus:border-transparent transition-all ${
+                  errors.avatar ? "border-red-500" : "border-gray-300"
+                }`}
+                required
+              />
+              {errors.avatar && (
+                <p className="mt-1 text-xs text-red-500">{errors.avatar}</p>
+              )}
+            </div>
+
+            <div>
+              <label
+                htmlFor="salonType"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Salon Type <span className="text-red-500">*</span>
               </label>
               <select
@@ -226,7 +366,9 @@ export default function BasicInfoPage() {
                 }`}
                 required
               >
-                <option value="" disabled>Select Salon Type</option>
+                <option value="" disabled>
+                  Select Salon Type
+                </option>
                 <option value="female">Female</option>
                 <option value="male">Male</option>
                 <option value="unisex">Unisex</option>
@@ -237,24 +379,22 @@ export default function BasicInfoPage() {
             </div>
 
             <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="phone"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Phone Number <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 name="phone"
                 value={formData.phone}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/\D/g, "").slice(0, 10);
-                  setFormData((prev) => ({ ...prev, phone: value }));
-                  setErrors((prev) => ({ ...prev, phone: "" }));
-                }}
+                onChange={handlePhoneChange}
                 className={`mt-1 w-full px-4 py-3 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#B4004E] focus:border-transparent transition-all ${
                   errors.phone ? "border-red-500" : "border-gray-300"
                 }`}
-                placeholder="Enter your phone number"
+                placeholder="e.g., 03335759985"
                 required
-                maxLength={10}
               />
               {errors.phone && (
                 <p className="mt-1 text-xs text-red-500">{errors.phone}</p>
@@ -262,7 +402,10 @@ export default function BasicInfoPage() {
             </div>
 
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="username"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Username <span className="text-red-500">*</span>
               </label>
               <input
@@ -282,14 +425,17 @@ export default function BasicInfoPage() {
             </div>
 
             <div>
-              <label htmlFor="address" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="address"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Address <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 name="address"
                 value={formData.address}
-                onChange={handleChange}
+                onChange={handleAddressChange}
                 className={`mt-1 w-full px-4 py-3 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#B4004E] focus:border-transparent transition-all ${
                   errors.address ? "border-red-500" : "border-gray-300"
                 }`}
@@ -302,7 +448,10 @@ export default function BasicInfoPage() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Password <span className="text-red-500">*</span>
               </label>
               <input
@@ -322,7 +471,10 @@ export default function BasicInfoPage() {
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="confirmPassword"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Confirm Password <span className="text-red-500">*</span>
               </label>
               <input
@@ -337,7 +489,9 @@ export default function BasicInfoPage() {
                 required
               />
               {errors.confirmPassword && (
-                <p className="mt-1 text-xs text-red-500">{errors.confirmPassword}</p>
+                <p className="mt-1 text-xs text-red-500">
+                  {errors.confirmPassword}
+                </p>
               )}
             </div>
 

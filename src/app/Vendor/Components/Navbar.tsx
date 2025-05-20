@@ -20,7 +20,7 @@ const Navbar = () => {
 
         {/* Desktop Menu */}
         <div className="hidden md:flex space-x-6 items-center">
-          <Link href="/pricing" className="text-lg font-medium hover:text-primary transition">
+          <Link href="/Subscription" className="text-lg font-medium hover:text-primary transition">
             Pricing
           </Link>
 
@@ -36,7 +36,7 @@ const Navbar = () => {
 
             {dropdownOpen && (
               <div className="absolute right-0 mt-2 w-52 bg-white shadow-lg rounded-md overflow-hidden z-50 animate-fadeIn">
-                <Link href="/pricing" className="block px-4 py-3 hover:bg-gray-100">Pricing</Link>
+                <Link href="/Subscription" className="block px-4 py-3 hover:bg-gray-100">Pricing</Link>
                 <Link href="/support" className="block px-4 py-3 hover:bg-gray-100">Support for Business</Link>
                 <Link href="/customers" className="block px-4 py-3 hover:bg-gray-100">For Customers</Link>
                 <Link href="/language" className="block px-4 py-3 hover:bg-gray-100">Language</Link>
@@ -45,8 +45,8 @@ const Navbar = () => {
           </div>
 
           {/* Login & Sign Up */}
-          <Link href="/login" className="text-lg font-medium hover:text-primary transition">Login</Link>
-          <Link href="/signup" className="px-5 py-2 bg-primary text-white rounded-md font-medium hover:opacity-90 transition">
+          <Link href="/salon/login" className="text-lg font-medium hover:text-primary transition">Login</Link>
+          <Link href="/salon/register/basic-info" className="px-5 py-2 bg-primary text-white rounded-md font-medium hover:opacity-90 transition">
             Sign Up
           </Link>
         </div>
@@ -59,7 +59,7 @@ const Navbar = () => {
 
       {/* Mobile Menu */}
       <div className={`md:hidden bg-white shadow-md absolute w-full left-0 py-4 transform transition-transform duration-300 ${menuOpen ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0 pointer-events-none"}`}>
-        <Link href="/pricing" className="block px-6 py-3 border-b hover:bg-gray-100">Pricing</Link>
+        <Link href="/Subscription" className="block px-6 py-3 border-b hover:bg-gray-100">Pricing</Link>
 
         {/* Mobile Dropdown */}
         <button 
@@ -74,7 +74,7 @@ const Navbar = () => {
 
         {mobileDropdownOpen && (
           <div className="bg-gray-50 animate-fadeIn">
-            <Link href="/pricing" className="block px-6 py-3 hover:bg-gray-200">Pricing</Link>
+            <Link href="/Subscription" className="block px-6 py-3 hover:bg-gray-200">Pricing</Link>
             <Link href="/support" className="block px-6 py-3 hover:bg-gray-200">Support for Business</Link>
             <Link href="/customers" className="block px-6 py-3 hover:bg-gray-200">For Customers</Link>
             <Link href="/language" className="block px-6 py-3 hover:bg-gray-200">Language</Link>

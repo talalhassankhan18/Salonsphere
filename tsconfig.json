@@ -2,9 +2,11 @@
   "compilerOptions": {
     "composite": true,
     "baseUrl": ".",
-    "target": "ES2017",
+    "target": "ESNext", // Use ESNext for modern JavaScript features
     "lib": ["dom", "dom.iterable", "esnext"],
-    "typeRoots": ["./node_modules/@types", "./types"],
+    "typeRoots": ["./node_modules/@types", "./types"], // Ensure next-auth.d.ts is in ./types/
+    "forceConsistentCasingInFileNames": true, // Add this to enforce case sensitivity
+
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -24,11 +26,16 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "noImplicitAny": false,
-    "noUnusedParameters": false,
-    "noUnusedLocals": false,
-    "strictNullChecks": false
+    "noImplicitAny": true, // Enable for better type safety
+    "noUnusedParameters": true, // Enable to catch unused parameters
+    "noUnusedLocals": true, // Enable to catch unused variables
+    "strictNullChecks": true // Enable for better null/undefined safety
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/app/signup"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
   "exclude": ["node_modules"]
 }

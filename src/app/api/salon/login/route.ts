@@ -1,71 +1,59 @@
+// src/app/api/auth/login/route.ts
 import { NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
 import dbConnect from "@/dbConnect";
 import Salon from "@/mongoose-models/Salon";
-import { compare } from "bcryptjs";
 
 export async function POST(req: Request) {
   await dbConnect();
 
   try {
-    const { email, password } = await req.json();
-
-    if (!email || !password) {
+    const { identifier, password } = await req.json();
+    if (!identifier || !password) {
       return NextResponse.json(
-        { error: "Email and password are required" },
+        { error: "Email/username and password are required" },
         { status: 400 }
       );
     }
 
-    const salon = await Salon.findOne({ email: email.toLowerCase() });
+    const salon = await Salon.findOne({
+      $or: [{ email: identifier.toLowerCase() }, { username: identifier }],
+    });
+
     if (!salon) {
-      console.log("No salon found for email:", email);
       return NextResponse.json(
-        { error: "Invalid email or password" },
+        { error: "Invalid email or username" },
         { status: 401 }
       );
     }
 
     if (!salon.isActive) {
-      console.log("Salon not active for email:", email);
       return NextResponse.json(
-        { error: "Salon registration is not complete" },
+        {
+          error: "Payment incomplete",
+          lastStep: salon.lastStep || "/salon/register/payment",
+        },
         { status: 403 }
       );
     }
 
-    // Check if password is defined
-    if (!salon.password) {
-      console.log("No password set for salon:", email);
-      return NextResponse.json(
-        { error: "No password set for this account" },
-        { status: 401 }
-      );
-    }
-
-    const isPasswordValid = await compare(password, salon.password);
-    console.log("Password comparison result for email:", email, isPasswordValid);
+    const isPasswordValid = await bcrypt.compare(
+      password,
+      salon.password || ""
+    );
     if (!isPasswordValid) {
       return NextResponse.json(
-        { error: "Invalid email or password" },
+        { error: "Incorrect password" },
         { status: 401 }
       );
     }
 
-    // In a real app, you'd generate a JWT or session token here
-    return NextResponse.json(
-      {
-        success: true,
-        message: "Login successful",
-        nextStep: "/salon/dashboard",
-        email: salon.email,
-      },
-      { status: 200 }
-    );
+    return NextResponse.json({
+      success: true,
+      user: { id: salon._id, email: salon.email, name: salon.name },
+    });
   } catch (error: any) {
     console.error("Login error:", error);
-    return NextResponse.json(
-      { error: "Failed to log in" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to login" }, { status: 500 });
   }
 }

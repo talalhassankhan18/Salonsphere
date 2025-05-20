@@ -1,4 +1,3 @@
-
 import "next-auth";
 import { DefaultSession } from "next-auth";
 
@@ -7,7 +6,7 @@ declare module "next-auth" {
     id: string;
     name: string;
     email: string;
-    role: 'admin' | 'salon_admin' | 'customer' | 'super_admin';
+    role: "admin" | "salon_admin" | "customer" | "super_admin";
     salon?: string;
     _id?: string;
   }
@@ -17,9 +16,9 @@ declare module "next-auth" {
       _id: string;
       name: string;
       email: string;
-      role: 'admin' | 'salon_admin' | 'customer' | 'super_admin';
+      role: "admin" | "salon_admin" | "customer" | "super_admin";
       salon?: string;
-    } & DefaultSession["user"]
+    } & DefaultSession["user"];
   }
 }
 

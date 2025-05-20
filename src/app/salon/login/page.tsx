@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 import { FaUser, FaLock } from "react-icons/fa";
 import Link from "next/link";
 import Image from "next/image";
+import { setSession, clearAllRegistrationSessions } from "@/lib/session";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -32,22 +33,93 @@ export default function LoginPage() {
     const toastId = toast.loading("Logging in...");
 
     try {
-      const result = await signIn("credentials", {
+      const baseUrl =
+        process.env.NEXT_PUBLIC_NEXTAUTH_URL || "http://localhost:3000";
+      const callbackUrl = `${baseUrl}/salon/dashboard`;
+
+      // Validate URL
+      try {
+        new URL(callbackUrl);
+      } catch {
+        throw new Error("Invalid callback URL");
+      }
+
+      console.log("Attempting signIn with salon-credentials-login", {
+        identifier,
+        callbackUrl,
+      });
+
+      const result = await signIn("salon-credentials-login", {
         redirect: false,
         identifier,
         password,
+        callbackUrl,
       });
 
+      console.log("signIn result:", result);
+
       if (result?.error) {
-        throw new Error(result.error);
+        setError(result.error);
+        if (result.error.includes("Payment incomplete")) {
+          setSession("salon_registration_email", identifier);
+          toast.error("Payment incomplete. Redirecting to payment page...", {
+            id: toastId,
+            duration: 3000,
+          });
+          setTimeout(
+            () =>
+              router.push(
+                `/salon/register/payment?email=${encodeURIComponent(
+                  identifier
+                )}`
+              ),
+            3000
+          );
+        } else if (result.error.includes("Account not verified")) {
+          setSession("salon_registration_email", identifier);
+          toast.error(
+            "Account not verified. Redirecting to verification page...",
+            { id: toastId, duration: 3000 }
+          );
+          setTimeout(
+            () =>
+              router.push(
+                `/salon/verify?email=${encodeURIComponent(identifier)}`
+              ),
+            3000
+          );
+        } else if (result.error.includes("Incorrect password")) {
+          toast.error("Incorrect password. Please try again.", {
+            id: toastId,
+            duration: 5000,
+          });
+        } else if (result.error.includes("Invalid email or username")) {
+          toast.error("Invalid email or username. Please check your input.", {
+            id: toastId,
+            duration: 5000,
+          });
+        } else {
+          toast.error(result.error, { id: toastId, duration: 5000 });
+        }
+        setIsLoading(false);
+        return;
       }
 
+      if (!result?.url) {
+        console.error("signIn: No redirect URL returned", result);
+        setError("Login failed: No redirect URL provided");
+        toast.error("Login failed: Please try again", { id: toastId });
+        setIsLoading(false);
+        return;
+      }
+
+      clearAllRegistrationSessions();
       toast.success("Login successful!", { id: toastId, duration: 5000 });
-      router.push("/salon/dashboard");
+      router.push(callbackUrl);
     } catch (err: any) {
-      toast.error(err.message || "Failed to login", { id: toastId });
+      console.error("Login error:", err);
       setError(err.message || "Failed to login");
-    } finally {
+      toast.error(err.message || "Failed to login", { id: toastId });
       setIsLoading(false);
     }
   };
@@ -60,20 +132,17 @@ export default function LoginPage() {
           <Image
             src="/assets/images/logo.png"
             alt="Salon Logo"
-            width={48}
-            height={48}
+            width={300}
+            height={300}
             className="rounded-full"
           />
         </div>
 
         {/* Title and Subtitle */}
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 sm:text-4xl">
-            Welcome Back
-          </h1>
-          <p className="mt-2 text-sm text-gray-600">
+          <h2 className="mt-2 text-sm text-gray-600">
             Log in to manage your salon dashboard
-          </p>
+          </h2>
         </div>
 
         {/* Error Message */}

@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 // Define the cached connection type
 interface CachedMongoose {
@@ -16,13 +16,22 @@ declare global {
 const MONGODB_URI = process.env.MONGODB_URI as string | undefined;
 const DB_NAME = process.env.DB_NAME as string | undefined;
 
+// src/dbConnect.ts
+console.log("MONGODB_URI:", process.env.MONGODB_URI);
+console.log("DB_NAME:", process.env.DB_NAME);
+
 // Validate environment variables
 if (!MONGODB_URI) {
-  throw new Error('MONGODB_URI environment variable is not defined');
+  throw new Error("MONGODB_URI environment variable is not defined");
+}
+
+// Validate environment variables
+if (!MONGODB_URI) {
+  throw new Error("MONGODB_URI environment variable is not defined");
 }
 
 if (!DB_NAME) {
-  throw new Error('DB_NAME environment variable is not defined');
+  throw new Error("DB_NAME environment variable is not defined");
 }
 
 // Type assertion is safe due to validation above
@@ -40,7 +49,7 @@ if (!global.mongoose) {
 async function dbConnect(): Promise<typeof mongoose> {
   // Return cached connection if it exists
   if (cached.conn) {
-    console.log('Using cached MongoDB connection');
+    console.log("Using cached MongoDB connection");
     return cached.conn;
   }
 
@@ -56,11 +65,15 @@ async function dbConnect(): Promise<typeof mongoose> {
       heartbeatFrequencyMS: 10000, // Frequency of server monitoring
     };
 
-    console.log(`Connecting to MongoDB at ${validatedMONGODB_URI} with dbName: ${validatedDB_NAME}`);
-    cached.promise = mongoose.connect(validatedMONGODB_URI, opts).then((mongooseInstance) => {
-      console.log('MongoDB connected successfully');
-      return mongooseInstance;
-    });
+    console.log(
+      `Connecting to MongoDB at ${validatedMONGODB_URI} with dbName: ${validatedDB_NAME}`
+    );
+    cached.promise = mongoose
+      .connect(validatedMONGODB_URI, opts)
+      .then((mongooseInstance) => {
+        console.log("MongoDB connected successfully");
+        return mongooseInstance;
+      });
   }
 
   try {
@@ -68,20 +81,23 @@ async function dbConnect(): Promise<typeof mongoose> {
   } catch (error: unknown) {
     // Reset promise on failure to allow retries
     cached.promise = null;
-    const err = error instanceof Error ? error : new Error('Unknown MongoDB connection error');
-    console.error('MongoDB connection error:', err.message);
+    const err =
+      error instanceof Error
+        ? error
+        : new Error("Unknown MongoDB connection error");
+    console.error("MongoDB connection error:", err.message);
     throw new Error(`Failed to connect to MongoDB: ${err.message}`);
   }
 
   // Add event listeners for connection monitoring
-  mongoose.connection.on('disconnected', () => {
-    console.warn('MongoDB disconnected');
+  mongoose.connection.on("disconnected", () => {
+    console.warn("MongoDB disconnected");
     cached.conn = null;
     cached.promise = null;
   });
 
-  mongoose.connection.on('error', (err) => {
-    console.error('MongoDB connection error:', err.message);
+  mongoose.connection.on("error", (err) => {
+    console.error("MongoDB connection error:", err.message);
     cached.conn = null;
     cached.promise = null;
   });

@@ -1,192 +1,215 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import 'swiper/swiper-bundle.css'; // Import Swiper styles
-import User from "@/mongoose-models/SalonService";
+import React, { useEffect, useState } from "react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/swiper-bundle.css";
+import { Search } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Service } from "../../../../../types";
+import Link from "next/link";
 
-const SalonServices: React.FC = () => {
-  const [services, setServices] = useState<any[]>([]); // State to store fetched services
-  const [loading, setLoading] = useState<boolean>(true); // Loading state
-  const [error, setError] = useState<string | null>(null); // Error state
-  const [newService, setNewService] = useState({
-    serviceName: '',
-    duration: '',
-    price: 0,
-    gender: 'Female',
-  }); // Form state for new service
+interface SalonServicesProps {
+  salonId: string;
+}
 
-  // Fetch services from the backend
+const SalonServices: React.FC<SalonServicesProps> = ({ salonId }) => {
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  // Fetch services for the specific salon
   useEffect(() => {
     const fetchServices = async () => {
       setLoading(true);
       setError(null);
 
       try {
-        const response = await fetch('/api/Services/get');
+        const response = await fetch(`/api/services?salonId=${salonId}`);
         if (response.ok) {
           const data = await response.json();
           setServices(data);
         } else {
-          setError('Failed to fetch services');
+          setError("Failed to fetch services");
         }
       } catch (err) {
-        setError('An error occurred while fetching services');
+        setError("An error occurred while fetching services");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchServices();
-  }, []);
-
-  // Handle adding a new service
-  const handleAddService = async () => {
-    setError(null);
-
-    try {
-      const response = await fetch('/api/Services/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newService),
-      });
-
-      if (response.ok) {
-        const createdService = await response.json();
-        setServices((prevServices) => [...prevServices, createdService]);
-        setNewService({ serviceName: '', duration: '', price: 0, gender: 'Female' }); // Reset form
-      } else {
-        setError('Failed to create service');
-      }
-    } catch (err) {
-      setError('An error occurred while adding the service');
+    if (salonId) {
+      fetchServices();
+    } else {
+      setError("Invalid salon ID");
+      setLoading(false);
     }
-  };
+  }, [salonId]);
 
-  // Handle deleting a service
-  const handleDeleteService = async (id: string) => {
-    setError(null);
+  // Get unique categories
+  const categories = [...new Set(services.map((service) => service.category))];
 
-    try {
-      const response = await fetch('/api/Services/delete', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id }),
-      });
+  // Filter services based on search term and selected category
+  const filteredServices = services.filter((service) => {
+    const matchesSearch =
+      service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      service.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory
+      ? service.category === selectedCategory
+      : true;
+    return matchesSearch && matchesCategory && service.isActive;
+  });
 
-      if (response.ok) {
-        setServices((prevServices) => prevServices.filter((service) => service._id !== id));
-      } else {
-        setError('Failed to delete service');
-      }
-    } catch (err) {
-      setError('An error occurred while deleting the service');
-    }
-  };
+  if (loading) {
+    return (
+      <div className="container mx-auto py-10 text-center">
+        <p className="text-gray-500">Loading services...</p>
+      </div>
+    );
+  }
 
-  if (loading) return <div>Loading services...</div>; // Show loading message
-  if (error) return <div className="text-red-500">{error}</div>; // Show error message
+  if (error) {
+    return (
+      <div className="container mx-auto py-10 text-center">
+        <p className="text-red-500">{error}</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="mb-6 w-full md:mb-8 bg-primary p-4">
-      <h2 className="text-2xl font-bold mb-4 text-purple-600">Salon Services</h2>
+    <div className="container mx-auto py-10 px-4">
+      <h2 className="text-3xl font-bold mb-6 text-primary">Our Services</h2>
 
-      {/* Display services */}
-      <div className="relative">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div className="relative w-full sm:w-64">
+          <input
+            type="text"
+            placeholder="Search services..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full py-2 pl-10 pr-4 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+          <Search
+            size={16}
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+          />
+        </div>
+      </div>
+
+      {categories.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-6">
+          <button
+            onClick={() => setSelectedCategory(null)}
+            className={cn(
+              "px-3 py-1 text-sm rounded-full transition-colors",
+              selectedCategory === null
+                ? "bg-blue-100 text-blue-800"
+                : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+            )}
+          >
+            All
+          </button>
+          {categories.map((category) => (
+            <button
+              key={category}
+              onClick={() => setSelectedCategory(category)}
+              className={cn(
+                "px-3 py-1 text-sm rounded-full transition-colors",
+                selectedCategory === category
+                  ? "bg-blue-100 text-blue-800"
+                  : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+              )}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className="block md:hidden">
         <Swiper
-          spaceBetween={30}
-          slidesPerView="auto"
+          spaceBetween={20}
+          slidesPerView={1}
           loop={false}
           breakpoints={{
             280: { slidesPerView: 1 },
-            768: { slidesPerView: 3 },
+            640: { slidesPerView: 2 },
           }}
         >
-          {services.map((service) => (
+          {filteredServices.map((service) => (
             <SwiperSlide key={service._id}>
-              <div className="service-item border p-4 rounded shadow-sm">
-                <img
-                  src={service.image || '/default-image.jpg'}
-                  alt={service.serviceName}
-                  className="w-full h-48 object-cover mb-2 rounded"
-                />
-                <h3 className="text-lg font-semibold mb-2">{service.serviceName}</h3>
-                <p className="text-gray-700 mb-1">Duration: {service.duration} minutes</p>
-                <p className="text-gray-700 mb-3">Price: ${service.price}</p>
-                <button
-                  onClick={() => handleDeleteService(service._id)}
-                  className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
-                >
-                  Delete
-                </button>
-              </div>
+              <ServiceCard service={service} salonId={salonId} />
             </SwiperSlide>
           ))}
         </Swiper>
       </div>
 
-      {/* Add new service form */}
-      <div className="mt-6 bg-white p-6 rounded shadow-md">
-        <h3 className="text-xl font-semibold mb-4">Add New Service</h3>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleAddService();
-          }}
-        >
-          <div className="mb-4">
-            <label className="block mb-1">Service Name</label>
-            <input
-              type="text"
-              value={newService.serviceName}
-              onChange={(e) => setNewService({ ...newService, serviceName: e.target.value })}
-              className="w-full border border-gray-300 rounded p-2"
-              placeholder="E.g., Haircut"
-              required
-            />
+      <div className="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredServices.map((service) => (
+          <ServiceCard key={service._id} service={service} salonId={salonId} />
+        ))}
+      </div>
+
+      {filteredServices.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-gray-500">No services found</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Service Card Component
+const ServiceCard: React.FC<{ service: Service; salonId: string }> = ({
+  service,
+  salonId,
+}) => {
+  return (
+    <div className="glass rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300">
+      <div className="h-48 overflow-hidden">
+        {service.image ? (
+          <img
+            src={service.image}
+            alt={service.name}
+            className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+          />
+        ) : (
+          <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+            <span className="text-gray-400">No image</span>
           </div>
-          <div className="mb-4">
-            <label className="block mb-1">Duration (in minutes)</label>
-            <input
-              type="number"
-              value={newService.duration}
-              onChange={(e) => setNewService({ ...newService, duration: e.target.value })}
-              className="w-full border border-gray-300 rounded p-2"
-              placeholder="E.g., 30"
-              required
-            />
+        )}
+      </div>
+
+      <div className="p-5">
+        <div className="flex justify-between items-start">
+          <div>
+            <span className="text-xs font-medium px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
+              {service.category}
+            </span>
+            <h3 className="mt-2 text-lg font-semibold">{service.name}</h3>
           </div>
-          <div className="mb-4">
-            <label className="block mb-1">Price (in $)</label>
-            <input
-              type="number"
-              value={newService.price}
-              onChange={(e) => setNewService({ ...newService, price: +e.target.value })}
-              className="w-full border border-gray-300 rounded p-2"
-              placeholder="E.g., 50"
-              required
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block mb-1">Gender</label>
-            <select
-              value={newService.gender}
-              onChange={(e) => setNewService({ ...newService, gender: e.target.value })}
-              className="w-full border border-gray-300 rounded p-2"
-              required
-            >
-              <option value="Unisex">Unisex</option>
-              <option value="Female">Female</option>
-              <option value="Male">Male</option>
-            </select>
-          </div>
-          <button
-            type="submit"
-            className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition"
+          <p className="text-lg font-bold">PKR {service.price.toFixed(2)}</p>
+        </div>
+
+        <p className="mt-2 text-sm text-gray-600 line-clamp-2">
+          {service.description}
+        </p>
+
+        <div className="mt-2 text-sm text-gray-500">
+          <span>Gender: {service.gender}</span> |{" "}
+          <span>{service.duration} min</span>
+        </div>
+
+        <div className="mt-4 flex justify-end">
+          <Link
+            href={`/salons/${salonId}/book?serviceId=${service._id}`}
+            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Add Service
-          </button>
-        </form>
+            Book Service
+          </Link>
+        </div>
       </div>
     </div>
   );

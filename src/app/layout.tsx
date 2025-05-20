@@ -2,7 +2,6 @@
 import React from "react";
 import localFont from "next/font/local";
 import "./globals.css";
-import Footer from "@/common/footer";
 import "swiper/css/bundle";
 import { CartStoreProvider } from "@/store/cartStoreContext";
 import CookieBanner from "@/common/cookie-banner";
@@ -28,7 +27,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" data-theme="light" title="SalonSphere">
+    <html
+      lang="en"
+      data-theme="light"
+      title="SalonSphere"
+      suppressHydrationWarning
+    >
+      <head>
+        <title>SalonSphere</title>
+        <meta name="description" content="Your SalonSphere application" />
+        {/* Favicon for logo */}
+        <link rel="icon" href="/assets/images/logo.png" />
+        {/* Optional: Support for Apple Touch Icon (for iOS home screen) */}
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        {/* Add other meta tags, favicon, etc., here if needed */}
+      </head>
       <body
         className={`${poppinsRegular.variable} ${poppinsBold.variable} container mx-auto bg-base-100 antialiased`}
       >

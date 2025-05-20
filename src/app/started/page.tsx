@@ -6,10 +6,17 @@ import { useRouter } from "next/navigation";
 import GetStartedImage from "@/assets/images/getstarted.jpg";
 import Image from "next/image";
 import Logo from "@/assets/images/logo.png";
-import { FaUserTie, FaUsers, FaGlobe, FaHeadset, FaSignInAlt } from "react-icons/fa";
+import {
+  FaUserTie,
+  FaUsers,
+  FaGlobe,
+  FaHeadset,
+  FaSignInAlt,
+  FaUserShield,
+} from "react-icons/fa";
 
 export default function GetStartedPage() {
-  const router = useRouter(); // Added router to fix the back button
+  const router = useRouter();
 
   return (
     <div className="relative flex min-h-screen bg-base-100">
@@ -20,7 +27,12 @@ export default function GetStartedPage() {
       >
         {/* Background Image for Mobile */}
         <div className="absolute inset-0 w-full h-full md:hidden">
-          <Image src={GetStartedImage} alt="Background" fill className="object-cover" />
+          <Image
+            src={GetStartedImage}
+            alt="Background"
+            fill
+            className="object-cover"
+          />
           <div className="absolute inset-0 bg-black/40"></div>
         </div>
 
@@ -40,16 +52,10 @@ export default function GetStartedPage() {
           className="relative w-full max-w-md text-center px-6 py-8 bg-white bg-opacity-80 md:bg-transparent 
              md:p-0 rounded-lg md:rounded-none shadow-md md:shadow-none z-10 flex flex-col justify-center items-center"
         >
-          {/* <h1 className="text-2xl font-extrabold text-primary mb-2">Continue to</h1> */}
           {/* Logo Centered */}
           <div className="mb-4 flex justify-center">
             <Image src={Logo} alt="Logo" width={300} height={300} />
           </div>
-          {/* Heading with Icon
-          <div className="flex items-center justify-center space-x-3 mb-6">
-            <FaSignInAlt className="text-2xl md:text-3xl text-primary" />
-            <h1 className="text-2xl md:text-3xl font-bold">Sign up / Log in</h1>
-          </div> */}
 
           {/* Customer Option */}
           <div className="w-full mb-4 md:mb-6">
@@ -58,7 +64,6 @@ export default function GetStartedPage() {
               className="w-full flex items-center justify-between p-4 md:p-6 border border-neutral rounded-lg shadow-sm transition-all duration-200 
                 hover:shadow-lg hover:bg-primary hover:text-primary-content group bg-white md:bg-transparent"
             >
-
               <div className="text-left w-full">
                 <h2 className="font-bold text-lg md:text-xl group-hover:text-primary-content transition-colors duration-200">
                   SalonSphere for customers
@@ -95,16 +100,24 @@ export default function GetStartedPage() {
               </div>
             </Link>
           </div>
-          {/* Language and Support Buttons */}
-          <div className="mt-4 flex justify-center space-x-3 sm:mt-6 sm:space-x-4">
-            <button className="flex items-center space-x-1 text-white bg-gray-700 px-3 py-1 text-xs sm:text-sm sm:px-4 sm:py-2 rounded-lg hover:bg-gray-800">
-              <FaGlobe />
-              <span>Language</span>
-            </button>
-            <button className="flex items-center space-x-1 text-white bg-gray-700 px-3 py-1 text-xs sm:text-sm sm:px-4 sm:py-2 rounded-lg hover:bg-gray-800">
-              <FaHeadset />
+
+          {/* Language, Support, and Admin Buttons */}
+          <div className="mt-4 flex justify-center flex-wrap gap-3 sm:mt-6 sm:gap-4">
+           
+             <Link
+              href="/Support"
+              className="flex items-center space-x-1 text-white bg-gray-700 px-3 py-1 text-xs sm:text-sm sm:px-4 sm:py-2 rounded-lg hover:bg-gray-800"
+            >
+               <FaHeadset />
               <span>Support</span>
-            </button>
+            </Link>
+            <Link
+              href="/Superadmin/login"
+              className="flex items-center space-x-1 text-white bg-gray-700 px-3 py-1 text-xs sm:text-sm sm:px-4 sm:py-2 rounded-lg hover:bg-gray-800"
+            >
+              <FaUserShield />
+              <span>Login as Admin</span>
+            </Link>
           </div>
         </div>
       </div>
@@ -118,5 +131,4 @@ export default function GetStartedPage() {
       ></div>
     </div>
   );
-
 }
