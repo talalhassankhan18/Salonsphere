@@ -121,6 +121,7 @@
     "dotenv": "^16.5.0",
     "eslint": "^9.27.0",
     "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
     "install": "^0.13.0",
     "mongoose": "^8.13.2",
     "npm": "^10.9.0",
