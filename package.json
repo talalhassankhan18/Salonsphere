@@ -8,7 +8,6 @@
     "start": "next start",
     "lint": "next lint"
   },
-  
   "dependencies": {
     "@clerk/nextjs": "^6.19.1",
     "@emotion/react": "^11.14.0",
@@ -111,8 +110,8 @@
     "@types/node": "^22.15.19",
     "@types/node-cron": "^3.0.11",
     "@types/nodemailer": "^6.4.17",
-    "@types/react": "^19.1.4",
-    "@types/react-dom": "^18.3.6",
+    "@types/react": "^18.3.21",
+    "@types/react-dom": "^18.3.7",
     "@types/react-toastify": "^4.1.0",
     "@types/socket.io": "^3.0.2",
     "@types/socket.io-client": "^3.0.0",
