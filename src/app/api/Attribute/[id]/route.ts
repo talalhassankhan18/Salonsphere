@@ -1,8 +1,8 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import mongoose from 'mongoose';
 import Attribute from '@/mongoose-models/Attribute';
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     await mongoose.connect(process.env.MONGODB_URI!);
     
@@ -25,7 +25,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     await mongoose.connect(process.env.MONGODB_URI!);
     
@@ -68,7 +68,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     await mongoose.connect(process.env.MONGODB_URI!);
     
