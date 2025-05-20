@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import mongoose from 'mongoose';
 import Attribute from '@/mongoose-models/Attribute';
 
-// @ts-ignore
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     await mongoose.connect(process.env.MONGODB_URI!);
@@ -33,7 +32,6 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     const body = await request.json();
     const { name, values, filterable, required } = body;
 
-    // Validate required fields
     if (!name) {
       return NextResponse.json(
         { success: false, error: 'Name is required' },
@@ -69,7 +67,6 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-// @ts-ignore
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     await mongoose.connect(process.env.MONGODB_URI!);
