@@ -37,9 +37,9 @@ const faqs = [
 
 // Support information to include in the email
 const supportInfo = {
-  website: "https://salonsphere.com",
+  website: "https://salonsphere.vercel.app",
   phone: "+92 319 2590810",
-  email: "support@salonsphere.com",
+  email: "info.salonsphere@gmail.com",
   twitter: "https://twitter.com/salonsphere",
   facebook: "https://facebook.com/salonsphere",
   instagram: "https://instagram.com/salonsphere",

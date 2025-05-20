@@ -128,7 +128,7 @@ const Footer = () => {
 						className="flex items-center"
 					>
 						<FaEnvelope aria-hidden="true" className="mr-1 " />
-						<p>info@SalonSphere.com.pk</p>
+						<p>info.salonsphere@gmail.com</p>
 					</Link>
 				</div>
 			</nav>

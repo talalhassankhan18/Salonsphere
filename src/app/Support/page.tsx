@@ -23,7 +23,7 @@ const Support = () => {
 
   return (
     <>
-    <Navbar isLoggedIn={isLoggedIn} handleLogout={handleLogout} />
+    <Navbar/>
     <div className="m-4 p-6"></div>
     <div className="relative min-h-screen space-y-8 p-4 bg-base-100 text-base-content">
       <div className="text-center">
