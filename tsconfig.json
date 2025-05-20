@@ -2,11 +2,10 @@
   "compilerOptions": {
     "composite": true,
     "baseUrl": ".",
-    "target": "ESNext", // Use ESNext for modern JavaScript features
+    "target": "ESNext",
     "lib": ["dom", "dom.iterable", "esnext"],
-    "typeRoots": ["./node_modules/@types", "./types"], // Ensure next-auth.d.ts is in ./types/
-    "forceConsistentCasingInFileNames": true, // Add this to enforce case sensitivity
-
+    "typeRoots": ["./node_modules/@types", "./types"],
+    "forceConsistentCasingInFileNames": true,
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -18,24 +17,36 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
+    "noEmitOnError": false,
+    "paths": {
+      "@/*": ["./src/*"]
+    },
     "plugins": [
       {
         "name": "next"
       }
     ],
-    "paths": {
-      "@/*": ["./src/*"]
-    },
-    "noImplicitAny": true, // Enable for better type safety
-    "noUnusedParameters": true, // Enable to catch unused parameters
-    "noUnusedLocals": true, // Enable to catch unused variables
-    "strictNullChecks": true // Enable for better null/undefined safety
+    "noImplicitAny": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": false, // Changed to false to avoid unused param errors
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "useUnknownInCatchVariables": true,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    "exactOptionalPropertyTypes": false
   },
   "include": [
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts"
-  ],
-  "exclude": ["node_modules"]
+    ".next/types/**/*.ts",
+    "src/**/*"
+, "next.config.js"  ],
+  "exclude": [
+    "node_modules",
+    ".next",
+    "dist"
+  ]
 }

@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
-import { useRouter } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
+import { Suspense } from "react"; // Import Suspense
 
-export default function ReviewForm() {
+// Component that uses useSearchParams
+const ReviewContent: React.FC = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const bookingId = searchParams.get("bookingId");
@@ -85,9 +86,7 @@ export default function ReviewForm() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium">
-            Comment (Optional)
-          </label>
+          <label className="block text-sm font-medium">Comment (Optional)</label>
           <textarea
             value={comment}
             onChange={(e) => setComment(e.target.value)}
@@ -104,5 +103,14 @@ export default function ReviewForm() {
         </button>
       </form>
     </div>
+  );
+};
+
+// Main ReviewForm component with Suspense
+export default function ReviewForm() {
+  return (
+    <Suspense fallback={<div className="container mx-auto p-4 text-center">Loading...</div>}>
+      <ReviewContent />
+    </Suspense>
   );
 }

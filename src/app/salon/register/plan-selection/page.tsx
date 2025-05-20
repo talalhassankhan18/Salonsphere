@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { Suspense } from "react"; // Import Suspense
 import LoadingSpinner from "@/common/LoadingSpinner";
 import toast from "react-hot-toast";
 import {
@@ -91,7 +92,8 @@ const commonFeatures = [
   "Priority Support",
 ];
 
-export default function PlanSelectionPage() {
+// Component that uses useSearchParams
+const PlanSelectionContent: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session, status } = useSession();
@@ -621,5 +623,20 @@ export default function PlanSelectionPage() {
         </div>
       )}
     </div>
+  );
+};
+
+// Main PlanSelectionPage component with Suspense
+export default function PlanSelectionPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <LoadingSpinner />
+        </div>
+      }
+    >
+      <PlanSelectionContent />
+    </Suspense>
   );
 }
