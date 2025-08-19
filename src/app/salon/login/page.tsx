@@ -34,7 +34,7 @@ export default function LoginPage() {
 
     try {
       const baseUrl =
-        process.env.NEXT_PUBLIC_NEXTAUTH_URL || "https://salonsphere.vercel.app";
+        process.env.NEXT_PUBLIC_NEXTAUTH_URL || "http://localhost:3000";
       const callbackUrl = `${baseUrl}/salon/dashboard`;
 
       // Validate URL
