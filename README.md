@@ -426,11 +426,11 @@ Role-based access control
 
 Secure session handling
 
-📁 Project Structure
+## 📁 Project Structure
 
-The exact structure can vary depending on the current implementation. A typical SalonSphere structure is:
-
+```text
 salonsphere/
+│
 ├── app/
 │   ├── api/
 │   ├── dashboard/
@@ -465,6 +465,7 @@ salonsphere/
 │   └── ...
 │
 ├── styles/
+│
 ├── .env.local
 ├── package.json
 ├── tsconfig.json
