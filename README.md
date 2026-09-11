@@ -88,33 +88,247 @@ Data-driven recommendation workflows
 
 🏗️ System Architecture
 
-                         ┌─────────────────────┐
-                         │      Customer       │
-                         │  Web Application    │
-                         └──────────┬──────────┘
-                                    │
-                                    ▼
-┌───────────────────────────────────────────────────────────┐
-│                    SalonSphere Platform                   │
-│                                                           │
-│  ┌───────────────┐   ┌────────────────┐   ┌────────────┐ │
-│  │ Authentication │   │ Business Logic │   │ AI Engine  │ │
-│  │ & Authorization│   │ & REST APIs    │   │ / Chatbot  │ │
-│  └───────────────┘   └───────┬────────┘   └────────────┘ │
-│                              │                            │
-└──────────────────────────────┼────────────────────────────┘
-                               │
-              ┌────────────────┴────────────────┐
-              ▼                                 ▼
-      ┌───────────────┐                 ┌───────────────┐
-      │    MongoDB    │                 │  Cloudinary   │
-      │   Database    │                 │ Image Storage │
-      └───────────────┘                 └───────────────┘
+## 🏗️ System Architecture
 
-      ┌───────────────┐                 ┌───────────────┐
-      │ Email / SMTP  │                 │    Stripe     │
-      │ Notifications │                 │   Payments    │
-      └───────────────┘                 └───────────────┘
+SalonSphere follows a **full-stack, modular architecture** built around Next.js, TypeScript, MongoDB, and a set of supporting external services. The system separates the presentation layer, application/API layer, data layer, and external integrations to keep the platform scalable and maintainable.
+
+```text
+                           SALONSPHERE PLATFORM
+                     "Where Beauty Meets Excellence"
+                                   │
+             ┌─────────────────────┴─────────────────────┐
+             │                                           │
+             ▼                                           ▼
+   ┌──────────────────────┐                    ┌──────────────────────┐
+   │   CUSTOMER CLIENT    │                    │   ADMIN / VENDOR     │
+   │                      │                    │      CLIENTS         │
+   │ • Home               │                    │                      │
+   │ • Salon Discovery    │                    │ • Vendor Dashboard   │
+   │ • Services           │                    │ • Admin Dashboard    │
+   │ • Booking            │                    │ • Analytics          │
+   │ • Products           │                    │ • Management Panels  │
+   │ • Cart & Checkout    │                    │                      │
+   │ • Profile            │                    │                      │
+   └──────────┬───────────┘                    └──────────┬───────────┘
+              │                                           │
+              └──────────────────┬────────────────────────┘
+                                 │
+                                 ▼
+                 ┌─────────────────────────────────┐
+                 │       PRESENTATION LAYER        │
+                 │          Next.js / React        │
+                 │                                 │
+                 │ • Responsive UI                 │
+                 │ • Components                    │
+                 │ • Pages / Routes                │
+                 │ • Forms & Validation            │
+                 │ • Client-side State             │
+                 └────────────────┬────────────────┘
+                                  │
+                                  ▼
+                 ┌─────────────────────────────────┐
+                 │       APPLICATION LAYER         │
+                 │        Next.js / Node.js        │
+                 │                                 │
+                 │ ┌─────────────────────────────┐ │
+                 │ │       API / Backend         │ │
+                 │ │                             │ │
+                 │ │ • Authentication            │ │
+                 │ │ • User Management           │ │
+                 │ │ • Salon Management          │ │
+                 │ │ • Service Management        │ │
+                 │ │ • Product Management        │ │
+                 │ │ • Booking Management        │ │
+                 │ │ • Cart & Orders             │ │
+                 │ │ • Admin Operations          │ │
+                 │ └─────────────────────────────┘ │
+                 │                                 │
+                 │ ┌─────────────────────────────┐ │
+                 │ │   Business & AI Services    │ │
+                 │ │                             │ │
+                 │ │ • Recommendation Engine     │ │
+                 │ │ • AI Assistant / Chatbot    │ │
+                 │ │ • Business Logic            │ │
+                 │ │ • Validation                │ │
+                 │ └─────────────────────────────┘ │
+                 └────────────────┬────────────────┘
+                                  │
+                                  ▼
+                 ┌─────────────────────────────────┐
+                 │          DATA LAYER             │
+                 │                                 │
+                 │              MongoDB            │
+                 │                                 │
+                 │ • Users                         │
+                 │ • Salons                        │
+                 │ • Services                      │
+                 │ • Products                      │
+                 │ • Bookings                      │
+                 │ • Orders                        │
+                 │ • Reviews / Preferences         │
+                 │ • Application Data              │
+                 └─────────────────────────────────┘
+
+
+                         EXTERNAL SERVICES
+                                  │
+              ┌───────────────────┼────────────────────┐
+              │                   │                    │
+              ▼                   ▼                    ▼
+       ┌─────────────┐    ┌─────────────┐     ┌──────────────┐
+       │  Cloudinary │    │   Stripe    │     │ Gmail / SMTP │
+       │             │    │             │     │              │
+       │ Images &    │    │ Payments &  │     │ Emails &     │
+       │ Media       │    │ Checkout    │     │ Notifications│
+       └─────────────┘    └─────────────┘     └──────────────┘
+
+              ┌───────────────────┼────────────────────┐
+              │                   │                    │
+              ▼                   ▼                    ▼
+       ┌─────────────┐    ┌─────────────┐     ┌──────────────┐
+       │ Google OAuth│    │ Google      │     │   Vercel     │
+       │             │    │ Analytics   │     │              │
+       │ Social      │    │             │     │ Deployment & │
+       │ Login       │    │ Analytics   │     │ Hosting      │
+       └─────────────┘    └─────────────┘     └──────────────┘
+```
+
+### 🔄 Request Flow
+
+A typical user interaction follows this flow:
+
+```text
+User
+ │
+ ▼
+Next.js / React UI
+ │
+ │ HTTP Request
+ ▼
+API Route / Backend
+ │
+ ├──────────────► Authentication & Authorization
+ │
+ ├──────────────► Business Logic
+ │
+ ├──────────────► AI / Recommendation Services
+ │
+ ▼
+MongoDB
+ │
+ ▼
+Backend Response
+ │
+ ▼
+Next.js UI
+ │
+ ▼
+User
+```
+
+### 🔐 Authentication Flow
+
+```text
+                    User
+                     │
+                     ▼
+             Login / Register
+                     │
+            ┌────────┴────────┐
+            │                 │
+            ▼                 ▼
+       Email/Password     Google OAuth
+            │                 │
+            └────────┬────────┘
+                     ▼
+              Authentication
+                     │
+                     ▼
+             JWT / NextAuth
+                     │
+                     ▼
+            Role Verification
+                     │
+          ┌──────────┼──────────┐
+          ▼          ▼          ▼
+        User       Vendor     Admin
+          │          │          │
+          ▼          ▼          ▼
+     User APIs   Vendor APIs  Admin APIs
+```
+
+### 🤖 AI Recommendation Flow
+
+```text
+              User Activity & Preferences
+                         │
+                         ▼
+                  Data Processing
+                         │
+                         ▼
+               Recommendation Model
+                         │
+                         ▼
+                  Service Ranking
+                         │
+                         ▼
+             Personalized Suggestions
+                         │
+                         ▼
+                    User UI
+```
+
+### 👥 Role-Based Architecture
+
+SalonSphere implements role-based access control to separate the responsibilities of different platform users.
+
+```text
+                         SalonSphere
+                              │
+             ┌────────────────┼────────────────┐
+             │                │                │
+             ▼                ▼                ▼
+        End User         Salon Vendor      Super Admin
+             │                │                │
+             ▼                ▼                ▼
+       • Discover       • Manage Salon    • Manage Users
+       • Book           • Manage Services • Manage Vendors
+       • Purchase       • Manage Products • Platform Control
+       • Review         • Manage Bookings • Analytics
+       • Profile        • View Analytics  • Monitoring
+```
+
+### 🧩 Architectural Components
+
+| Layer              | Technologies / Components                | Responsibility                                          |
+| ------------------ | ---------------------------------------- | ------------------------------------------------------- |
+| **Presentation**   | Next.js, React, TypeScript, Tailwind CSS | UI, pages, forms, dashboards and user interaction       |
+| **Application**    | Next.js API Routes, Node.js              | Request handling and backend operations                 |
+| **Authentication** | JWT, NextAuth, Google OAuth              | Authentication, sessions and authorization              |
+| **Business Logic** | TypeScript services / modules            | Bookings, products, salons, users and business rules    |
+| **AI Layer**       | TensorFlow / recommendation logic        | Personalized recommendations and intelligent assistance |
+| **Data Layer**     | MongoDB, Mongoose                        | Persistent application data                             |
+| **Media Layer**    | Cloudinary                               | Image and media storage                                 |
+| **Payment Layer**  | Stripe                                   | Payment processing and checkout                         |
+| **Communication**  | Gmail / SMTP                             | Email notifications and account workflows               |
+| **Analytics**      | Google Analytics                         | Usage and engagement analytics                          |
+| **Deployment**     | Vercel                                   | Application hosting and deployment                      |
+
+### 📦 Architectural Approach
+
+The platform follows a **modular full-stack architecture**, allowing individual system components to evolve independently.
+
+The main architectural principles are:
+
+* **Separation of concerns** between UI, application logic, and data
+* **Role-based access control** for users, vendors, and administrators
+* **API-driven communication** between the frontend and backend
+* **Reusable UI components** for consistent design
+* **Modular business logic** for easier maintenance
+* **External service integration** for payments, media, authentication, email, and analytics
+* **AI integration** for personalized customer experiences
+* **Environment-based configuration** for development and production deployments
+
 
 🛠️ Technology Stack
 
