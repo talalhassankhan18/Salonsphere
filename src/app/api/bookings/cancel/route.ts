@@ -5,6 +5,7 @@ import Booking from "@/mongoose-models/Booking";
 import TimeSlot from "@/mongoose-models/TimeSlot";
 import Service from "@/mongoose-models/Service";
 import { addMinutes } from "date-fns";
+import { createNotification } from "@/lib/notifications";
 
 // Utility to format Pakistani phone number
 const formatPakistaniPhone = (phone: string): string => {
@@ -114,15 +115,16 @@ export async function POST(req: NextRequest) {
         booking.service?.name
       } at ${startTime.toISOString()} has been cancelled. Contact: ${formattedPhone}`;
 
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/notifications`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: booking.user || null,
-          adminId: booking.salon.toString(),
-          userEmail: booking.customerInfo.email,
-          message,
-        }),
+      // Notify the salon admin directly. The previous HTTP hop to
+      // /api/notifications sent a body the endpoint rejected (400), so
+      // cancellation notifications were never actually delivered.
+      await createNotification({
+        title: "Booking Cancelled",
+        content: message,
+        type: "status_update",
+        target: "salonAdmin",
+        salonId: booking.salon.toString(),
+        status: "sent",
       });
     } catch (notificationError) {
       console.error("Cancellation notification error:", notificationError);

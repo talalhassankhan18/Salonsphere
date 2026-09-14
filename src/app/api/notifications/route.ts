@@ -1,61 +1,42 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/dbConnect";
 import Notification from "@/mongoose-models/Notification";
-import Customer from "@/mongoose-models/Customer";
-import Salon from "@/mongoose-models/Salon";
+import {
+  createNotification,
+  type NotificationTarget,
+  type NotificationType,
+} from "@/lib/notifications";
+import {
+  requireNotificationIdentity,
+  requireSuperAdmin,
+} from "@/lib/auth/guards";
 
-// Map to store SSE clients by userId
-const clients = new Map<string, WritableStreamDefaultWriter[]>();
-
-// Function to add a client
-export function addClient(userId: string, writer: WritableStreamDefaultWriter) {
-  const clientList = clients.get(userId) || [];
-  clientList.push(writer);
-  clients.set(userId, clientList);
-}
-
-// Function to remove a client
-export function removeClient(userId: string, writer: WritableStreamDefaultWriter) {
-  const clientList = clients.get(userId) || [];
-  const updatedList = clientList.filter((client) => client !== writer);
-  if (updatedList.length > 0) {
-    clients.set(userId, updatedList);
-  } else {
-    clients.delete(userId);
-  }
-}
-
-// Function to emit notification to clients
-export async function emitNotification(userId: string, notification: any) {
-  const clientList = clients.get(userId) || [];
-  const encoder = new TextEncoder();
-  for (const writer of clientList) {
-    try {
-      await writer.write(
-        encoder.encode(`data: ${JSON.stringify(notification)}\n\n`)
-      );
-    } catch (error) {
-      console.error("Error writing to SSE client:", error);
-    }
-  }
-}
-
+// GET /api/notifications?userId=...
+// A caller may only read notifications addressed to themselves; the super-admin
+// may read anyone's (or everything when userId is omitted).
 export async function GET(request: Request) {
+  const identity = await requireNotificationIdentity();
+  if (identity instanceof NextResponse) return identity;
+
   try {
     await dbConnect();
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("userId");
 
-    let query = {};
-    if (userId) {
+    let query: Record<string, unknown>;
+    if (identity.isSuperAdmin) {
+      query = userId ? { recipientIds: userId } : {};
+    } else {
+      if (!userId || !identity.recipientIds.includes(userId)) {
+        return NextResponse.json(
+          { error: "You can only read your own notifications" },
+          { status: 403 }
+        );
+      }
       query = { recipientIds: userId };
     }
 
-    const notifications = await Notification.find(query).sort({
-      createdAt: -1,
-    });
-
-    console.log("Fetched notifications for userId:", userId, notifications);
+    const notifications = await Notification.find(query).sort({ createdAt: -1 });
     return NextResponse.json(notifications, { status: 200 });
   } catch (error: any) {
     console.error("Error fetching notifications:", error);
@@ -66,11 +47,24 @@ export async function GET(request: Request) {
   }
 }
 
+// POST /api/notifications
+// Super-admin: any target. Everyone else (including guests completing a
+// booking): only a "booking" notification addressed to one salon's admin.
 export async function POST(request: Request) {
   try {
     await dbConnect();
     const body = await request.json();
-    const { title, content, type, target, recipientIds, status, scheduledFor, salonId } = body;
+    const { title, content, type, target, recipientIds, status, scheduledFor, salonId } =
+      body as {
+        title?: string;
+        content?: string;
+        type?: NotificationType;
+        target?: NotificationTarget;
+        recipientIds?: string[];
+        status?: "draft" | "sent";
+        scheduledFor?: string | null;
+        salonId?: string;
+      };
 
     if (!title || !content || !type || !target) {
       return NextResponse.json(
@@ -79,78 +73,39 @@ export async function POST(request: Request) {
       );
     }
 
-    let recipients: string[] = [];
-    if (target === "all") {
-      const customers = await Customer.find().select("_id");
-      const salons = await Salon.find().select("userId");
-      recipients = [
-        ...customers.map((c: any) => c._id.toString()),
-        ...salons.map((s: any) => s.userId),
-      ];
-    } else if (target === "salons") {
-      const salons = await Salon.find().select("userId");
-      recipients = salons.map((s: any) => s.userId);
-    } else if (target === "customers") {
-      const customers = await Customer.find().select("_id");
-      recipients = customers.map((c: any) => c._id.toString());
-    } else if (target === "specific" && recipientIds) {
-      recipients = recipientIds;
-    } else if (target === "salonAdmin" && salonId) {
-      const salon = await Salon.findById(salonId).select("userId").lean();
-      if (salon && salon.userId) {
-        recipients = [salon.userId];
-      } else {
-        throw new Error("No admin associated with this salon");
-      }
-    } else {
-      return NextResponse.json(
-        { error: "Invalid target or missing recipientIds/salonId" },
-        { status: 400 }
-      );
+    const denied = await requireSuperAdmin();
+    if (denied) {
+      const isBookingPing = target === "salonAdmin" && type === "booking" && !!salonId;
+      if (!isBookingPing) return denied;
     }
 
-    const notification = new Notification({
+    const notification = await createNotification({
       title,
       content,
       type,
       target,
-      recipientIds: recipients,
-      status: status || "draft",
-      scheduledFor: scheduledFor ? new Date(scheduledFor) : null,
-      createdAt: new Date(),
-      sentAt: status === "sent" ? new Date() : null,
-      read: false,
+      recipientIds,
+      salonId,
+      status,
+      scheduledFor,
     });
-
-    await notification.save();
-    console.log("Saved notification with recipients:", recipients);
-
-    // Emit to SSE clients if status is sent
-    if (status === "sent") {
-      for (const recipientId of recipients) {
-        await emitNotification(recipientId, {
-          _id: notification._id,
-          title: notification.title,
-          content: notification.content,
-          type: notification.type,
-          createdAt: notification.createdAt,
-          read: notification.read,
-        });
-        console.log("Emitted notification to SSE client:", recipientId);
-      }
-    }
 
     return NextResponse.json(notification, { status: 201 });
   } catch (error: any) {
     console.error("Error creating notification:", error);
+    const isClientError = /required|Invalid|No admin/i.test(error?.message ?? "");
     return NextResponse.json(
       { error: error.message || "Failed to create notification" },
-      { status: 500 }
+      { status: isClientError ? 400 : 500 }
     );
   }
 }
 
+// DELETE /api/notifications?id=...  (super-admin only)
 export async function DELETE(request: Request) {
+  const denied = await requireSuperAdmin();
+  if (denied) return denied;
+
   try {
     await dbConnect();
     const { searchParams } = new URL(request.url);

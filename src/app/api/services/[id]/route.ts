@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import Service from "@/mongoose-models/Service";
 import Salon from "@/mongoose-models/Salon";
 import dbConnect from "@/dbConnect";
+import { requireSalonAdmin } from "@/lib/auth/guards";
 
 // Ensure DB connection
 async function ensureDbConnection() {
@@ -73,11 +74,14 @@ export async function GET(
   }
 }
 
-// PUT: Update a service
+// PUT: Update a service (salon admin, own salon only)
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const admin = await requireSalonAdmin();
+  if (admin instanceof NextResponse) return admin;
+
   let serviceId: string | undefined;
   try {
     await ensureDbConnection();
@@ -85,17 +89,9 @@ export async function PUT(
     const { id } = await params;
     serviceId = id;
     const body = await req.json();
-    const {
-      name,
-      description,
-      price,
-      duration,
-      category,
-      image,
-      gender,
-      isActive,
-      salonId,
-    } = body;
+    const { name, description, price, duration, category, image, gender, isActive } =
+      body;
+    const salonId = admin.salonId;
 
     if (!mongoose.Types.ObjectId.isValid(serviceId)) {
       console.error(`Invalid service ID: ${serviceId}`);
@@ -176,16 +172,16 @@ export async function PUT(
       );
     }
 
-    // Validate salon ownership
+    // Validate salon ownership against the session, not the request body
     const service = await Service.findById(serviceId);
     if (!service) {
       console.error(`Service not found for ID: ${serviceId}`);
       return NextResponse.json({ error: "Service not found" }, { status: 404 });
     }
-    if (salonId && service.salon.toString() !== salonId) {
+    if (service.salon.toString() !== salonId) {
       console.error(`Service ${serviceId} does not belong to salon ${salonId}`);
       return NextResponse.json(
-        { error: "Service does not belong to this salon" },
+        { error: "Service does not belong to your salon" },
         { status: 403 }
       );
     }
@@ -225,11 +221,14 @@ export async function PUT(
   }
 }
 
-// DELETE: Delete a service
+// DELETE: Delete a service (salon admin, own salon only)
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const admin = await requireSalonAdmin();
+  if (admin instanceof NextResponse) return admin;
+
   let serviceId: string | undefined;
   try {
     await ensureDbConnection();
@@ -249,6 +248,12 @@ export async function DELETE(
     if (!service) {
       console.error(`Service not found for ID: ${serviceId}`);
       return NextResponse.json({ error: "Service not found" }, { status: 404 });
+    }
+    if (service.salon.toString() !== admin.salonId) {
+      return NextResponse.json(
+        { error: "Service does not belong to your salon" },
+        { status: 403 }
+      );
     }
 
     // Delete service

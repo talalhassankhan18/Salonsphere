@@ -4,11 +4,16 @@ import Salon from "@/mongoose-models/Salon";
 import Gallery from "@/mongoose-models/Gallery";
 import dbConnect from "@/dbConnect";
 import { deleteImage } from "@/lib/cloudinary";
+import { requireSalonAdmin } from "@/lib/auth/guards";
 
+// DELETE: remove a gallery image (salon admin, own salon only)
 export async function DELETE(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
+  const admin = await requireSalonAdmin();
+  if (admin instanceof NextResponse) return admin;
+
   try {
     await dbConnect();
 
@@ -24,6 +29,12 @@ export async function DELETE(
     const image = await Gallery.findById(id);
     if (!image) {
       return NextResponse.json({ error: "Image not found" }, { status: 404 });
+    }
+    if (image.salon.toString() !== admin.salonId) {
+      return NextResponse.json(
+        { error: "Image does not belong to your salon" },
+        { status: 403 }
+      );
     }
 
     // Find the associated salon

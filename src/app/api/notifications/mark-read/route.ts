@@ -1,50 +1,50 @@
 import { NextResponse } from "next/server";
+import mongoose from "mongoose";
 import dbConnect from "@/dbConnect";
 import Notification from "@/mongoose-models/Notification";
+import { requireNotificationIdentity } from "@/lib/auth/guards";
 
+// POST /api/notifications/mark-read  { notificationId }
+// Only a recipient of the notification (or the super-admin) may mark it read.
 export async function POST(request: Request) {
+  const identity = await requireNotificationIdentity();
+  if (identity instanceof NextResponse) return identity;
+
   try {
     await dbConnect();
     const { notificationId } = await request.json();
 
-    if (!notificationId) {
-      console.error("Missing notificationId in request body");
+    if (!notificationId || !mongoose.Types.ObjectId.isValid(notificationId)) {
       return NextResponse.json(
-        { error: "Notification ID is required" },
+        { error: "A valid notification ID is required" },
         { status: 400 }
       );
     }
 
-    console.log(
-      "Attempting to mark notification as read, notificationId:",
-      notificationId
-    );
+    const filter: Record<string, unknown> = { _id: notificationId };
+    if (!identity.isSuperAdmin) {
+      filter.recipientIds = { $in: identity.recipientIds };
+    }
 
-    const notification = await Notification.findByIdAndUpdate(
-      notificationId,
+    const notification = await Notification.findOneAndUpdate(
+      filter,
       { $set: { read: true } },
       { new: true }
     );
 
     if (!notification) {
-      console.error("Notification not found for ID:", notificationId);
       return NextResponse.json(
         { error: "Notification not found" },
         { status: 404 }
       );
     }
 
-    console.log("Successfully marked notification as read:", notification);
-
     return NextResponse.json(
       { message: "Notification marked as read", notification },
       { status: 200 }
     );
   } catch (error: any) {
-    console.error("Error marking notification as read:", {
-      message: error.message,
-      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
-    });
+    console.error("Error marking notification as read:", error.message);
     return NextResponse.json(
       { error: error.message || "Failed to mark notification as read" },
       { status: 500 }

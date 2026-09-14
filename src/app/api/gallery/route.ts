@@ -4,28 +4,25 @@ import Salon from "@/mongoose-models/Salon";
 import Gallery, { IGallery } from "@/mongoose-models/Gallery";
 import dbConnect from "@/dbConnect";
 import { uploadImage } from "@/lib/cloudinary";
+import { requireSalonAdmin } from "@/lib/auth/guards";
 
+// POST: upload a gallery image (salon admin, own salon only)
 export async function POST(req: NextRequest) {
+  const admin = await requireSalonAdmin();
+  if (admin instanceof NextResponse) return admin;
+
   try {
     await dbConnect();
 
     const formData = await req.formData();
-    const salonId = formData.get("salonId") as string;
     const image = formData.get("image") as File;
     const caption = formData.get("caption") as string;
+    // The salon comes from the session; a salonId form field is ignored.
+    const salonId = admin.salonId;
 
     // Validate input
-    if (!salonId || !image) {
-      return NextResponse.json(
-        { error: "Salon ID and image are required" },
-        { status: 400 }
-      );
-    }
-
-    // Validate salonId
-    if (!mongoose.Types.ObjectId.isValid(salonId)) {
-      console.error("Invalid salonId:", salonId);
-      return NextResponse.json({ error: "Invalid salonId" }, { status: 400 });
+    if (!image) {
+      return NextResponse.json({ error: "Image is required" }, { status: 400 });
     }
 
     // Check if salon exists

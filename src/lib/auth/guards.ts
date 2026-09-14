@@ -102,3 +102,33 @@ export async function requireSuperAdminOrOwnSalon(
   }
   return { salonId: salon.salonId };
 }
+
+export interface NotificationIdentity {
+  /** True when the caller holds a valid super-admin cookie. */
+  isSuperAdmin: boolean;
+  /** Ids under which notifications may be addressed to this caller. */
+  recipientIds: string[];
+}
+
+/**
+ * Resolves the caller's notification identity. Customers are keyed by their
+ * `Customer._id` (`session.user.id`); salon admins by `Salon.userId`
+ * (`session.user.userId`) — that is what `Notification.recipientIds` stores.
+ * Returns a 401 response when there is no session and no super-admin cookie.
+ */
+export async function requireNotificationIdentity(): Promise<
+  NotificationIdentity | NextResponse
+> {
+  if (await isSuperAdminRequest()) return { isSuperAdmin: true, recipientIds: [] };
+
+  const session = await getServerSession(authOptions);
+  const user = session?.user;
+  if (!user) return unauthorized("Login required");
+
+  const ids = new Set<string>();
+  if (user.id) ids.add(user.id);
+  if (user.role === "salon_admin" && user.userId) ids.add(user.userId);
+  if (ids.size === 0) return unauthorized("Login required");
+
+  return { isSuperAdmin: false, recipientIds: [...ids] };
+}

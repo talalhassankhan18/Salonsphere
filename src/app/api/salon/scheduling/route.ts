@@ -1,17 +1,22 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/dbConnect";
 import Salon from "@/mongoose-models/Salon";
+import { requireSalonAdmin } from "@/lib/auth/guards";
 
+// PATCH: update the caller's own salon business hours
 export async function PATCH(req: Request) {
+  const admin = await requireSalonAdmin();
+  if (admin instanceof NextResponse) return admin;
+
   await dbConnect();
 
   try {
-    const { userId, scheduling } = await req.json();
+    const { scheduling } = await req.json();
 
     // Validate required fields
-    if (!userId || !scheduling) {
+    if (!scheduling) {
       return NextResponse.json(
-        { error: "userId and scheduling are required" },
+        { error: "scheduling is required" },
         { status: 400 }
       );
     }
@@ -24,9 +29,9 @@ export async function PATCH(req: Request) {
       );
     }
 
-    // Update the Salon document
-    const updatedSalon = await Salon.findOneAndUpdate(
-      { userId },
+    // Update the caller's Salon document
+    const updatedSalon = await Salon.findByIdAndUpdate(
+      admin.salonId,
       { $set: { scheduling } },
       { new: true, runValidators: true }
     );

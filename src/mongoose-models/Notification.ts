@@ -53,13 +53,8 @@ const notificationSchema = new Schema<INotification>(
   }
 );
 
-// Clear model cache to ensure updated schema is used
-delete mongoose.models.Notification;
-
-// Create or reuse Notification model
-const Notification: Model<INotification> = mongoose.model<INotification>(
-  "Notification",
-  notificationSchema
-);
+const Notification: Model<INotification> =
+  mongoose.models.Notification ||
+  mongoose.model<INotification>("Notification", notificationSchema);
 
 export default Notification;

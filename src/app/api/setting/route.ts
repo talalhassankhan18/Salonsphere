@@ -2,8 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import mongoose from "mongoose";
 import Settings from "@/mongoose-models/setting";
 import dbConnect from "@/dbConnect";
+import { requireSuperAdmin } from "@/lib/auth/guards";
+
+// Platform settings — super-admin only on every method.
 
 export async function GET() {
+  const denied = await requireSuperAdmin();
+  if (denied) return denied;
+
   try {
     await dbConnect();
     // Explicitly type the query to avoid union type issues
@@ -19,6 +25,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const denied = await requireSuperAdmin();
+  if (denied) return denied;
+
   try {
     await dbConnect();
     const formData = await req.formData();

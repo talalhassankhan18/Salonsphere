@@ -260,3 +260,171 @@ A `.claude/launch.json` entry (`salonsphere-dev`) is included for the Claude Cod
 **Not done / needs you**
 - `bun.lockb` could not be deleted by tooling — remove it manually (`npm` is the package manager).
 - Phase 4 follow-ups (shadcn/`cn()` consolidation, single toast lib, remaining public routes, rate limiting) — see §3.
+
+---
+
+## 7. Pass 3 — 2026-09-14 (afternoon): branch reconciliation + remaining API auth
+
+### 7.1 Situation found
+
+This working copy (`Downloads/Personal Data/SalonSphere`) was a **stale snapshot**: it sat at
+`59321a9 packages installation` (the pre-audit base) plus one local commit `Latest Updates`
+(Prettier trailing-commas in `api/orders/route.ts` + phone number `03335759985 → 03255664245`
+in `order-confirmation/page.tsx`). Meanwhile `origin/main` already carried the whole audit from
+§6 (9 commits ahead). `git status` reported *"diverged, 1 and 9 different commits"* and a push
+was impossible.
+
+Force-pushing this folder would have deleted the audit. Instead:
+
+- [x] Backup branch `local-backup-2026-09-14` created at the old local `main`.
+- [x] `git rebase origin/main` — clean, no conflicts. `main` is now `origin/main + 1`
+      (fast-forward push). The phone-number change is preserved.
+- [x] `npm install` to match the rewritten `package.json` (155 added / 429 removed).
+- [x] Baseline verified after rebase: `tsc` 0 errors · `eslint .` 0 errors / 93 warnings.
+- [ ] **Manual cleanup needed (tooling refused to delete):** `server.ts`, `bun.lockb` (both
+      still tracked — the §6 note says they were removed but the merge with origin brought
+      them back) and the empty nested repo `src/app/.git`. Run:
+      `git rm server.ts bun.lockb && rm -rf src/app/.git`
+
+### 7.2 Findings — API routes still without authorization
+
+Mapped all 94 `route.ts` files for HTTP methods vs. guard usage. Legitimately public routes
+(auth, registration, listings, health, contact, geocode, reviews-by-token, guest booking
+cancel-by-email) were excluded. The following are **mutations or private reads with no auth
+and no ownership check** — `salonId` / `userId` is taken straight from the request body:
+
+| # | Route | Methods | Impact | Callers |
+|---|---|---|---|---|
+| A1 | `api/notifications` | POST | **Anyone can broadcast a notification to every customer and salon** (`target: "all"`). | Superadmin page (broadcast), booking page (`salonAdmin` target) |
+| A2 | `api/notifications` | GET | No `userId` → dumps *all* notifications; with `userId` → anyone's. Also `console.log`s the full list. | dashboard header, customer notifications page |
+| A3 | `api/notifications` | DELETE | Anyone can delete any notification. | Superadmin page |
+| A4 | `api/notifications/mark-read` | POST | Anyone can mark anyone's read. | dashboard header, customer page |
+| A5 | `api/notifications/sse` | GET | Anyone can subscribe to anyone's live stream by `userId`. | same |
+| A6 | `api/services` | POST | Add a service to any salon. | salon dashboard |
+| A7 | `api/services/[id]` | PUT, DELETE | Edit/delete any salon's service. | salon dashboard |
+| A8 | `api/gallery` | POST | Upload to Cloudinary under any salon (cost/abuse). | salon dashboard |
+| A9 | `api/gallery/[id]` | DELETE | Delete any salon's gallery image (also from Cloudinary). | salon dashboard |
+| A10 | `api/salon/products` | POST, PUT, DELETE | List/delist/restock products for any salon; DELETE has no salon check at all. | salon dashboard |
+| A11 | `api/salon/scheduling` | PATCH | Overwrite any salon's business hours. | **none** (dead) |
+| A12 | `api/timeslots/mark-available` | POST | Free any salon's booked slots (double-booking). | salon dashboard |
+| A13 | `api/setting`, `api/setting/[id]` | all | Platform settings CRUD. | Superadmin page |
+| A14 | `api/orders/latest` | GET | "Auth" is `Authorization: Bearer <customerId>` — the id *is* the token. | **none** (dead) |
+| A15 | `api/customers/[id]/notifications` | PUT | Toggle read on any customer's embedded notifications. | **none** (dead) |
+
+Related defects found while tracing callers:
+
+| # | Issue |
+|---|---|
+| N1 | `api/notifications/route.ts` exports non-HTTP helpers (`addClient`, `removeClient`, `emitNotification`) that `sse/route.ts` imports — route files should only export handlers. |
+| N2 | `api/bookings/cancel` "sends" a cancellation notification via an HTTP `fetch` to `/api/notifications` with body `{userId, adminId, userEmail, message}` — the endpoint requires `{title, content, type, target}`, so **this always 400s and is swallowed by its try/catch. Cancellation notifications have never been delivered.** |
+| N3 | `mongoose-models/Notification.ts` still has the `delete mongoose.models.Notification` hot-reload hack (the last one — §6 removed it from `Salon`). |
+| N4 | `npm audit`: 17 vulns (2 critical, 9 high). Criticals: `next` 15.5.22 → **unauthenticated RCE on Windows-hosted servers + image-optimizer RCE** (fixed ≥ 15.5.24); `next-auth` 4.24.14 → email-normalization homoglyph bypass (fixed 4.24.15). Non-breaking fixes exist for all but `@faker-js/faker` (9→10), `uuid` (8→14), `nodemailer` (7→10) — all three only use APIs that are unchanged across those majors (`faker.commerce/lorem/number/string`, `uuid.v4`, `nodemailer.createTransport`). |
+
+### 7.3 Plan for this pass
+
+**Notifications (A1–A5, N1–N3)**
+- [x] New `src/lib/notifications.ts`: SSE client registry + `createNotification()` (recipient resolution, save, emit). Route files import from here.
+- [x] `GET /api/notifications`: require a session; `userId` must equal the caller's own id (customer `session.user.id`, salon `session.user.userId`) unless super-admin. Drop the payload logging.
+- [x] `POST /api/notifications`: super-admin → any target. Anyone else → only `{ target: "salonAdmin", type: "booking", salonId }` (the guest-booking path).
+- [x] `DELETE /api/notifications`: super-admin.
+- [x] `POST /api/notifications/mark-read`: session required; caller must be in `recipientIds` (or super-admin).
+- [x] `GET /api/notifications/sse`: session required; `userId` must be the caller's own.
+- [x] `api/bookings/cancel`: call `createNotification()` directly (fixes N2).
+- [x] `Notification.ts`: standard `models.X || model()` (N3).
+
+**Salon-owned resources (A6–A12)** — `requireSalonAdmin()`; ignore any `salonId` in the body and use the session's; verify the target document belongs to that salon.
+- [x] `api/services` POST · `api/services/[id]` PUT, DELETE
+- [x] `api/gallery` POST · `api/gallery/[id]` DELETE
+- [x] `api/salon/products` POST, PUT, DELETE
+- [x] `api/salon/scheduling` PATCH
+- [x] `api/timeslots/mark-available` POST
+
+**Super-admin only (A13)**
+- [x] `api/setting` GET, POST · `api/setting/[id]` PUT, DELETE → `requireSuperAdmin()`
+
+**Dead-but-dangerous (A14, A15)** — guard rather than delete, so nothing that might link to them breaks:
+- [x] `api/orders/latest` → `requireCustomer()`, order looked up by session id.
+- [x] `api/customers/[id]/notifications` → `requireSuperAdminOrSelf(id)`.
+
+**Dependencies (N4)**
+- [x] `npm audit fix` (non-breaking) + manual bump of `@faker-js/faker`, `uuid`, `nodemailer`.
+
+**Verify + ship**
+- [x] `tsc` 0 · `eslint` 0 errors · `next build` passes.
+- [x] Commit, push `main` (fast-forward), confirm `git status` = "up to date with origin/main".
+
+Frontend callers do not need changes: every dashboard page already sends `session.user.salonId`,
+and the guarded routes keep accepting the same request shape — they just stop trusting it.
+
+### 7.4 What was done (change log for this pass)
+
+**Notifications**
+- New `src/lib/notifications.ts` — SSE client registry (`addClient` / `removeClient` /
+  `emitNotification`) and `createNotification()` / `resolveRecipients()`. Route files now only
+  export HTTP handlers.
+- New guard `requireNotificationIdentity()` in `src/lib/auth/guards.ts` → `{ isSuperAdmin,
+  recipientIds }` (customer → `session.user.id`; salon admin → `session.user.id` +
+  `session.user.userId`).
+- `GET /api/notifications` — session required; non-admins may only pass their own `userId`
+  (403 otherwise). Removed the `console.log` that dumped every notification on each request.
+- `POST /api/notifications` — super-admin for any target; without the cookie only
+  `{ target: "salonAdmin", type: "booking", salonId }` is accepted (the guest-booking ping).
+  Recipient-resolution errors now return 400 instead of 500.
+- `DELETE /api/notifications` — super-admin only.
+- `POST /api/notifications/mark-read` — session required; the update filter includes
+  `recipientIds ∈ caller` so a non-recipient gets 404. `notificationId` validated as ObjectId.
+- `GET /api/notifications/sse` — session required; `userId` must be the caller's own.
+- `api/bookings/cancel` — replaced the broken `fetch("/api/notifications")` hop with a direct
+  `createNotification({ type: "status_update", target: "salonAdmin", … })`. Salon admins now
+  actually receive cancellation notifications.
+- `mongoose-models/Notification.ts` — `models.Notification || model()`; hack removed.
+
+**Salon-owned resources — `requireSalonAdmin()`, `salonId` from the session, ownership checked**
+- `POST /api/services` · `PUT|DELETE /api/services/[id]` (service must belong to caller's salon)
+- `POST /api/gallery` · `DELETE /api/gallery/[id]` (image must belong to caller's salon)
+- `POST|PUT|DELETE /api/salon/products` (DELETE now filters on `salonId` too)
+- `PATCH /api/salon/scheduling` (`findByIdAndUpdate(session.salonId)` instead of body `userId`)
+- `POST /api/timeslots/mark-available`
+- Body fields `salonId` / `userId` are ignored where present — callers unchanged.
+
+**Super-admin only** — `GET|POST /api/setting`, `PUT|DELETE /api/setting/[id]`.
+
+**Previously dead + dangerous** — `GET /api/orders/latest` → `requireCustomer()`, order by
+session id (fake Bearer scheme removed). `PUT /api/customers/[id]/notifications` →
+`requireSuperAdminOrSelf(id)`.
+
+**Dependencies**
+- `npm audit fix` + `@faker-js/faker` 9→10.6, `uuid` 8→14 (`@types/uuid` dropped — uuid ships
+  types), `nodemailer` 7→10.0.9.
+- `next` 15.5.22 → **15.5.25** (unauthenticated RCE on Windows hosts + image-optimizer RCE
+  patched), `next-auth` 4.24.14 → 4.24.15, plus axios / mongoose / form-data / nanoid / js-yaml /
+  dompurify / qs / sharp transitive fixes.
+- `package.json` `overrides: { nodemailer: "$nodemailer" }` — `next-auth` has an *optional* peer
+  on `nodemailer ^7`; without the override every later `npm install` / `npm ci` (incl. Vercel)
+  fails with ERESOLVE. The app does not use next-auth's EmailProvider, so the override is safe.
+- **17 → 2 vulnerabilities.** The remaining two are `postcss` bundled *inside* `next` 15.5 —
+  only fixable by Next 16 (major). Build-time tool, not reachable from user input; deferred.
+
+**Verification**
+- `npx tsc --noEmit` → 0 errors · `npx eslint .` → 0 errors / 93 warnings (unchanged) ·
+  `npx next build` → ✓ compiled, all pages, middleware 61.6 kB · `npm ci` clean.
+- Dev-server smoke test (curl): all 21 guarded method/route pairs → **401** with no session;
+  guest-booking `POST /api/notifications` → passes auth (400 on a fake salon, not 401);
+  public `GET` listings (`services`, `gallery`, `salon`, `salon/products`, `health`) unchanged.
+  With the super-admin cookie: `setting` 200, `notifications` GET 200 / POST 201 / mark-read 200
+  / DELETE 200 (test draft created and removed). Home page renders normally.
+
+**Git** — `main` rebased onto `origin/main` (backup at `local-backup-2026-09-14`), this pass
+committed on top, pushed as a fast-forward.
+
+### 7.5 Still open (next pass)
+
+- Manual: `git rm server.ts bun.lockb && rm -rf src/app/.git` (see §7.1).
+- `POST /api/upload` (registration image upload, pre-auth by design) and `api/draft/*` /
+  `api/salon/progress` (registration drafts keyed by email) have no auth — add rate limiting
+  (`RATE_LIMIT_*` env vars exist but are unused) and consider a signed registration token.
+- `POST /api/bookings/cancel` authenticates guests by `bookingId + email` — acceptable for the
+  guest flow, but when a session exists it should additionally require `session.email` to match.
+- Next 16 upgrade to clear the last 2 `postcss` advisories.
+- Phase 4 items from §3 still stand: consolidate the 5 shadcn/ui copies + 4 `cn()` helpers, pick
+  one toast library, the 93 lint warnings (`<img>` → `next/image`, `prefer-const`, hook deps).

@@ -1,19 +1,19 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/dbConnect";
 import Order from "@/mongoose-models/order";
+import { requireCustomer } from "@/lib/auth/guards";
 
-export async function GET(request: Request) {
+// GET /api/orders/latest — the logged-in customer's most recent order.
+// (Previously "authenticated" with `Authorization: Bearer <customerId>`,
+// where the id itself was the secret.)
+export async function GET() {
+  const me = await requireCustomer();
+  if (me instanceof NextResponse) return me;
+
   try {
     await dbConnect();
 
-    const authHeader = request.headers.get("Authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const customerId = authHeader.split(" ")[1];
-
-    const order = await Order.findOne({ customerId })
+    const order = await Order.findOne({ customerId: me.id })
       .populate("customerId", "name email")
       .populate("items.productId", "name")
       .populate("salonId", "name")

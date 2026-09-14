@@ -2,8 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import mongoose from "mongoose";
 import Settings from "@/mongoose-models/setting";
 import dbConnect from "@/dbConnect";
+import { requireSuperAdmin } from "@/lib/auth/guards";
+
+// Platform settings — super-admin only on every method.
 
 export async function PUT(req: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const denied = await requireSuperAdmin();
+  if (denied) return denied;
+
   const params = await context.params;
   try {
     await dbConnect();
@@ -84,6 +90,9 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
 }
 
 export async function DELETE(req: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const denied = await requireSuperAdmin();
+  if (denied) return denied;
+
   const params = await context.params;
   try {
     await dbConnect();

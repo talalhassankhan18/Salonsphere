@@ -6,6 +6,7 @@ import Category from "@/mongoose-models/categories";
 import Attribute from "@/mongoose-models/Attribute";
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
+import { requireSalonAdmin } from "@/lib/auth/guards";
 
 interface PopulatedSalonProduct {
   _id: string;
@@ -189,15 +190,18 @@ export async function GET(request: Request): Promise<NextResponse> {
   }
 }
 
+// POST: list a product for the caller's salon
 export async function POST(request: Request) {
+  const admin = await requireSalonAdmin();
+  if (admin instanceof NextResponse) return admin;
+
   await dbConnect();
   try {
-    const { salonId, productId, desiredStock } = await request.json();
+    const { productId, desiredStock } = await request.json();
+    const salonId = admin.salonId;
 
     if (
-      !salonId ||
       !productId ||
-      !mongoose.Types.ObjectId.isValid(salonId) ||
       !mongoose.Types.ObjectId.isValid(productId) ||
       typeof desiredStock !== "number" ||
       desiredStock < 0
@@ -290,16 +294,19 @@ export async function POST(request: Request) {
   }
 }
 
+// PUT: update stock on one of the caller's listed products
 export async function PUT(request: Request) {
+  const admin = await requireSalonAdmin();
+  if (admin instanceof NextResponse) return admin;
+
   await dbConnect();
   try {
-    const { salonId, salonProductId, stock } = await request.json();
+    const { salonProductId, stock } = await request.json();
+    const salonId = admin.salonId;
 
     // Validate inputs
     if (
-      !salonId ||
       !salonProductId ||
-      !mongoose.Types.ObjectId.isValid(salonId) ||
       !mongoose.Types.ObjectId.isValid(salonProductId) ||
       typeof stock !== "number" ||
       stock < 0
@@ -308,7 +315,7 @@ export async function PUT(request: Request) {
         {
           success: false,
           error:
-            "Invalid input: salonId, salonProductId, and stock (non-negative number) are required",
+            "Invalid input: salonProductId and stock (non-negative number) are required",
         },
         { status: 400 }
       );
@@ -354,7 +361,11 @@ export async function PUT(request: Request) {
   }
 }
 
+// DELETE: delist one of the caller's products
 export async function DELETE(request: Request) {
+  const admin = await requireSalonAdmin();
+  if (admin instanceof NextResponse) return admin;
+
   await dbConnect();
   try {
     const { salonProductId } = await request.json();
@@ -366,7 +377,11 @@ export async function DELETE(request: Request) {
       );
     }
 
-    const salonProduct = await SalonProduct.findById(salonProductId);
+    // Scoped to the caller's salon so one salon cannot delist another's product
+    const salonProduct = await SalonProduct.findOne({
+      _id: salonProductId,
+      salonId: admin.salonId,
+    });
     if (!salonProduct) {
       return NextResponse.json(
         { success: false, error: "Salon product not found" },

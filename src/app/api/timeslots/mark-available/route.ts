@@ -1,31 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
-import mongoose from "mongoose";
 import dbConnect from "@/dbConnect";
 import TimeSlot from "@/mongoose-models/TimeSlot";
 import { addMinutes } from "date-fns";
+import { requireSalonAdmin } from "@/lib/auth/guards";
 
+// POST: re-open time slots for the caller's own salon
 export async function POST(req: NextRequest) {
+  const admin = await requireSalonAdmin();
+  if (admin instanceof NextResponse) return admin;
+
   try {
     await dbConnect();
 
-    const { salonId, startTime, duration } = await req.json();
+    const { startTime, duration } = await req.json();
+    // Slots can only be freed on the caller's own salon.
+    const salonId = admin.salonId;
 
-    if (!salonId || !startTime || !duration) {
-      console.error("Missing salonId, startTime, or duration", {
-        salonId,
-        startTime,
-        duration,
-      });
+    if (!startTime || !duration) {
+      console.error("Missing startTime or duration", { startTime, duration });
       return NextResponse.json(
-        { message: "Salon ID, start time, and duration are required" },
-        { status: 400 }
-      );
-    }
-
-    if (!mongoose.isValidObjectId(salonId)) {
-      console.error("Invalid salon ID:", salonId);
-      return NextResponse.json(
-        { message: "Invalid salon ID" },
+        { message: "Start time and duration are required" },
         { status: 400 }
       );
     }

@@ -3,6 +3,7 @@ import mongoose, { Types } from "mongoose";
 import Service, { IService } from "@/mongoose-models/Service";
 import Salon from "@/mongoose-models/Salon";
 import dbConnect from "@/dbConnect";
+import { requireSalonAdmin } from "@/lib/auth/guards";
 
 // Ensure DB connection
 async function ensureDbConnection() {
@@ -44,26 +45,21 @@ export async function GET(request: Request) {
   }
 }
 
-// POST: Create a new service
+// POST: Create a new service (salon admin, own salon only)
 export async function POST(request: Request) {
+  const admin = await requireSalonAdmin();
+  if (admin instanceof NextResponse) return admin;
+
   try {
     await ensureDbConnection();
 
     const body = await request.json();
-    const {
-      salonId,
-      name,
-      description,
-      price,
-      duration,
-      category,
-      image,
-      gender,
-    } = body;
+    const { name, description, price, duration, category, image, gender } = body;
+    // Never trust a salonId from the body — the caller can only add to their own salon.
+    const salonId = admin.salonId;
 
     // Validate required fields
     if (
-      !salonId ||
       !name ||
       !description ||
       !price ||
@@ -74,15 +70,10 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error:
-            "Missing required fields: salonId, name, description, price, duration, category, gender",
+            "Missing required fields: name, description, price, duration, category, gender",
         },
         { status: 400 }
       );
-    }
-
-    // Validate salonId as ObjectId
-    if (!mongoose.Types.ObjectId.isValid(salonId)) {
-      return NextResponse.json({ error: "Invalid Salon ID" }, { status: 400 });
     }
 
     // Validate price and duration
