@@ -165,6 +165,12 @@ npm run lint         # eslint .
 
 `.env` must contain at least `MONGODB_URI`, `DB_NAME`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL` (plus Cloudinary / SMTP / Stripe keys for those features).
 
+**Atlas instead of local Mongo:** set `MONGODB_URI=mongodb+srv://<user>:<pass>@<cluster>.mongodb.net/glimmer-db`.
+Atlas rejects any source IP not in *Security → Network Access* **at the TLS handshake** — the
+symptom is `TLSV1_ALERT_INTERNAL_ERROR … SSL alert number 80` in Compass / the app, not an auth
+error. Add your current IP (it changes on mobile hotspots) or `0.0.0.0/0` for dev; Vercel needs
+`0.0.0.0/0` too. A cluster whose hostname returns *Non-existent domain* has been paused/deleted.
+
 **If every page says "Failed to load…" / the log shows `ECONNREFUSED 127.0.0.1:27017`:** MongoDB is
 down. Check `sc query MongoDB` and free disk space, then `Start-Service MongoDB` from an admin
 PowerShell. Run `scripts\mongodb-harden.ps1` once (as admin) so it auto-restarts and uses less RAM —
