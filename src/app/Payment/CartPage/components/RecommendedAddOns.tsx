@@ -7,7 +7,8 @@ function generateCircularPattern(maxRows = 25) {
   for (let i = 0; i <= maxRows; i++) {
     const numCount = i * 2 + 1;
     const padding = maxRows - i;
-    const numbers = Array.from({ length: numCount }, () => Math.floor(Math.random() * 10)).join(" ");
+    // Deterministic so the server and client render the same pattern (hydration).
+    const numbers = Array.from({ length: numCount }, (_, j) => (i * 7 + j * 3) % 10).join(" ");
     const paddedRow = " ".repeat(padding * 2) + numbers;
     rows.push(paddedRow);
   }

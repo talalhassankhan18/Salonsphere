@@ -39,7 +39,7 @@ const SalonsNearby = ({ currentSalonId, latitude, longitude }: SalonsNearbyProps
         setSalons(ordered.slice(0, NEARBY_LIMIT).map(toSalonCard));
       } catch (err) {
         if ((err as Error).name === "AbortError") return;
-        console.error("Error fetching nearby salons:", err);
+        console.warn("Error fetching nearby salons:", err);
         setSalons([]);
       } finally {
         if (!controller.signal.aborted) setIsLoading(false);

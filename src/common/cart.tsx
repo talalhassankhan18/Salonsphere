@@ -94,7 +94,7 @@ const Cart = () => {
                   <tr key={item.id}>
                     <td className="flex items-center gap-4 flex-none max-lg:min-w-80">
                       <img
-                        src={item.image || "/placeholder.png"}
+                        src={item.image || "/placeholder.svg"}
                         alt={item.title}
                         className="h-16 w-16 rounded-md object-cover"
                       />

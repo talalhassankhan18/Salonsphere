@@ -1,7 +1,10 @@
 import ProductDetail from "./components/product-details";
 import Link from "next/link";
+import mongoose from "mongoose";
+import dbConnect from "@/dbConnect";
+import Product from "@/mongoose-models/product";
 // import CategoryNavMenu from "@/common/category-nav-menu";
-import { ProductType, ApiResponse } from "types"; // Import shared types
+import { ProductType } from "types"; // Import shared types
 
 interface Params {
   id: string;
@@ -65,22 +68,24 @@ const Page = async ({ params }: { params: Promise<Params> }) => {
   const { id } = await params;
 
   try {
-    // Fetch product data from the API
-    const response = await fetch(`https://salonsphere.vercel.app/api/products/${id}`, {
-      cache: "no-store", // Ensure fresh data
-    });
+    // Server component: read straight from the database (same query as
+    // GET /api/products/[id]). This used to fetch a hardcoded production
+    // URL, so any other environment showed "Product not found".
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw new Error("Product not found");
+    }
+    await dbConnect();
+    const doc = await Product.findById(id)
+      .populate("category", "name")
+      .populate("attributes.attributeId", "name values")
+      .lean();
 
-    if (!response.ok) {
+    if (!doc) {
       throw new Error("Product not found");
     }
 
-    const { success, data }: ApiResponse<ApiProduct> = await response.json();
-
-    if (!success || !data) {
-      throw new Error("Product not found");
-    }
-
-    // Map API data to ProductType
+    // Serialise ObjectIds/Dates the same way the JSON API would
+    const data: ApiProduct = JSON.parse(JSON.stringify(doc));
     const product = mapApiProductToProductType(data);
 
     return (

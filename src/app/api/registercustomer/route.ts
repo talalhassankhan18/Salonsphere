@@ -50,7 +50,7 @@ export async function POST(request: Request) {
 
     const emailResponse = await fetch(
       `${
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"
+        process.env.NEXTAUTH_URL
       }/api/send-verification-email`,
       {
         method: "POST",

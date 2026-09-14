@@ -35,7 +35,7 @@ const SalonCardList = () => {
 				setSalons(sortNewestFirst(data).slice(0, HOME_SALON_LIMIT).map(toSalonCard));
 			} catch (err) {
 				if ((err as Error).name === "AbortError") return;
-				console.error("Error fetching salons:", err);
+				console.warn("Error fetching salons:", err);
 				setError("Failed to load salons. Please try again later.");
 			} finally {
 				if (!controller.signal.aborted) setIsLoading(false);

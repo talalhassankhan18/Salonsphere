@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FaWhatsapp } from "react-icons/fa";
 import Navbar from "@/common/navbar";
 import Footer from "@/common/footer";
@@ -11,21 +11,25 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+const HERO_IMAGES = [
+  "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80",
+  "https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80",
+  "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80",
+  "https://images.unsplash.com/photo-1516321497487-e288fb19713f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80",
+];
+
 export default function ContactUs() {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [formData, setFormData] = useState({ name: "", email: "", message: "" });
   const [errors, setErrors] = useState({ name: "", email: "", message: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [currentImage] = useState(() => {
-    const images = [
-      "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80",
-      "https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80",
-      "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80",
-      "https://images.unsplash.com/photo-1516321497487-e288fb19713f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80",
-    ];
-    return images[Math.floor(Math.random() * images.length)];
-  });
+  // Server and first client render must agree (hydration), so start with a
+  // fixed image and only randomise after mount.
+  const [currentImage, setCurrentImage] = useState(HERO_IMAGES[0]);
+  useEffect(() => {
+    setCurrentImage(HERO_IMAGES[Math.floor(Math.random() * HERO_IMAGES.length)]);
+  }, []);
 
   const handleLogout = () => {
     setIsLoggedIn(false);

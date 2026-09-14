@@ -31,7 +31,7 @@ export async function POST(request: Request) {
       },
     });
 
-    const verificationUrl = `http://localhost:3000/auth/verify?token=${token}`; // Replace with your domain in production
+    const verificationUrl = `${process.env.NEXTAUTH_URL}/auth/verify?token=${token}`;
 
     await transporter.sendMail({
       from: `"${process.env.EMAIL_FROM_NAME}" <${process.env.EMAIL_FROM}>`, // "SalonSphere" <akhterhifza@gmail.com>

@@ -10,6 +10,7 @@ import { isValidObjectId } from "mongoose";
 import { formatPakistaniPhone, validatePakistaniPhone } from "@/lib/PhoneUtils";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
+import { createNotification } from "@/lib/notifications";
 
 interface BookingRequest {
   salonId: string;
@@ -405,14 +406,16 @@ export async function POST(req: NextRequest) {
           }),
         });
 
-        await fetch(`${process.env.NEXTAUTH_URL}/api/notifications`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            salonId,
-            message: adminMessage,
-            type: "booking",
-          }),
+        // Direct call — the previous HTTP hop sent {salonId, message, type},
+        // which the endpoint rejects (needs title/content/target), so the
+        // salon admin never received this notification from the server.
+        await createNotification({
+          title: "New Booking",
+          content: adminMessage,
+          type: "booking",
+          target: "salonAdmin",
+          salonId,
+          status: "sent",
         });
       } catch (notificationError) {
         console.error("Notification error:", notificationError);

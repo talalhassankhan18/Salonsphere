@@ -33,22 +33,9 @@ export default function LoginPage() {
     const toastId = toast.loading("Logging in...");
 
     try {
-      const baseUrl =
-        process.env.NEXT_PUBLIC_NEXTAUTH_URL ||
-        "https://salonsphere.vercel.app";
-      const callbackUrl = `${baseUrl}/salon/dashboard`;
-
-      // Validate URL
-      try {
-        new URL(callbackUrl);
-      } catch {
-        throw new Error("Invalid callback URL");
-      }
-
-      console.log("Attempting signIn with salon-credentials-login", {
-        identifier,
-        callbackUrl,
-      });
+      // Relative so it works on localhost, previews and production alike
+      // (an absolute production URL here sent local logins off-site).
+      const callbackUrl = "/salon/dashboard";
 
       const result = await signIn("salon-credentials-login", {
         redirect: false,

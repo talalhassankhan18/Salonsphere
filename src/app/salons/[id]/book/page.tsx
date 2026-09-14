@@ -189,11 +189,14 @@ const BookAppointmentContent: React.FC<Props> = ({ params }) => {
             return;
           }
 
+          const now = new Date();
           const mappedSlots: BookingTimeSlot[] = slotsData.map(
             (slot: BackendTimeSlot) => ({
               id: slot._id,
               time: format(new Date(slot.startTime), "h:mm a"),
-              isAvailable: slot.isAvailable,
+              // Past slots render disabled instead of erroring on click.
+              isAvailable:
+                slot.isAvailable && !isBefore(new Date(slot.startTime), now),
               capacityReached: false,
             })
           );
@@ -386,22 +389,8 @@ const BookAppointmentContent: React.FC<Props> = ({ params }) => {
           }),
         });
 
-        const adminMessage = `New booking for ${service.name} at ${format(
-          new Date(selectedSlots[0]),
-          "EEEE, MMMM d, yyyy h:mm a"
-        )} by ${formData.name} (${formData.email}) awaits approval.`;
-        await fetch("/api/notifications", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            title: "New Booking",
-            content: adminMessage,
-            type: "booking",
-            target: "salonAdmin",
-            salonId,
-            status: "sent",
-          }),
-        });
+        // The salon-admin "New Booking" notification is created server-side
+        // by POST /api/bookings; sending it here too produced duplicates.
 
         router.push(`/bookings?email=${encodeURIComponent(formData.email)}`);
       } else {

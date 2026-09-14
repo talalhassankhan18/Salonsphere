@@ -77,7 +77,7 @@ export default function Page() {
       setSalons(mappedSalons);
       console.log("Mapped Salons:", JSON.stringify(mappedSalons, null, 2)); // Debug the response
     } catch (err: any) {
-      console.error("Error fetching salons:", err);
+      console.warn("Error fetching salons:", err);
       setError("Failed to load salons. Please try again later.");
     } finally {
       setIsLoading(false);

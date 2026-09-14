@@ -152,13 +152,15 @@ const ProductStats = () => {
 
   const fetchSalons = async () => {
     try {
-      const response = await fetch("/api/salon/list", { cache: "no-store" });
-      const result = await response.json();
-      if (result.success) {
-        setSalons(result.data);
-      } else {
-        throw new Error(result.error);
-      }
+      // /api/salon/list never existed (it fell through to /api/salon/[id]
+      // with id="list" → 400). /api/salon returns a plain array.
+      const response = await fetch("/api/salon", { cache: "no-store" });
+      if (!response.ok) throw new Error(`Failed to fetch salons (${response.status})`);
+      const result: { _id: string; salonName?: string; name?: string }[] =
+        await response.json();
+      setSalons(
+        result.map((s) => ({ _id: s._id, name: s.salonName || s.name || "Unnamed" }))
+      );
     } catch (error) {
       console.error("Error fetching salons:", error);
       toast({
