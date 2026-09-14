@@ -569,3 +569,18 @@ super-admin login + all 16 pages; mobile menu at 375 px. No horizontal overflow 
 - Orphan pages nobody links to: `/Payment/*`, `/Booking`, `/map`, `/orderdetailspage`,
   `/order-tracking`, `/coming-soon` — probably Lovable leftovers; decide keep/delete.
 - `GET /api/salon` still `console.log`s the full raw Mongo result on every call.
+
+### 9.7 Chatbot panel (2026-09-14, late) — clipped / overlapping navbar
+
+`Support/components/Chatbot.tsx` stacked fixed heights (header + 300 px messages + input +
+200 px suggestions ≈ 700 px) so on any window shorter than that the top was cut off and the
+panel sat over the navbar. Now: card is `flex flex-col max-h-[calc(100dvh-3rem)]`, header and
+input row are `shrink-0`, the message list is `flex-[0_1_300px] min-h-[8rem]` (shrinks first),
+suggestions fixed at 7.5 rem. Verified at 1000×600 (panel 552 px, fully visible) and 375×812.
+
+Also fixed in the same component:
+- **Suggested questions never sent** — `setUserMessage(q); handleSendMessage()` read the stale
+  closure value (empty) and returned early. `handleSendMessage(text?)` now takes the text.
+- **No auto-scroll to the newest message** — `scrollAreaRef` was never attached (and Radix
+  ScrollArea scrolls its inner Viewport anyway). Sentinel `<div ref>` + `scrollIntoView`.
+- `aria-label` on the close and send icon buttons; `onKeyPress` → `onKeyDown`.

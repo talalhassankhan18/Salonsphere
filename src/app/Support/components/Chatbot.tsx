@@ -28,8 +28,10 @@ const Chatbot = ({ isChatOpen, setIsChatOpen }: ChatbotProps) => {
   const [userMessage, setUserMessage] = useState("");
   const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const suggestionsRef = useRef<HTMLDivElement>(null);
+  // Sentinel at the end of the message list; Radix ScrollArea's scrollable
+  // element is its inner Viewport, so scrolling a ref on the wrapper never
+  // worked. scrollIntoView on the sentinel is independent of that.
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isChatOpen) {
@@ -38,13 +40,8 @@ const Chatbot = ({ isChatOpen, setIsChatOpen }: ChatbotProps) => {
   }, [isChatOpen]);
 
   useEffect(() => {
-    if (scrollAreaRef.current) {
-      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
-    }
-    if (suggestionsRef.current && suggestedQuestions.length > 0) {
-      suggestionsRef.current.scrollTop = 0;
-    }
-  }, [chatMessages, suggestedQuestions]);
+    messagesEndRef.current?.scrollIntoView({ block: "end" });
+  }, [chatMessages, isLoading]);
 
   const fetchSuggestedQuestions = async () => {
     try {
@@ -56,12 +53,15 @@ const Chatbot = ({ isChatOpen, setIsChatOpen }: ChatbotProps) => {
     }
   };
 
-  const handleSendMessage = async () => {
-    if (!userMessage.trim()) return;
+  // `text` defaults to the input value; suggested questions pass theirs
+  // directly because setState hasn't applied yet when they click.
+  const handleSendMessage = async (text: string = userMessage) => {
+    const message = text.trim();
+    if (!message) return;
 
     const newMessage: ChatMessage = {
       id: chatMessages.length + 1,
-      text: userMessage,
+      text: message,
       isBot: false,
     };
 
@@ -75,7 +75,7 @@ const Chatbot = ({ isChatOpen, setIsChatOpen }: ChatbotProps) => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ message: userMessage }),
+        body: JSON.stringify({ message }),
       });
 
       const data = await response.json();
@@ -100,10 +100,7 @@ const Chatbot = ({ isChatOpen, setIsChatOpen }: ChatbotProps) => {
     }
   };
 
-  const handleSuggestedQuestion = async (question: string) => {
-    setUserMessage(question);
-    await handleSendMessage();
-  };
+  const handleSuggestedQuestion = (question: string) => handleSendMessage(question);
 
   return (
     <AnimatePresence>
@@ -115,8 +112,11 @@ const Chatbot = ({ isChatOpen, setIsChatOpen }: ChatbotProps) => {
           transition={{ duration: 0.3 }}
           className="fixed bottom-[1.5rem] right-[1rem] w-full max-w-[90vw] sm:max-w-[340px] md:max-w-[380px] z-50 min-w-[250px]"
         >
-          <div className="bg-gradient-to-br from-[#B4004E] to-[#6B1A4B] rounded-2xl shadow-lg overflow-hidden">
-            <div className="flex items-center justify-between p-3 text-white">
+          {/* Never taller than the viewport: header/input keep their size, the
+              message list shrinks (down to 8rem) so the panel can't be clipped
+              at the top or overlap the navbar on short windows. */}
+          <div className="bg-gradient-to-br from-[#B4004E] to-[#6B1A4B] rounded-2xl shadow-lg overflow-hidden flex flex-col max-h-[calc(100dvh-3rem)]">
+            <div className="flex items-center justify-between p-3 text-white shrink-0">
               <div className="flex items-center space-x-2">
                 <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
                   <MessageSquare className="h-4 w-4" />
@@ -133,12 +133,13 @@ const Chatbot = ({ isChatOpen, setIsChatOpen }: ChatbotProps) => {
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsChatOpen(false)}
+                aria-label="Close chat"
                 className="text-white hover:bg-white/10"
               >
                 <X className="h-5 w-5" />
               </Button>
             </div>
-            <ScrollArea className="h-[40vh] sm:h-[250px] md:h-[300px] p-3 bg-white/5 max-h-[400px]">
+            <ScrollArea className="flex-[0_1_300px] min-h-[8rem] p-3 bg-white/5">
               {chatMessages.map((message) => (
                 <motion.div
                   key={message.id}
@@ -168,21 +169,23 @@ const Chatbot = ({ isChatOpen, setIsChatOpen }: ChatbotProps) => {
                   </div>
                 </div>
               )}
+              <div ref={messagesEndRef} />
             </ScrollArea>
-            <div className="p-3 bg-white/10">
+            <div className="p-3 bg-white/10 shrink-0">
               <div className="flex items-center space-x-2">
                 <Input
                   value={userMessage}
                   onChange={(e) => setUserMessage(e.target.value)}
                   placeholder="Enter your message..."
                   className="flex-1 rounded-full bg-white/20 text-white placeholder-white/60 border-none focus:ring-2 focus:ring-[#D5AA68]"
-                  onKeyPress={(e) => {
+                  onKeyDown={(e) => {
                     if (e.key === "Enter") handleSendMessage();
                   }}
                 />
                 <Button
-                  onClick={handleSendMessage}
+                  onClick={() => handleSendMessage()}
                   disabled={isLoading}
+                  aria-label="Send message"
                   className="rounded-full bg-[#D5AA68] text-white hover:bg-[#B98A4A]"
                 >
                   <Send className="h-5 w-5" />
@@ -191,7 +194,7 @@ const Chatbot = ({ isChatOpen, setIsChatOpen }: ChatbotProps) => {
               {suggestedQuestions.length > 0 && (
                 <div className="mt-3">
                   <p className="text-xs text-white/70 mb-2">Suggested questions:</p>
-                  <ScrollArea className="h-[30vh] sm:h-[180px] md:h-[200px] pr-2 max-h-[250px]">
+                  <ScrollArea className="h-[7.5rem] pr-2">
                     {suggestedQuestions.map((question, index) => (
                       <Button
                         key={index}
