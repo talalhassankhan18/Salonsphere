@@ -95,7 +95,7 @@ const SideMenu: React.FC<SideMenuProps> = ({ isLoggedIn, handleLogout }) => {
           </button>
         ) : (
           <Link
-            href="/login"
+            href="/auth/signin"
             onClick={closeMenu}
             className="flex items-center gap-2 text-base"
           >

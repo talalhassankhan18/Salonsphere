@@ -36,7 +36,7 @@ export default function ContactUs() {
   };
 
   const validateForm = () => {
-    let newErrors = { name: "", email: "", message: "" };
+    const newErrors = { name: "", email: "", message: "" };
     if (!formData.name) newErrors.name = "Name is required!";
     if (!formData.email) newErrors.email = "Email is required!";
     else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = "Invalid email format!";
@@ -231,6 +231,7 @@ export default function ContactUs() {
           <Button
             className="rounded-full w-12 h-12 bg-gradient-to-br from-[#B4004E] to-[#6B1A4B] shadow-lg"
             onClick={() => setIsChatOpen(true)}
+            aria-label="Open support chat"
           >
             <MessageSquare className="h-6 w-6 text-white" />
           </Button>

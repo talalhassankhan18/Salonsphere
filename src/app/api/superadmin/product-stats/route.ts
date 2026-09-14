@@ -17,7 +17,7 @@ export async function GET(request: Request) {
     const salonId = searchParams.get("salonId");
     const search = searchParams.get("search") || "";
 
-    let query: any = {};
+    const query: any = {};
     if (salonId && mongoose.Types.ObjectId.isValid(salonId)) {
       query.salonId = salonId;
     }

@@ -163,7 +163,7 @@ const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({ params }) => {
         <div className="text-center text-sm mt-4">
           <p className="text-gray-600">
             Return to{' '}
-            <Link href="/Login" className="text-blue-600 hover:text-blue-800 font-medium">
+            <Link href="/auth/signin" className="text-blue-600 hover:text-blue-800 font-medium">
               Sign in
             </Link>
           </p>

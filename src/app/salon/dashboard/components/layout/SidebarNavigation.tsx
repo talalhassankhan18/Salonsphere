@@ -11,7 +11,7 @@ import {
   ShoppingBag,
   Calendar,
   Star,
-  Image,
+  Image as ImageIcon,
   Images,
   BarChart,
   Package,
@@ -243,7 +243,7 @@ const SidebarNavigation = ({
     {
       title: "Portfolio",
       path: "/salon/dashboard/pages/Portfolio",
-      icon: <Image size={20} />,
+      icon: <ImageIcon size={20} />,
       restrictedPlans: [],
     },
     {

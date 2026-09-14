@@ -4,7 +4,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
-import { X, Upload, Image } from "lucide-react";
+import { X, Upload, Image as ImageIcon } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -252,7 +252,7 @@ const AddPortfolio: React.FC<AddPortfolioProps> = ({
               ) : (
                 <div className="mt-2 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
                   <div className="flex flex-col items-center justify-center">
-                    <Image size={32} className="text-gray-400 mb-3" />
+                    <ImageIcon size={32} className="text-gray-400 mb-3" />
                     <p className="text-sm text-gray-500 mb-4">
                       Upload an image in JPG, PNG format (max 2MB)
                     </p>

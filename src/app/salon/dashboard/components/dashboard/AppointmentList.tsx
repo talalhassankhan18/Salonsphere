@@ -1,5 +1,6 @@
 
 import React from 'react';
+import Link from 'next/link';
 import { Appointment } from '../../models/types';
 import { format } from 'date-fns';
 import { Clock, Calendar, User } from 'lucide-react';
@@ -69,10 +70,12 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ appointments }) => {
         </div>
       ))}
       
-      <button className="w-full py-2 text-sm text-blue-600 hover:text-blue-800 transition-colors">
+      <Link
+        href="/salon/dashboard/pages/Appointments"
+        className="block w-full py-2 text-sm text-center text-blue-600 hover:text-blue-800 transition-colors"
+      >
         View all appointments
-        <link rel="stylesheet" href="/Appointments" />
-      </button>
+      </Link>
     </div>
   );
 };

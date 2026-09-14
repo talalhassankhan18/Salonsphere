@@ -69,7 +69,7 @@ const BillingAddressForm = () => {
 
   // Validate Form
   const validateForm = () => {
-    let errors: { [key: string]: string } = {};
+    const errors: { [key: string]: string } = {};
 
     if (!formData.firstName.trim()) errors.firstName = "First name is required.";
     if (!formData.lastName.trim()) errors.lastName = "Last name is required.";

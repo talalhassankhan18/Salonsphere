@@ -443,6 +443,7 @@ const Support = () => {
                           variant="outline"
                           className="w-full rounded-full"
                           onClick={() => setIsChatOpen(true)}
+            aria-label="Open support chat"
                         >
                           Start Chat
                         </Button>
@@ -657,6 +658,7 @@ const Support = () => {
           <Button
             className="rounded-full w-12 h-12 bg-gradient-to-br from-[#B4004E] to-[#6B1A4B] shadow-lg"
             onClick={() => setIsChatOpen(true)}
+            aria-label="Open support chat"
           >
             <MessageSquare className="h-6 w-6 text-white" />
           </Button>

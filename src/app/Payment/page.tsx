@@ -55,11 +55,11 @@ export default function Home() {
 
         <p className="text-xs text-gray-500 mt-3">
           By checking out you agree with our{" "}
-          <a href="#" className="underline font-medium">
+          <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline font-medium">
             Terms of Service
           </a>{" "}
           and confirm that you have read our{" "}
-          <a href="#" className="underline font-medium">
+          <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline font-medium">
             Privacy Policy
           </a>
           . You can cancel recurring payments at any time.

@@ -73,6 +73,7 @@ const ContactSupportSection = ({ setIsChatOpen }: ContactSupportSectionProps) =>
                     variant="outline"
                     className="w-full rounded-full"
                     onClick={() => setIsChatOpen(true)}
+            aria-label="Open support chat"
                   >
                     Start Chat
                   </Button>

@@ -37,9 +37,8 @@ const Navbar = () => {
             {dropdownOpen && (
               <div className="absolute right-0 mt-2 w-52 bg-white shadow-lg rounded-md overflow-hidden z-50 animate-fadeIn">
                 <Link href="/Subscription" className="block px-4 py-3 hover:bg-gray-100">Pricing</Link>
-                <Link href="/support" className="block px-4 py-3 hover:bg-gray-100">Support for Business</Link>
-                <Link href="/customers" className="block px-4 py-3 hover:bg-gray-100">For Customers</Link>
-                <Link href="/language" className="block px-4 py-3 hover:bg-gray-100">Language</Link>
+                <Link href="/Support" className="block px-4 py-3 hover:bg-gray-100">Support for Business</Link>
+                <Link href="/" className="block px-4 py-3 hover:bg-gray-100">For Customers</Link>
               </div>
             )}
           </div>
@@ -75,15 +74,14 @@ const Navbar = () => {
         {mobileDropdownOpen && (
           <div className="bg-gray-50 animate-fadeIn">
             <Link href="/Subscription" className="block px-6 py-3 hover:bg-gray-200">Pricing</Link>
-            <Link href="/support" className="block px-6 py-3 hover:bg-gray-200">Support for Business</Link>
-            <Link href="/customers" className="block px-6 py-3 hover:bg-gray-200">For Customers</Link>
-            <Link href="/language" className="block px-6 py-3 hover:bg-gray-200">Language</Link>
+            <Link href="/Support" className="block px-6 py-3 hover:bg-gray-200">Support for Business</Link>
+            <Link href="/" className="block px-6 py-3 hover:bg-gray-200">For Customers</Link>
           </div>
         )}
 
         {/* Login & Sign Up (Mobile) */}
-        <Link href="/login" className="block px-6 py-3 border-b hover:bg-gray-100">Login</Link>
-        <Link href="/register" className="block px-6 py-3 bg-primary text-white font-medium text-center">Sign Up</Link>
+        <Link href="/salon/login" className="block px-6 py-3 border-b hover:bg-gray-100">Login</Link>
+        <Link href="/salon/register/basic-info" className="block px-6 py-3 bg-primary text-white font-medium text-center">Sign Up</Link>
       </div>
     </nav>
   );

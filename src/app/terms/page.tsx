@@ -52,7 +52,7 @@ export default function TermsPage() {
           </section>
           <p className="text-center text-sm">
             Back to{" "}
-            <Link href="/register" className="text-blue-600 hover:text-blue-800">
+            <Link href="/auth/register" className="text-blue-600 hover:text-blue-800">
               Register
             </Link>
           </p>

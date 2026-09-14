@@ -14,7 +14,7 @@ import {
 } from "@/mongoose-models/order";
 
 // Email transporter setup
-let transporter = nodemailer.createTransport({
+const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
   port: parseInt(process.env.EMAIL_PORT || "587"),
   secure: false,

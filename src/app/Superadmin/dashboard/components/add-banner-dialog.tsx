@@ -31,7 +31,7 @@ import {
 } from "@/app/Superadmin/dashboard/components/ui/select";
 import { Switch } from "@/app/Superadmin/dashboard/components/ui/switch";
 import { Textarea } from "@/app/Superadmin/dashboard/components/ui/textarea";
-import { Image, Plus, Upload } from "lucide-react";
+import { Image as ImageIcon, Plus, Upload } from "lucide-react";
 
 export function AddBannerDialog() {
   const { toast } = useToast();
@@ -143,7 +143,7 @@ export function AddBannerDialog() {
                 </div>
               ) : (
                 <div className="text-center">
-                  <Image className="h-10 w-10 mx-auto mb-2 text-muted-foreground" />
+                  <ImageIcon className="h-10 w-10 mx-auto mb-2 text-muted-foreground" />
                   <div className="space-y-1">
                     <p className="text-sm font-medium">
                       Drag and drop your image here, or click to browse

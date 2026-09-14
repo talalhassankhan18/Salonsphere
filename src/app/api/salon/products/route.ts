@@ -83,7 +83,7 @@ export async function GET(request: Request): Promise<NextResponse> {
       );
     }
 
-    let query: any = {
+    const query: any = {
       _id: { $nin: listedProductIds },
       category: listingCategory._id,
     };

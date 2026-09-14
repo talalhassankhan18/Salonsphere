@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import DashboardLayout from "../../components/layout/DashboardLayout";
 import { Plus, Edit, Trash } from "lucide-react";
 import { format } from "date-fns";
@@ -240,9 +241,9 @@ const Portfolio: React.FC = () => {
           <h2 className="text-lg font-semibold text-red-600">Session Error</h2>
           <p className="text-gray-600">
             Unable to load salon information. Please{" "}
-            <a href="/salon/login" className="text-blue-600 underline">
+            <Link href="/salon/login" className="text-blue-600 underline">
               log in again
-            </a>
+            </Link>
             .
           </p>
         </div>

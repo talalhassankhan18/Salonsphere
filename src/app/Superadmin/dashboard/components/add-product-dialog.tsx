@@ -39,7 +39,7 @@ import {
 } from "@/app/Superadmin/dashboard/components/ui/tabs";
 import {
   BarChart,
-  Image,
+  Image as ImageIcon,
   Palette,
   Package,
   Plus,
@@ -419,7 +419,7 @@ export default function AddProductDialog() {
                           ))}
                           {imagePreviews.length < 4 && (
                             <div className="border-2 border-dashed rounded-md flex flex-col items-center justify-center p-6 h-[150px] relative">
-                              <Image className="h-10 w-10 mb-2 text-muted-foreground" />
+                              <ImageIcon className="h-10 w-10 mb-2 text-muted-foreground" />
                               <p className="text-sm font-medium">
                                 Upload Images
                               </p>
