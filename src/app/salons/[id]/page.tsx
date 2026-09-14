@@ -35,6 +35,8 @@ interface SalonDetails {
   name: string;
   phone: string;
   ratings?: number;
+  latitude?: number | null;
+  longitude?: number | null;
   scheduling: Scheduling;
 }
 
@@ -54,7 +56,7 @@ const Page = async ({ params }: { params: Promise<Params> }) => {
       // Removed isVerified and paymentStatus for broader matching
     })
       .select(
-        "salonName address salonType avatar email name phone _id ratings scheduling"
+        "salonName address salonType avatar email name phone _id ratings scheduling latitude longitude"
       )
       .lean();
 
@@ -64,11 +66,13 @@ const Page = async ({ params }: { params: Promise<Params> }) => {
         salonName: salonDoc.salonName || "Unknown Salon",
         address: salonDoc.address || "No address provided",
         salonType: salonDoc.salonType || "unisex",
-        avatar: salonDoc.avatar || "/default-salon-image.jpg",
+        avatar: salonDoc.avatar || "/placeholder.svg",
         email: salonDoc.email || "No email provided",
         name: salonDoc.name || "Unknown Owner",
         phone: salonDoc.phone || "No phone provided",
         ratings: salonDoc.ratings ?? 0,
+        latitude: salonDoc.latitude ?? null,
+        longitude: salonDoc.longitude ?? null,
         scheduling: salonDoc.scheduling
           ? JSON.parse(JSON.stringify(salonDoc.scheduling))
           : {
@@ -169,7 +173,11 @@ const Page = async ({ params }: { params: Promise<Params> }) => {
       <Portfolio salonId={salon._id} />
       <AboutSalon salon={salon} />
       <RecommendedProducts salonId={salon._id} />
-      <SalonsNearby currentSalonAddress={salon.address || undefined} />
+      <SalonsNearby
+        currentSalonId={salon._id}
+        latitude={salon.latitude}
+        longitude={salon.longitude}
+      />
     </>
   );
 };

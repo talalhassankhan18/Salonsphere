@@ -98,7 +98,7 @@ export async function GET(request: Request) {
           salonName: salon.salonName,
           address: salon.address || "No address provided",
           salonType: salon.salonType || "unisex",
-          avatar: salon.avatar || "/default-salon-image.jpg",
+          avatar: salon.avatar || "/placeholder.svg",
           latitude: salon.latitude,
           longitude: salon.longitude,
           name: salon.name || "Unknown",

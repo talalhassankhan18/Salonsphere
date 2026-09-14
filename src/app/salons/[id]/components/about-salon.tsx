@@ -26,7 +26,7 @@ const AboutSalon: React.FC<AboutSalonProps> = ({ salon }) => {
   }
 
   // Ensure a fallback image if avatar is not provided
-  const avatarSrc = salon.avatar || "/default-salon-image.jpg";
+  const avatarSrc = salon.avatar || "/placeholder.svg";
 
   return (
     <div className="container mx-auto py-12">

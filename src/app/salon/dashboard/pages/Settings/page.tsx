@@ -149,7 +149,7 @@ const Settings: React.FC = () => {
           name: data.name || "",
           username: data.username || "",
         });
-        setAvatarPreview(data.avatar || "/default-salon-image.jpg");
+        setAvatarPreview(data.avatar || "/placeholder.svg");
         setSchedulingForm({
           businessHours:
             data.scheduling?.businessHours.map((hour) => ({
@@ -345,7 +345,7 @@ const Settings: React.FC = () => {
         username: updatedSalon.username || "",
       });
       setAvatarFile(null);
-      setAvatarPreview(updatedSalon.avatar || "/default-salon-image.jpg");
+      setAvatarPreview(updatedSalon.avatar || "/placeholder.svg");
 
       toast({
         title: "Salon settings updated",
@@ -768,7 +768,7 @@ const Settings: React.FC = () => {
                       <Label htmlFor="avatar">Profile Photo</Label>
                       <div className="relative h-32 w-32 rounded-full overflow-hidden group">
                         <img
-                          src={avatarPreview || "/default-salon-image.jpg"}
+                          src={avatarPreview || "/placeholder.svg"}
                           alt="Salon avatar"
                           className="w-full h-full object-cover"
                         />

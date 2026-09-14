@@ -6,12 +6,7 @@ import {
   AreaType,
   ProductType,
   ReviewType,
-  SalonCardType,
 } from "../../types";
-import salon1 from "@/assets/salons/salon-1.png";
-import salon2 from "@/assets/salons/salon-2.png";
-import salon3 from "@/assets/salons/salon-3.png";
-import salon4 from "@/assets/salons/salon-4.png";
 import review1 from "@/assets/reviews/review-img-1.png";
 import review2 from "@/assets/reviews/review-img-2.png";
 import review3 from "@/assets/reviews/review-img-3.png";
@@ -277,57 +272,6 @@ export const SelfCareProductsData: ProductType[] = alreadyGeneratedscProducts;
 export const BestSellersData: ProductType[] = SelfCareProductsData;
 export const NewArrivalsData: ProductType[] = SelfCareProductsData;
 export const BudgetFriendlyData: ProductType[] = SelfCareProductsData;
-
-export const SalonsData: SalonCardType[] = [
-  {
-    name: "salon 1",
-    address: "Address 1",
-    ratings: 4.5,
-    image: salon1.src,
-  },
-  {
-    name: "salon 2",
-    address: "Address 2",
-    ratings: 4.5,
-    image: salon2.src,
-  },
-  {
-    name: "salon 3",
-    address: "Address 3",
-    ratings: 4.5,
-    image: salon3.src,
-  },
-  {
-    name: "salon 4",
-    address: "Address 4",
-    ratings: 4.5,
-    image: salon4.src,
-  },
-  {
-    name: "salon 5",
-    address: "Address 1",
-    ratings: 4.5,
-    image: salon1.src,
-  },
-  {
-    name: "salon 6",
-    address: "Address 2",
-    ratings: 4.5,
-    image: salon2.src,
-  },
-  {
-    name: "salon 7",
-    address: "Address 3",
-    ratings: 4.5,
-    image: salon3.src,
-  },
-  {
-    name: "salon 8",
-    address: "Address 4",
-    ratings: 4.5,
-    image: salon4.src,
-  },
-];
 
 export const areasData: AreaType[] = [
   {

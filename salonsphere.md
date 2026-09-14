@@ -428,3 +428,42 @@ committed on top, pushed as a fast-forward.
 - Next 16 upgrade to clear the last 2 `postcss` advisories.
 - Phase 4 items from §3 still stand: consolidate the 5 shadcn/ui copies + 4 `cn()` helpers, pick
   one toast library, the 93 lint warnings (`<img>` → `next/image`, `prefer-const`, hook deps).
+
+---
+
+## 8. Pass 4 — 2026-09-14 (evening): home page shows registered salons, not mock data
+
+**Reported:** "on user's home page I'm unable to see registered salons, the home page is showing
+dummy data."
+
+**Cause:** `src/app/components/salon-card-list.tsx` took an optional `salons` prop and fell back
+to the `SalonsData` mock array from `src/data/index.ts` ("salon 1"…"salon 8" with bundled PNGs).
+`page.tsx` rendered `<SalonCardList />` with no prop, so the mock always won. The same mock fed
+`salons/[id]/components/salons-nearby.tsx`, which filtered it by *exact address match* — on real
+data that never matched, so every salon page said "No nearby salons found."
+
+**Done**
+- New `src/lib/salon-cards.ts` — `toSalonCard()` (API salon → `SalonCardType`),
+  `sortNewestFirst()`, `SALON_FALLBACK_IMAGE`.
+- `salon-card-list.tsx` → client component that fetches `GET /api/salon` (already filtered to
+  `isVerified && paymentStatus === "completed"`), sorts newest-first, shows up to **8** (the
+  "Salons" heading still links to `/salons` for the full list). Loading / error / "No salons
+  registered yet." states. Fetch is aborted on unmount.
+- `salons-nearby.tsx` → client component. When the current salon has coordinates it calls
+  `GET /api/salon/nearby?lat&lng&distance=10000&excludeId` (real Haversine query, up to 4);
+  otherwise falls back to the newest registered salons under an "Other Salons" heading.
+  `salons/[id]/page.tsx` now selects `latitude longitude` and passes `_id` + coords instead of
+  `address`.
+- Deleted `SalonsData` and the four `@/assets/salons/salon-N.png` mock images (no other users).
+- `/default-salon-image.jpg` was referenced as the avatar fallback in **9 places** but never
+  existed in `public/` → all now `/placeholder.svg` (`api/salon`, `api/salon/nearby`,
+  `api/salon/details`, salon dashboard Settings, `about-salon.tsx`, `salons/[id]/page.tsx`).
+
+**Verified:** `tsc` 0 · `eslint` 0 errors · `next build` ✓ · dev server: home page renders all
+7 registered salons (The Beauty Loft, zaeraSalon, kajal, Glam, Divine, depilex, Glamour) with
+their Cloudinary avatars and working `Book Now` links; `/salons/Divine` shows "Glamour" under
+Nearby Salons (both Islamabad). No mock names, no server errors.
+
+**Note for later:** `GET /api/salon` `console.log`s the entire raw Mongo result on every call
+("Raw MongoDB Salons") — noisy and leaks salon emails/phones into server logs. Not changed in
+this pass; worth removing.

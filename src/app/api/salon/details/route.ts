@@ -41,7 +41,7 @@ export async function POST(req: Request) {
             upgradedAt: salon.plan.upgradedAt,
           }
         : null,
-      avatar: salon.avatar || "/default-salon-image.jpg",
+      avatar: salon.avatar || "/placeholder.svg",
     });
   } catch (error: any) {
     console.error("Salon details error:", error);
@@ -96,7 +96,7 @@ export async function GET(req: Request) {
             upgradedAt: salon.plan.upgradedAt,
           }
         : null,
-      avatar: salon.avatar || "/default-salon-image.jpg",
+      avatar: salon.avatar || "/placeholder.svg",
     });
   } catch (error: any) {
     console.error("Salon details error:", error);
