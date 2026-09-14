@@ -609,3 +609,36 @@ top 72 px of every page using it (home hero, /salons, /selfcare-products, /Conta
 Verified at 1280 px: overlap 0 px, links centre offset 0 px, actions 24 px from the right
 edge; /salons, /selfcare-products, /ContactUs, /cart all 0 px overlap; 375 px OK.
 `/Vendor` has its own fixed navbar with `mt-16` on its hero — left as is.
+
+### 9.9 Vercel build (2026-09-14, night) — env-at-import crash; 93 lint warnings → 0
+
+The pasted Vercel log stopped at the lint step; every line there was a *warning* (they don't fail
+a Next build). The real failure was below it: `dbConnect.ts`, `session.server.ts` and both
+Stripe API routes **validated env vars at module load**, and `next build` imports every route
+while collecting page data → `Error: MONGODB_URI environment variable is not defined` on a Vercel
+project without the vars set. Validation is now lazy (inside the function that needs the value;
+same error text at runtime). The three `loadStripe()` call sites pass `null` to `<Elements>` when
+`NEXT_PUBLIC_STRIPE_PUBLIC_KEY` is missing instead of throwing.
+
+**Proof:** `MONGODB_URI="" DB_NAME="" NEXTAUTH_SECRET="" SESSION_SECRET="" STRIPE_SECRET_KEY=""
+NEXT_PUBLIC_STRIPE_PUBLIC_KEY="" npx next build` → exit 0, 150 static pages, middleware, no lint
+output. (You still need the real values in Vercel → Settings → Environment Variables for the app
+to *work*; see §5.)
+
+**Lint 93 → 0:**
+- `@next/next/no-img-element` (51) turned **off** with rationale in `eslint.config.js` — the
+  `<img>` sources are Cloudinary/user-upload/base64; `next/image` would push a marketplace's
+  images through Vercel's optimizer (1,000/month on Hobby → broken images) for no gain.
+- `react-hooks/exhaustive-deps` (26) fixed properly: fetchers in `useCallback` with their real
+  inputs and listed in their effects (effects moved below definitions they reference — TDZ).
+  Loop traps avoided: `DashboardOverview` reads its previous snapshot via a mirror `useRef`;
+  `Settings` uses functional `setState`; module-level constants hoisted; `salons/page` uses
+  `useMemo` for the debounce and a single effect (it was double-fetching on mount);
+  `bookings` split into `fetchBookings(email)` + form handler.
+- **Real bug surfaced by a warning:** `salon/register/plan-selection` read the `email` state in
+  the same effect run that set it → the upgrade path compared the account email against `""`
+  ("Email mismatch" → bounced to login) and built redirect URLs with an empty email. Fixed.
+- `prefer-const`, `card-list-wrapper` ref-cleanup capture, named ESLint config export.
+
+**Note to self / next person:** running `next build` while `npm run dev` is up corrupts the dev
+server's `.next/` state (every route 500s until the dev server is restarted). Stop dev first.
