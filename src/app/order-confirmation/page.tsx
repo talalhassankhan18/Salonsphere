@@ -249,7 +249,7 @@ const OrderConfirmationContent = () => {
                 A confirmation email has been sent to you. Delivery expected
                 within 5-6 working days.
               </p>
-              <p>Contact: salonsphere@gmail.com | Phone: 03335759985</p>
+              <p>Contact: salonsphere@gmail.com | Phone: 03255664245</p>
             </div>
           </div>
         </div>

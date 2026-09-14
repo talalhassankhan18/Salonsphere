@@ -62,14 +62,14 @@ export async function POST(request: NextRequest) {
   if (!customerId || !items || !shippingAddress || shippingFee === undefined) {
     return NextResponse.json(
       { error: "Missing required fields" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
   if (subtotal === undefined || total === undefined) {
     return NextResponse.json(
       { error: "Subtotal and total are required" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
     const totalCommission = populatedOrder.items.reduce(
       (acc, item) =>
         item.salonId ? acc + item.subtotal * (item.commissionRate || 0) : acc,
-      0
+      0,
     );
 
     const mailOptions = {
@@ -129,7 +129,7 @@ export async function POST(request: NextRequest) {
         <ul>
           <li><strong>Order ID:</strong> ${populatedOrder._id}</li>
           <li><strong>Date:</strong> ${new Date(
-            populatedOrder.createdAt
+            populatedOrder.createdAt,
           ).toLocaleDateString()}</li>
           <li><strong>Payment Method:</strong> ${
             populatedOrder.paymentMethod
@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
           ${
             totalCommission > 0
               ? `<li><strong>Salon Commission:</strong> ₨${totalCommission.toFixed(
-                  2
+                  2,
                 )}</li>`
               : ""
           }
@@ -145,10 +145,10 @@ export async function POST(request: NextRequest) {
         <h2>Shipping Address</h2>
         <p>${populatedOrder.shippingAddress.street}</p>
         <p>${populatedOrder.shippingAddress.city}, ${
-        populatedOrder.shippingAddress.state
-      }, ${populatedOrder.shippingAddress.postalCode}, ${
-        populatedOrder.shippingAddress.country
-      }</p>
+          populatedOrder.shippingAddress.state
+        }, ${populatedOrder.shippingAddress.postalCode}, ${
+          populatedOrder.shippingAddress.country
+        }</p>
         <h2>Ordered Products</h2>
         <table border="1" cellpadding="5" cellspacing="0">
           <tr>
@@ -204,7 +204,7 @@ export async function POST(request: NextRequest) {
 
     await transporter.sendMail(mailOptions);
     console.log(
-      `📧 Email sent to ${orderCustomerEmail} for order ${populatedOrder._id}`
+      `📧 Email sent to ${orderCustomerEmail} for order ${populatedOrder._id}`,
     );
 
     return NextResponse.json({ order: populatedOrder }, { status: 201 });
@@ -214,7 +214,7 @@ export async function POST(request: NextRequest) {
       error instanceof Error ? error.message : "Unknown error occurred";
     return NextResponse.json(
       { error: `Failed to create order: ${errorMessage}` },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -250,11 +250,11 @@ export async function GET(request: NextRequest) {
       if (!salonId || salonId !== session.user.salonId) {
         return NextResponse.json(
           { error: "Invalid or missing salonId" },
-          { status: 403 }
+          { status: 403 },
         );
       }
       populatedOrders = (await Order.getSalonOrders(
-        new mongoose.Types.ObjectId(salonId)
+        new mongoose.Types.ObjectId(salonId),
       )
         .populate("items.productId", "name price imageUrls")
         .populate("items.salonId", "salonName")
@@ -275,7 +275,7 @@ export async function GET(request: NextRequest) {
       error instanceof Error ? error.message : "Unknown error occurred";
     return NextResponse.json(
       { error: `Failed to fetch orders: ${errorMessage}` },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
