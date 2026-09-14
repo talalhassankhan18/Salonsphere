@@ -177,6 +177,27 @@ A `.claude/launch.json` entry (`salonsphere-dev`) is included for the Claude Cod
 
 ## 6. Change log
 
+### 2026-09-14 (later) — Sync with GitHub (`origin/main`)
+
+**Situation:** the local copy was a 13-May-2025 snapshot; GitHub `main` had 29 newer commits (20–21 May + 20 Aug 2025 work, a Next CVE pin, README rewrite) that had never been pulled. VS Code's push was rejected ("Try running Pull first"). Simply pulling would have produced 123 conflicts against the audit changes.
+
+**What was done**
+- Audit work snapshotted on branch `audit-fixes`, then `origin/main` merged into it. Conflicts resolved by rule: remote version for anything the audit hadn't touched; audit version for hand-edited files; mechanical edits (API guards, Suspense wrappers, `placeholder.svg`) re-applied on top of the remote versions. Remote's removal of `/users`, `/register`, `/signup` accepted.
+- **Dropped the remote's `ignoreBuildErrors: true` / `ignoreDuringBuilds: true`** (next.config.ts) — it was hiding real breakage. Fixed what it hid:
+  - 11 route handlers with sync `params` → Next 15 `Promise` form.
+  - `api/orders/salon/[id]` read `params.salonId` (segment is `[id]` → always undefined) and let any salon admin read any salon's orders → now uses `id` and `requireSuperAdminOrOwnSalon`.
+  - `api/support/email` used a Pages-API `res: NextApiResponse` param.
+  - Navbar/Cart lost their props on the remote but callers still passed them (5 files).
+  - `api/upload/route.ts` was an **empty file** (salon registration image upload was broken) → real Cloudinary upload (`images[]` → `{ imageUrls }`, 5 files / 5 MB / image types only).
+  - `auth/error/page.tsx` was empty → restored.
+- `next` floor raised to `^15.3.8` (matches the remote CVE fix; resolves to 15.5.x).
+- Local `main` fast-forwarded to the merged result → `ahead 3, behind 0` of `origin/main`; push is a clean fast-forward.
+
+**Verification:** `tsc` 0 errors · `eslint .` 0 errors · `next build` ✓ (150 pages, middleware) · dev smoke test: all pages 200 / correct redirects, admin APIs 401→200 with cookie, all 16 super-admin pages 200.
+
+**Git conventions from here:** always `git pull` (or Fetch + Pull in VS Code) **before** starting work; never re-enable `ignoreBuildErrors` — fix the error instead.
+
+
 ### 2026-09-14 — Hardcoded super-admin login, runtime verification, build
 
 - **Super-admin credentials hardcoded again** (project requirement) in server-only `src/lib/auth/superadmin-credentials.ts`; `/api/superadmin/login` reads from there. Server-side verification + httpOnly cookie + middleware guard from the previous pass are kept.
