@@ -109,7 +109,7 @@ const OrderConfirmationContent = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <div className="flex-grow container mx-auto p-6 pt-20 pb-10">
+      <div className="flex-grow container mx-auto p-6 pb-10">
         <div className="max-w-4xl mx-auto">
           <button
             onClick={handleDownloadPDF}

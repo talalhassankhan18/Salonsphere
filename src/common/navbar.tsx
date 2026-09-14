@@ -99,13 +99,17 @@ const Navbar: React.FC = () => {
   };
 
   return (
+    <>
     <nav className="bg-base-100 shadow-md font-poppins fixed top-0 left-0 w-full z-50">
-      <div className="container mx-auto flex items-center justify-between px-6 py-3">
-        <Link className="flex items-center" href="/">
+      {/* md+: 3-column grid with equal outer columns so the links are truly
+          centred while the logo stays left and cart/profile stay right.
+          Fixed height so the spacer below can match it exactly. */}
+      <div className="container mx-auto h-[4.5rem] px-6 flex items-center justify-between md:grid md:grid-cols-[1fr_auto_1fr]">
+        <Link className="flex items-center md:justify-self-start" href="/">
           <img src={Logo.src} alt="logo" className="h-9" />
         </Link>
 
-        <ul className="hidden md:flex items-center space-x-6 text-sm font-medium">
+        <ul className="hidden md:flex items-center space-x-6 text-sm font-medium md:justify-self-center">
           <li>
             <Link href="/" className={getLinkClasses("/")}>
               Home
@@ -142,8 +146,12 @@ const Navbar: React.FC = () => {
               Support
             </Link>
           </li>
+        </ul>
 
-          <div className="flex items-center space-x-4">
+        {/* Right-aligned actions: cart + account. Kept as a list because the
+            auth branches below render <li>. */}
+        <ul className="hidden md:flex items-center space-x-4 md:justify-self-end">
+          <li className="flex items-center">
             {/* <div className="relative hidden md:block">
               <input
                 type="text"
@@ -160,7 +168,7 @@ const Navbar: React.FC = () => {
             </div>
             <FiHeart className="text-xl cursor-pointer hover:text-gray-700 transition-colors duration-200" /> */}
             <CartNavbar initialCartCount={0} />
-          </div>
+          </li>
           {session?.user?.role === "admin" ||
             session?.user?.role === "super_admin" ? (
             <li>
@@ -591,6 +599,10 @@ const Navbar: React.FC = () => {
         )}
       </div>
     </nav>
+    {/* The nav is position:fixed, so reserve its height in normal flow —
+        otherwise the top 4.5rem of every page renders underneath it. */}
+    <div aria-hidden className="h-[4.5rem]" />
+    </>
   );
 };
 

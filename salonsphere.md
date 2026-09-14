@@ -584,3 +584,22 @@ Also fixed in the same component:
 - **No auto-scroll to the newest message** — `scrollAreaRef` was never attached (and Radix
   ScrollArea scrolls its inner Viewport anyway). Sentinel `<div ref>` + `scrollIntoView`.
 - `aria-label` on the close and send icon buttons; `onKeyPress` → `onKeyDown`.
+
+### 9.8 Navbar (2026-09-14, late) — banner hidden behind it; links centred
+
+`common/navbar.tsx` is `position: fixed` (72 px) but nothing reserved that height in flow, so the
+top 72 px of every page using it (home hero, /salons, /selfcare-products, /ContactUs, /cart,
+/checkout, …) rendered underneath. Only `order-confirmation` had a manual `pt-20`.
+
+- Nav container is now a fixed `h-[4.5rem]` and the component renders an `aria-hidden`
+  `h-[4.5rem]` spacer after `</nav>` — every consumer gets the offset automatically.
+  `order-confirmation`'s `pt-20` removed (would have doubled).
+- Desktop layout is a 3-column grid `md:grid-cols-[1fr_auto_1fr]`: logo `justify-self-start`,
+  links `justify-self-center` (equal outer columns ⇒ true centre regardless of logo/actions
+  width), cart + account in their own `<ul>` `justify-self-end`. The actions used to be a
+  `<div>` inside the links `<ul>` (invalid HTML) pushing everything right.
+- Mobile (< md) unchanged: logo left, hamburger + cart right.
+
+Verified at 1280 px: overlap 0 px, links centre offset 0 px, actions 24 px from the right
+edge; /salons, /selfcare-products, /ContactUs, /cart all 0 px overlap; 375 px OK.
+`/Vendor` has its own fixed navbar with `mt-16` on its hero — left as is.
