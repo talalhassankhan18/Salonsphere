@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "composite": true,
     "baseUrl": ".",
     "target": "ESNext", // Use ESNext for modern JavaScript features
     "lib": ["dom", "dom.iterable", "esnext"],
