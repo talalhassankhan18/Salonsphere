@@ -4,6 +4,7 @@ import Salon from "@/mongoose-models/Salon";
 import { hash } from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
 import { uploadImage } from "@/lib/cloudinary";
+import { validatePakistaniPhone } from "@/lib/PhoneUtils";
 
 export async function POST(req: Request) {
   await dbConnect();
@@ -54,12 +55,12 @@ export async function POST(req: Request) {
       );
     }
 
-    // Validate phone format (match schema: /^\+?[\d\s-]{10,}$/)
-    if (!/^\+?[\d\s-]{10,}$/.test(phone)) {
+    // Validate phone format using phoneUtils
+    if (!validatePakistaniPhone(phone)) {
       return NextResponse.json(
         {
           error:
-            "Phone number must be at least 10 digits, optionally with +, spaces, or hyphens",
+            "Phone number must be in Pakistani format (e.g., 03335759985)",
         },
         { status: 400 }
       );
@@ -169,8 +170,8 @@ export async function POST(req: Request) {
       latitude: parsedLatitude,
       longitude: parsedLongitude,
       lastStep: "/salon/register/verification",
-      role: "salon_admin", // Added to match schema default
-      portfolios: [], // Initialize arrays
+      role: "salon_admin",
+      portfolios: [],
       services: [],
       gallery: [],
     };

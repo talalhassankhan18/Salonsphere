@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/dbConnect";
 import Salon from "@/mongoose-models/Salon";
+import Service from "@/mongoose-models/Service";
 
 export async function GET(request: Request) {
   try {
@@ -12,6 +13,7 @@ export async function GET(request: Request) {
     const salonName = searchParams.get("salonName");
     const address = searchParams.get("address");
     const salonType = searchParams.get("salonType");
+    const serviceName = searchParams.get("serviceName");
 
     // Build query with existing filters
     const query: any = {
@@ -22,21 +24,53 @@ export async function GET(request: Request) {
       longitude: { $exists: true, $ne: null },
     };
 
-    // Add optional filters
+    // Add optional salon filters
     if (salonName) {
-      query.salonName = { $regex: salonName, $options: "i" }; // Case-insensitive
+      query.salonName = { $regex: salonName, $options: "i" }; // Partial match
+      console.log("Salon Name Query:", query.salonName);
     }
     if (address) {
-      query.address = { $regex: address, $options: "i" };
+      query.address = { $regex: address, $options: "i" }; // Partial match
     }
     if (salonType && ["female", "male", "unisex"].includes(salonType)) {
       query.salonType = salonType;
     }
 
-    // Fetch salons with required fields
-    const salons = await Salon.find(query).select(
-      "salonName address salonType avatar latitude longitude _id name plan isActive createdAt ratings"
-    );
+    // Add service-based filtering
+    if (serviceName) {
+      // Find services with matching names (partial match)
+      const matchingServices = await Service.find({
+        name: { $regex: serviceName, $options: "i" },
+        isActive: true,
+      }).select("_id");
+
+      console.log("Matching Services:", JSON.stringify(matchingServices, null, 2));
+
+      // Extract service IDs
+      const serviceIds = matchingServices.map((service) => service._id);
+
+      // Filter salons that have these services
+      if (serviceIds.length > 0) {
+        query.services = { $in: serviceIds };
+      } else {
+        // If no services match, return no salons
+        return NextResponse.json([], { status: 200 });
+      }
+    }
+
+    // Log the final query
+    console.log("Final Query:", JSON.stringify(query, null, 2));
+
+    // Fetch salons with populated services
+    const salons = await Salon.find(query)
+      .populate({
+        path: "services",
+        select: "name category isActive",
+      })
+      .lean();
+
+    // Log raw MongoDB response for debugging
+    console.log("Raw MongoDB Salons:", JSON.stringify(salons, null, 2));
 
     // Format and validate response
     const formattedSalons = salons
@@ -52,6 +86,13 @@ export async function GET(request: Request) {
           );
           return null;
         }
+
+        const sanitizedServices = (salon.services || []).map((service: any) => ({
+          name: typeof service.name === "string" ? service.name : "Unknown Service",
+          category: service.category || "Other",
+          isActive: service.isActive ?? true,
+        }));
+
         return {
           _id: salon._id.toString(),
           salonName: salon.salonName,
@@ -65,11 +106,14 @@ export async function GET(request: Request) {
           isActive: salon.isActive,
           createdAt: salon.createdAt,
           ratings: salon.ratings ?? 0,
+          services: sanitizedServices,
         };
       })
       .filter((salon) => salon !== null);
 
-    console.log("Fetched salons:", formattedSalons);
+    // Log formatted response for debugging
+    console.log("Fetched Salons:", JSON.stringify(formattedSalons, null, 2));
+
     return NextResponse.json(formattedSalons, { status: 200 });
   } catch (error: any) {
     console.error("Error fetching salons:", error.message, error.stack);

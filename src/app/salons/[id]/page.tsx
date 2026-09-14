@@ -169,7 +169,7 @@ const Page = async ({ params }: { params: Promise<Params> }) => {
       <Portfolio salonId={salon._id} />
       <AboutSalon salon={salon} />
       <RecommendedProducts salonId={salon._id} />
-      <SalonsNearby currentSalonAddress={salon.address} />
+      <SalonsNearby currentSalonAddress={salon.address || undefined} />
     </>
   );
 };

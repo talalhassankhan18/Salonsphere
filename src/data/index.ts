@@ -370,35 +370,35 @@ export const reviewsData: ReviewType[] = [
     stars: 5,
     title: "Purchase Product",
     description:
-      "This product is so good. Recommended from me. Glimmer is a lifesaver. Thank you, Glimmer.",
-    name: "Rumaisha Rauf",
-    city: "Gulistan Town",
+      "This Pure Clay Mask is so good. Recommended from me. SalonSphere(Glimmer) is a lifesaver. Thank you, Salonsphere(Glimmer).",
+    name: "Hifza Akhter",
+    city: "Wahcantt",
     image: review1.src,
   },
   {
     stars: 5,
     title: "Saloon Service",
     description:
-      "Glimmer make life so much easier. I also found a few good barbershops that I didn't know existed.",
-    name: "Wisam Ahmad",
-    city: "Korangi",
+      "SalonSphere(Glimmer) make life so much easier. I also found a few good barbershops that I didn't know existed.Highly recommended from me!",
+    name: "Talal Hassan Khan",
+    city: "HassanAbdal",
+    image: review3.src,
+  },
+  {
+    stars: 5,
+    title: "Booking Service",
+    description:
+      "I've been using SalonSphere(Glimmer) for two months and it's by far the best booking platform I've used. Highly recommend it!",
+    name: "Maaz Ahmad",
+    city: "Lahore",
     image: review2.src,
   },
   {
     stars: 5,
     title: "Purchase Product",
     description:
-      "I've been using Glimmer for two months and it's by far the best booking platform I've used. Highly recommend it!",
-    name: "Maaz Ahmad",
-    city: "Lahore",
-    image: review3.src,
-  },
-  {
-    stars: 5,
-    title: "Purchase Product",
-    description:
-      "This product is so good. Recommended from me. Glimmer is a lifesaver. Thank you, Glimmer.",
-    name: "Irza Rauf",
+      "This product is so good. Recommended from me. SalonSphere(Glimmer) is a lifesaver. Thank you, SalonSphere(Glimmer).",
+    name: "Samia Ahmed",
     city: "Karachi",
     image: review4.src,
   },

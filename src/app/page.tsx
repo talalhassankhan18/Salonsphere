@@ -23,14 +23,14 @@ import { motion } from "framer-motion";
 export default function Home() {
   const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
-  
+
   const handleLogout = () => {
     setIsLoggedIn(false);
   };
 
   return (
     <>
-      <Navbar isLoggedIn={isLoggedIn} handleLogout={handleLogout} />
+      <Navbar />
       {/* <div className="m-4 p-6"></div> */}
       <Hero />
       <SalonCardList />
@@ -41,7 +41,7 @@ export default function Home() {
       <CallToAction />
       <GymBanner />
       <FakeReviewList />
-            <Chatbot isChatOpen={isChatOpen} setIsChatOpen={setIsChatOpen} />
+      <Chatbot isChatOpen={isChatOpen} setIsChatOpen={setIsChatOpen} />
 
       <motion.div
         className="fixed bottom-6 right-6 z-40"

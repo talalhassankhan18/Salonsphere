@@ -4,6 +4,7 @@ import React from "react";
 import { HiOutlineSearch } from "react-icons/hi";
 import { IoLocationSharp } from "react-icons/io5";
 import { FaPerson } from "react-icons/fa6";
+import { GiHairStrands } from "react-icons/gi";
 
 interface HeroProps {
   salonName: string;
@@ -12,6 +13,9 @@ interface HeroProps {
   setLocation: (value: string) => void;
   gender: "female" | "male" | "unisex" | "";
   setGender: (value: "female" | "male" | "unisex" | "") => void;
+  service: string;
+  setService: (value: string) => void;
+  handleSearch: () => void;
 }
 
 const Hero = ({
@@ -21,6 +25,9 @@ const Hero = ({
   setLocation,
   gender,
   setGender,
+  service,
+  setService,
+  handleSearch,
 }: HeroProps) => {
   return (
     <div
@@ -44,6 +51,15 @@ const Hero = ({
               onChange={(e) => setSalonName(e.target.value)}
             />
             <SearchFilterSection
+              placeholder="Services"
+              icon={<GiHairStrands className="size-5 opacity-70" />}
+              value={service}
+              onChange={(e) => {
+                console.log("Service Input:", e.target.value);
+                setService(e.target.value);
+              }}
+            />
+            <SearchFilterSection
               placeholder="Location"
               icon={<IoLocationSharp className="size-5 opacity-70" />}
               value={location}
@@ -58,7 +74,9 @@ const Hero = ({
               }
               isGenderFilter
             />
-            <button className="btn btn-neutral btn-block">Search</button>
+            <button className="btn btn-neutral btn-block" onClick={handleSearch}>
+              Search
+            </button>
           </div>
           <div className="hidden items-center justify-between rounded-full bg-white px-1 lg:flex">
             <SearchFilterSection
@@ -70,6 +88,16 @@ const Hero = ({
             />
             <HorizontalDivider className="hidden lg:block" />
             <SearchFilterSection
+              placeholder="Services"
+              icon={<GiHairStrands className="size-5 opacity-70" />}
+              value={service}
+              onChange={(e) => {
+                console.log("Service Input:", e.target.value);
+                setService(e.target.value);
+              }}
+            />
+            <HorizontalDivider className="hidden lg:block" />
+            <SearchFilterSection
               placeholder="Location"
               icon={<IoLocationSharp className="size-5 opacity-70" />}
               value={location}
@@ -85,7 +113,12 @@ const Hero = ({
               }
               isGenderFilter
             />
-            <button className="btn btn-neutral rounded-full">Search</button>
+            <button
+              className="btn btn-neutral rounded-full"
+              onClick={handleSearch}
+            >
+              Search
+            </button>
           </div>
         </div>
       </div>
@@ -152,7 +185,7 @@ const SearchFilterSection = ({
         <ul
           tabIndex={0}
           className="dropdown-content menu top-16 z-[1] w-full rounded-box border border-base-300 bg-base-100 p-2 shadow lg:w-72"
-          style={{ display: "none" }} // Hide empty dropdown to avoid confusion
+          style={{ display: "none" }}
         ></ul>
       )}
     </div>

@@ -71,6 +71,7 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ appointments }) => {
       
       <button className="w-full py-2 text-sm text-blue-600 hover:text-blue-800 transition-colors">
         View all appointments
+        <link rel="stylesheet" href="/Appointments" />
       </button>
     </div>
   );

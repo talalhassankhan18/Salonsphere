@@ -103,14 +103,14 @@ export default function GetStartedPage() {
 
           {/* Language, Support, and Admin Buttons */}
           <div className="mt-4 flex justify-center flex-wrap gap-3 sm:mt-6 sm:gap-4">
-            <button className="flex items-center space-x-1 text-white bg-gray-700 px-3 py-1 text-xs sm:text-sm sm:px-4 sm:py-2 rounded-lg hover:bg-gray-800">
-              <FaGlobe />
-              <span>Language</span>
-            </button>
-            <button className="flex items-center space-x-1 text-white bg-gray-700 px-3 py-1 text-xs sm:text-sm sm:px-4 sm:py-2 rounded-lg hover:bg-gray-800">
-              <FaHeadset />
+           
+             <Link
+              href="/Support"
+              className="flex items-center space-x-1 text-white bg-gray-700 px-3 py-1 text-xs sm:text-sm sm:px-4 sm:py-2 rounded-lg hover:bg-gray-800"
+            >
+               <FaHeadset />
               <span>Support</span>
-            </button>
+            </Link>
             <Link
               href="/Superadmin/login"
               className="flex items-center space-x-1 text-white bg-gray-700 px-3 py-1 text-xs sm:text-sm sm:px-4 sm:py-2 rounded-lg hover:bg-gray-800"

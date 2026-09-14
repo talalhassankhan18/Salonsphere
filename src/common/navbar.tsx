@@ -7,12 +7,7 @@ import { FiSearch, FiHeart, FiMenu, FiX } from "react-icons/fi";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
-interface NavbarProps {
-  isLoggedIn: boolean;
-  handleLogout: () => void;
-}
-
-const Navbar: React.FC<NavbarProps> = ({ isLoggedIn, handleLogout }) => {
+const Navbar: React.FC = () => {
   const { data: session } = useSession();
   const router = useRouter();
   const [search, setSearch] = useState("");
@@ -28,10 +23,9 @@ const Navbar: React.FC<NavbarProps> = ({ isLoggedIn, handleLogout }) => {
 
   const getLinkClasses = (path: string) =>
     `relative py-2 transition-all duration-300 
-    ${
-      pathname === path
-        ? "text-black font-semibold after:content-[''] after:absolute after:left-0 after:bottom-0 after:w-full after:h-[2px] after:bg-black"
-        : "text-gray-600 hover:text-black hover:after:content-[''] hover:after:absolute hover:after:left-0 hover:after:bottom-0 hover:after:w-full hover:after:h-[2px] hover:after:bg-black"
+    ${pathname === path
+      ? "text-black font-semibold after:content-[''] after:absolute after:left-0 after:bottom-0 after:w-full after:h-[2px] after:bg-black"
+      : "text-gray-600 hover:text-black hover:after:content-[''] hover:after:absolute hover:after:left-0 hover:after:bottom-0 hover:after:w-full hover:after:h-[2px] hover:after:bg-black"
     }`;
 
   const toggleAccountDropdown = () => {
@@ -43,7 +37,6 @@ const Navbar: React.FC<NavbarProps> = ({ isLoggedIn, handleLogout }) => {
     setAccountDropdownOpen(false);
     setMobileMenuOpen(false);
     router.push("/auth/signin");
-    handleLogout();
   };
 
   const getInitial = () => {
@@ -89,6 +82,22 @@ const Navbar: React.FC<NavbarProps> = ({ isLoggedIn, handleLogout }) => {
     setMobileMenuOpen(false);
   };
 
+  // Handle search submission
+  const handleSearch = () => {
+    if (search.trim()) {
+      router.push(`/search?query=${encodeURIComponent(search.trim())}`);
+      setSearch(""); // Clear the search input
+      setMobileMenuOpen(false); // Close mobile menu if open
+    }
+  };
+
+  // Handle Enter key press for search
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  };
+
   return (
     <nav className="bg-base-100 shadow-md font-poppins fixed top-0 left-0 w-full z-50">
       <div className="container mx-auto flex items-center justify-between px-6 py-3">
@@ -125,23 +134,35 @@ const Navbar: React.FC<NavbarProps> = ({ isLoggedIn, handleLogout }) => {
               Contact Us
             </Link>
           </li>
+          <li>
+            <Link
+              href="/Support"
+              className={getLinkClasses("/Support")}
+            >
+              Support
+            </Link>
+          </li>
 
           <div className="flex items-center space-x-4">
-            <div className="relative hidden md:block">
+            {/* <div className="relative hidden md:block">
               <input
                 type="text"
                 placeholder="What are you looking for?"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
+                onKeyDown={handleKeyDown}
                 className="bg-gray-100 text-sm px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400"
               />
-              <FiSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+              <FiSearch
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer"
+                onClick={handleSearch}
+              />
             </div>
-            <FiHeart className="text-xl cursor-pointer hover:text-gray-700 transition-colors duration-200" />
-            <CartNavbar />
+            <FiHeart className="text-xl cursor-pointer hover:text-gray-700 transition-colors duration-200" /> */}
+            <CartNavbar initialCartCount={0} />
           </div>
           {session?.user?.role === "admin" ||
-          session?.user?.role === "super_admin" ? (
+            session?.user?.role === "super_admin" ? (
             <li>
               <button
                 onClick={handleLogoutClick}
@@ -323,8 +344,8 @@ const Navbar: React.FC<NavbarProps> = ({ isLoggedIn, handleLogout }) => {
             {mobileMenuOpen ? <FiX /> : <FiMenu />}
           </button>
           <div className="flex items-center space-x-2">
-            <FiHeart className="text-xl cursor-pointer hover:text-gray-700 transition-colors duration-200" />
-            <CartNavbar />
+            {/* <FiHeart className="text-xl cursor-pointer hover:text-gray-700 transition-colors duration-200" /> */}
+            <CartNavbar initialCartCount={0} />
           </div>
         </div>
 
@@ -363,19 +384,31 @@ const Navbar: React.FC<NavbarProps> = ({ isLoggedIn, handleLogout }) => {
                 </Link>
               </li>
               <li>
+                <Link
+                  href="/Support"
+                  className={getLinkClasses("/Support")}
+                >
+                  Support
+                </Link>
+              </li>
+              {/* <li>
                 <div className="relative">
                   <input
                     type="text"
                     placeholder="What are you looking for?"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
+                    onKeyDown={handleKeyDown}
                     className="w-full bg-gray-100 text-sm px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400"
                   />
-                  <FiSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                  <FiSearch
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer"
+                    onClick={handleSearch}
+                  />
                 </div>
-              </li>
+              </li> */}
               {session?.user?.role === "admin" ||
-              session?.user?.role === "super_admin" ? (
+                session?.user?.role === "super_admin" ? (
                 <li>
                   <button
                     onClick={handleLogoutClick}

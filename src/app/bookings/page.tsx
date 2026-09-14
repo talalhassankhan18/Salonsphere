@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
   Table,
@@ -18,9 +18,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/app/Booking/components/ui/card";
-import { Badge } from "@/app/Booking/components/ui/badge"; // Assuming Badge is part of the UI library
+import { Badge } from "@/app/Booking/components/ui/badge";
 import { toast } from "@/app/Booking/hooks/use-toast";
 import { Loader2, ArrowLeft } from "lucide-react";
+import { Suspense } from "react"; // Import Suspense
 
 interface Booking {
   _id: string;
@@ -51,7 +52,8 @@ const formatPakistaniPhone = (phone: string): string => {
   return `${countryCode} ${number.slice(0, 3)} ${number.slice(3)}`;
 };
 
-const BookingsPageContent: React.FC = () => {
+// Component that uses useSearchParams
+const BookingsContent: React.FC = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [email, setEmail] = useState<string>("");
@@ -157,15 +159,136 @@ const BookingsPageContent: React.FC = () => {
   ): "default" | "destructive" | "outline" | "secondary" => {
     switch (status) {
       case "pending":
-        return "outline"; // Use outline for pending (can be styled with yellow)
+        return "outline";
       case "confirmed":
-        return "default"; // Use default for confirmed (can be styled with green)
+        return "default";
       case "cancelled":
-        return "destructive"; // Use destructive for cancelled (red)
+        return "destructive";
       default:
         return "default";
     }
   };
+
+  return (
+    <CardContent className="p-6">
+      <form
+        onSubmit={(e) => handleEmailSubmit(e)}
+        className="mb-8 flex flex-col sm:flex-row gap-4 items-center"
+      >
+        <Input
+          type="email"
+          placeholder="Enter your email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="flex-1 rounded-md border border-muted focus:ring-2 focus:ring-primary"
+          required
+        />
+        <Button
+          type="submit"
+          disabled={loading}
+          className="bg-primary hover:bg-primary/90 transition-colors duration-200 px-6"
+        >
+          {loading ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : (
+            "View Bookings"
+          )}
+        </Button>
+      </form>
+
+      {error && (
+        <div className="mb-6 text-red-500 text-center font-medium">{error}</div>
+      )}
+
+      {loading && !error && (
+        <div className="flex justify-center items-center py-8">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      )}
+
+      {bookings.length > 0 && (
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/50">
+                <TableHead className="py-3">Salon</TableHead>
+                <TableHead className="py-3">Service</TableHead>
+                <TableHead className="py-3">Date</TableHead>
+                <TableHead className="py-3">Time</TableHead>
+                <TableHead className="py-3">Duration</TableHead>
+                <TableHead className="py-3">Payment</TableHead>
+                <TableHead className="py-3">Amount Paid</TableHead>
+                <TableHead className="py-3">Status</TableHead>
+                <TableHead className="py-3">Name</TableHead>
+                <TableHead className="py-3">Email</TableHead>
+                <TableHead className="py-3">Phone</TableHead>
+                <TableHead className="py-3">Notes</TableHead>
+                <TableHead className="py-3">Booked On</TableHead>
+                <TableHead className="py-3">Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {bookings.map((booking) => (
+                <TableRow
+                  key={booking._id}
+                  className="hover:bg-muted/20 transition-colors duration-150"
+                >
+                  <TableCell className="py-4">{booking.salonName}</TableCell>
+                  <TableCell className="py-4">{booking.serviceName}</TableCell>
+                  <TableCell className="py-4">{booking.date}</TableCell>
+                  <TableCell className="py-4">{booking.time}</TableCell>
+                  <TableCell className="py-4">{booking.duration} min</TableCell>
+                  <TableCell className="py-4">{booking.paymentOption}</TableCell>
+                  <TableCell className="py-4">
+                    PKR {booking.amountPaid.toFixed(2)}
+                  </TableCell>
+                  <TableCell className="py-4">
+                    <Badge
+                      variant={getStatusVariant(booking.status)}
+                      className="capitalize"
+                    >
+                      {booking.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="py-4">
+                    {booking.customerInfo.name}
+                  </TableCell>
+                  <TableCell className="py-4">
+                    {booking.customerInfo.email}
+                  </TableCell>
+                  <TableCell className="py-4">
+                    {formatPakistaniPhone(booking.customerInfo.phone)}
+                  </TableCell>
+                  <TableCell className="py-4 max-w-xs truncate">
+                    {booking.customerInfo.notes}
+                  </TableCell>
+                  <TableCell className="py-4">{booking.createdAt}</TableCell>
+                  <TableCell className="py-4">
+                    {booking.status !== "cancelled" && (
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleCancelBooking(booking._id)}
+                        disabled={loading}
+                        className="hover:bg-red-700 transition-colors duration-200"
+                      >
+                        Cancel
+                      </Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+    </CardContent>
+  );
+};
+
+// Main BookingsPage component with Suspense
+const BookingsPage: React.FC = () => {
+  const router = useRouter();
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-7xl">
@@ -182,141 +305,12 @@ const BookingsPageContent: React.FC = () => {
         <CardHeader className="bg-gradient-to-r from-primary to-primary/80 text-white rounded-t-lg">
           <CardTitle className="text-2xl md:text-3xl">Your Bookings</CardTitle>
         </CardHeader>
-        <CardContent className="p-6">
-          <form
-            onSubmit={(e) => handleEmailSubmit(e)}
-            className="mb-8 flex flex-col sm:flex-row gap-4 items-center"
-          >
-            <Input
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="flex-1 rounded-md border border-muted focus:ring-2 focus:ring-primary"
-              required
-            />
-            <Button
-              type="submit"
-              disabled={loading}
-              className="bg-primary hover:bg-primary/90 transition-colors duration-200 px-6"
-            >
-              {loading ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : (
-                "View Bookings"
-              )}
-            </Button>
-          </form>
-
-          {error && (
-            <div className="mb-6 text-red-500 text-center font-medium">
-              {error}
-            </div>
-          )}
-
-          {loading && !error && (
-            <div className="flex justify-center items-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          )}
-
-          {bookings.length > 0 && (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/50">
-                    <TableHead className="py-3">Salon</TableHead>
-                    <TableHead className="py-3">Service</TableHead>
-                    <TableHead className="py-3">Date</TableHead>
-                    <TableHead className="py-3">Time</TableHead>
-                    <TableHead className="py-3">Duration</TableHead>
-                    <TableHead className="py-3">Payment</TableHead>
-                    <TableHead className="py-3">Amount Paid</TableHead>
-                    <TableHead className="py-3">Status</TableHead>
-                    <TableHead className="py-3">Name</TableHead>
-                    <TableHead className="py-3">Email</TableHead>
-                    <TableHead className="py-3">Phone</TableHead>
-                    <TableHead className="py-3">Notes</TableHead>
-                    <TableHead className="py-3">Booked On</TableHead>
-                    <TableHead className="py-3">Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {bookings.map((booking) => (
-                    <TableRow
-                      key={booking._id}
-                      className="hover:bg-muted/20 transition-colors duration-150"
-                    >
-                      <TableCell className="py-4">
-                        {booking.salonName}
-                      </TableCell>
-                      <TableCell className="py-4">
-                        {booking.serviceName}
-                      </TableCell>
-                      <TableCell className="py-4">{booking.date}</TableCell>
-                      <TableCell className="py-4">{booking.time}</TableCell>
-                      <TableCell className="py-4">
-                        {booking.duration} min
-                      </TableCell>
-                      <TableCell className="py-4">
-                        {booking.paymentOption}
-                      </TableCell>
-                      <TableCell className="py-4">
-                        PKR {booking.amountPaid.toFixed(2)}
-                      </TableCell>
-                      <TableCell className="py-4">
-                        <Badge
-                          variant={getStatusVariant(booking.status)}
-                          className="capitalize"
-                        >
-                          {booking.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="py-4">
-                        {booking.customerInfo.name}
-                      </TableCell>
-                      <TableCell className="py-4">
-                        {booking.customerInfo.email}
-                      </TableCell>
-                      <TableCell className="py-4">
-                        {formatPakistaniPhone(booking.customerInfo.phone)}
-                      </TableCell>
-                      <TableCell className="py-4 max-w-xs truncate">
-                        {booking.customerInfo.notes}
-                      </TableCell>
-                      <TableCell className="py-4">
-                        {booking.createdAt}
-                      </TableCell>
-                      <TableCell className="py-4">
-                        {booking.status !== "cancelled" && (
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleCancelBooking(booking._id)}
-                            disabled={loading}
-                            className="hover:bg-red-700 transition-colors duration-200"
-                          >
-                            Cancel
-                          </Button>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
+        <Suspense fallback={<div className="p-6 text-center">Loading...</div>}>
+          <BookingsContent />
+        </Suspense>
       </Card>
     </div>
   );
 };
-
-// useSearchParams() must sit under a Suspense boundary for static prerendering.
-const BookingsPage = () => (
-  <Suspense fallback={null}>
-    <BookingsPageContent />
-  </Suspense>
-);
 
 export default BookingsPage;

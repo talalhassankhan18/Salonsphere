@@ -1,155 +1,229 @@
 "use client";
 
-import { cn } from "@/lib/utils";
-import {
-  AreaType,
-  CardType,
-  ProductType,
-  ReviewType,
-  SalonType,
-} from "../../types";
-import CardListWrapper from "./card-list-wrapper";
-import { mapSalons, mapProducts, mapAreas, mapReviews } from "@/lib/utils";
+import React from "react";
+import { useCartStoreContext } from "@/store/cartStoreContext";
+import { RiDeleteBin5Line } from "react-icons/ri";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
+import Navbar from "@/common/navbar";
+import Footer from "@/common/footer";
 
-type CardVariants = ProductType[] | SalonType[] | AreaType[] | ReviewType[];
-type TypeOfCardData = "product" | "salon" | "area" | "review";
-type Props = {
-  cards?: CardVariants;
-  dataType: TypeOfCardData;
-  shouldAnimate?: boolean;
-  className?: string;
-};
+const Cart = () => {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const { cartItems, updateQuantity, removeItem, totalPrice } =
+    useCartStoreContext();
 
-const CardList = ({
-  cards = [],
-  dataType,
-  shouldAnimate = false,
-  className,
-}: Props) => {
-  const allCards: CardType[] = getMappedCards(cards, dataType);
-  return (
-    <CardListWrapper
-      className={cn("mb-4 md:mb-6", className)}
-      shouldAnimate={shouldAnimate}
-      cards={allCards.map((cardItem, i) => {
-        return <Card key={i} card={cardItem} />;
-      })}
-    />
-  );
-};
+  const deliveryFee = 200;
+  const formatPrice = (price: number) =>
+    new Intl.NumberFormat("en-PK", {
+      style: "currency",
+      currency: "PKR",
+      minimumFractionDigits: 2,
+    }).format(price);
 
-export default CardList;
+  const handleProceedToCheckout = () => {
+    if (!cartItems || cartItems.length === 0) {
+      alert("Your cart is empty!");
+      return;
+    }
+    if (status === "authenticated") {
+      router.push("/checkout");
+    } else {
+      router.push("/auth/signin?callbackUrl=/checkout");
+    }
+  };
 
-const getMappedCards = (
-  cards: CardVariants,
-  dataType: TypeOfCardData
-): CardType[] => {
-  switch (dataType) {
-    case "product":
-      return mapProducts(cards as ProductType[]);
-    case "salon":
-      return mapSalons(cards as SalonType[]);
-    case "area":
-      return mapAreas(cards as AreaType[]);
-    case "review":
-      return mapReviews(cards as ReviewType[]);
-    default:
-      return [];
+  const handleLogout = () => {
+    signOut({ callbackUrl: "/" });
+  };
+
+  if (status === "loading") {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center">
+        <span className="loading loading-spinner loading-lg"></span>
+      </div>
+    );
   }
-};
 
-const Card = ({ card }: { card: CardType }) => {
-  const { top, bottom, actionBtn, image, bgColor, border, className } = card;
+  if (cartItems.length === 0) {
+    return (
+      <>
+        <Navbar />
+        <div className="hero min-h-[70vh] bg-base-200">
+          <div className="hero-content text-center">
+            <div className="max-w-md">
+              <h1 className="font-bold text-5xl">Cart Empty</h1>
+              <p className="py-6">
+                Your cart is empty. Please add items to your cart.
+              </p>
+              <Link href="/selfcare-products">
+                <button className="btn btn-secondary">Continue Shopping</button>
+              </Link>
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </>
+    );
+  }
 
   return (
-    <div
-      className={cn(
-        // Base styles: compact size, subtle shadow, rounded corners
-        "flex-none w-[250px] h-full flex flex-col bg-white rounded-lg shadow-md overflow-hidden",
-        // Hover effect: subtle shadow increase
-        "hover:shadow-lg transition-shadow duration-200 ease-in-out",
-        // Border styling
-        border ? "border border-gray-200" : "border-none",
-        // Background color override
-        bgColor ? `bg-${bgColor}` : "bg-white",
-        // Custom className from props
-        className
-      )}
-    >
-      {image && (
-        <figure className="w-full h-[180px] overflow-hidden bg-gray-100">
-          <div className="w-full h-full flex items-center justify-center p-2">
-            {image}
+    <>
+      <Navbar />
+      <div className="m-4 p-6"></div>
+      <div className="flex min-h-[70vh] justify-center bg-gray-50 p-2 lg:p-8">
+        <div className="flex w-full max-w-2xl flex-col gap-6 rounded-lg bg-white p-6 shadow-lg">
+          <div className="mb-4 flex items-center">
+            <h2 className="mr-2 font-semibold text-2xl">Shopping Cart</h2>
+            <span className="text-gray-500">({cartItems.length} Items)</span>
           </div>
-        </figure>
-      )}
-      <div
-        className={cn(
-          "flex flex-col gap-2 p-4 flex-grow",
-          border && "border-gray-200 border-t"
-        )}
-      >
-        {/* Top Section */}
-        <div
-          className={cn(
-            "flex items-center min-h-[36px]",
-            // Ensure name (left) and rating (right) are on opposite sides
-            top?.left && top?.right && "justify-between",
-            top?.full && !top?.right && !top?.left && "justify-center",
-            top?.left && !top?.full && !top?.right && "justify-start",
-            top?.right && !top?.full && !top?.left && "justify-end"
-          )}
-        >
-          <div className="truncate text-base font-medium">{top?.left}</div>
-          <div className="flex-shrink-0">
-            {top?.right && (
-              <div className="flex items-center bg-primary text-white text-sm px-2 py-1 rounded-full">
-                {top.right}
+          <div className="overflow-x-auto">
+            <table className="table w-full">
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Price</th>
+                  <th className="pl-6">Quantity</th>
+                  <th>Remove</th>
+                </tr>
+              </thead>
+              <tbody>
+                {cartItems.map((item) => (
+                  <tr key={item.id}>
+                    <td className="flex items-center gap-4 flex-none max-lg:min-w-80">
+                      <img
+                        src={item.image || "/placeholder.png"}
+                        alt={item.title}
+                        className="h-16 w-16 rounded-md object-cover"
+                      />
+                      <div>
+                        <p className="font-semibold flex-none">
+                          {item.title}{" "}
+                          {item.salonName && (
+                            <span className="text-sm text-gray-500">
+                              - {item.salonName}
+                            </span>
+                          )}
+                        </p>
+                        {item.uniqueProductCode && (
+                          <p className="text-gray-500 text-sm">
+                            Code: {item.uniqueProductCode}
+                          </p>
+                        )}
+                        {item.selectedVariations?.map((v, i) => (
+                          <p key={i} className="text-gray-500 text-sm">
+                            {v.title}
+                            {v.title && v.variationListItem && <span>: </span>}
+                            {v.variationListItem}
+                          </p>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="text-nowrap">
+                      {item.discountPercent && item.discountPercent > 0 ? (
+                        <>
+                          <span className="line-through text-gray-500 mr-2">
+                            {formatPrice(item.price)}
+                          </span>
+                          <span>{formatPrice(item.netPrice)}</span>
+                        </>
+                      ) : (
+                        <span>{formatPrice(item.netPrice)}</span>
+                      )}
+                    </td>
+                    <td>
+                      <div className="flex items-center">
+                        <button
+                          className="btn btn-sm btn-base-100"
+                          onClick={() =>
+                            updateQuantity(item.id, item.quantity - 1)
+                          }
+                          disabled={item.quantity <= 1}
+                        >
+                          -
+                        </button>
+                        <span className="mx-2">{item.quantity}</span>
+                        <button
+                          className="btn btn-sm btn-base-100"
+                          onClick={() =>
+                            updateQuantity(item.id, item.quantity + 1)
+                          }
+                          disabled={
+                            item.quantity >= (item.maxAllowedInCart || 10)
+                          }
+                        >
+                          +
+                        </button>
+                      </div>
+                    </td>
+                    <td>
+                      <button
+                        className="btn btn-sm btn-error"
+                        onClick={() => removeItem(item.id)}
+                      >
+                        <RiDeleteBin5Line className="size-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="rounded-lg bg-gray-100 p-4 mt-4">
+            <h3 className="mb-4 font-semibold text-lg">Order Summary</h3>
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span>Total (before discount)</span>
+                <span>
+                  {formatPrice(
+                    cartItems.reduce(
+                      (acc, item) => acc + item.price * item.quantity,
+                      0
+                    )
+                  )}
+                </span>
               </div>
-            )}
+              {cartItems.some(
+                (item) => item.discountPercent && item.discountPercent > 0
+              ) && (
+                <div className="flex justify-between">
+                  <span>Discount Applied</span>
+                  <span>
+                    -
+                    {formatPrice(
+                      cartItems.reduce(
+                        (acc, item) =>
+                          acc + (item.price - item.netPrice) * item.quantity,
+                        0
+                      )
+                    )}
+                  </span>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <span>Delivery</span>
+                <span>{formatPrice(deliveryFee)}</span>
+              </div>
+              <hr className="my-2" />
+              <div className="flex justify-between font-semibold">
+                <span>Subtotal</span>
+                <span>{formatPrice(totalPrice() + deliveryFee)}</span>
+              </div>
+            </div>
+            <button
+              className="btn btn-primary mt-4 w-full"
+              onClick={handleProceedToCheckout}
+            >
+              Proceed to Checkout
+            </button>
           </div>
-          <div className="w-full">{top?.full}</div>
-        </div>
-
-        {/* Bottom Section */}
-        <div
-          className={cn(
-            "flex-grow flex items-start flex-col gap-1 min-h-[50px]",
-            bottom?.full && !bottom?.right && !bottom?.left && "justify-center",
-            bottom?.left && bottom?.right && "justify-between",
-            bottom?.left && !bottom?.full && !bottom?.right && "justify-start",
-            bottom?.right && !bottom?.full && !bottom?.left && "justify-end"
-          )}
-        >
-          <div className="truncate text-sm">{bottom?.left}</div>
-          <div className="truncate text-sm">{bottom?.right}</div>
-          <div className="w-full">{bottom?.full}</div>
-        </div>
-
-        {/* Action Button Section */}
-        <div
-          className={cn(
-            "flex pt-1 min-h-[40px]",
-            actionBtn?.full &&
-              !actionBtn?.right &&
-              !actionBtn?.left &&
-              "justify-center",
-            actionBtn?.left && actionBtn?.right && "justify-between",
-            actionBtn?.left &&
-              !actionBtn?.full &&
-              !actionBtn?.right &&
-              "justify-start",
-            actionBtn?.right &&
-              !actionBtn?.full &&
-              !actionBtn?.left &&
-              "justify-end"
-          )}
-        >
-          {actionBtn?.left}
-          {actionBtn?.right}
-          {actionBtn?.full}
         </div>
       </div>
-    </div>
+      <Footer />
+    </>
   );
 };
+
+export default Cart;

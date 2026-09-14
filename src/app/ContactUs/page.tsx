@@ -80,7 +80,7 @@ export default function ContactUs() {
 
   return (
     <div className="min-h-screen bg-base-100">
-      <Navbar isLoggedIn={isLoggedIn} handleLogout={handleLogout} />
+      <Navbar />
       <section className="py-16">
         <div className="container mx-auto flex flex-col lg:flex-row items-center gap-12 px-4 lg:px-8">
           {/* Left Image Section */}

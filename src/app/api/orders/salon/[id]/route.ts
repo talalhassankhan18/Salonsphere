@@ -2,22 +2,22 @@ import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import Order from "@/mongoose-models/order";
 import dbConnect from "@/dbConnect";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/authOptions";
+import { requireSuperAdminOrOwnSalon } from "@/lib/auth/guards";
 
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "salon_admin") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  // Route segment is [id]; the old code read params.salonId which was always undefined.
+  const { id: salonId } = await context.params;
 
+  // Only the owning salon (or super-admin) may read these orders.
+  const scope = await requireSuperAdminOrOwnSalon(salonId);
+  if (scope instanceof NextResponse) return scope;
+
+  try {
     await dbConnect();
-    const orders = await Order.find({ salonId: id })
+    const orders = await Order.find({ salonId })
       .populate({
         path: "customerId",
         select: "name email",

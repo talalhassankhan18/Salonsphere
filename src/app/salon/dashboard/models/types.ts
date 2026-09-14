@@ -1,6 +1,3 @@
-
-// Model Types
-
 export interface Salon {
   _id: string;
   name: string;
@@ -27,9 +24,9 @@ export interface User {
   _id: string;
   name: string;
   email: string;
-  password: string; // Hashed password
+  password: string;
   role: 'admin' | 'salon_admin' | 'customer';
-  salon?: string; // Reference to salon for salon admins
+  salon?: string;
   profileImage?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -49,12 +46,12 @@ export interface Service {
   _id: string;
   name: string;
   description: string;
-  duration: number; // in minutes
+  duration: number;
   price: number;
   category: string;
   image?: string;
   isActive: boolean;
-  salon: string; // Reference to salon
+  salon: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -75,8 +72,8 @@ export interface Product {
 export interface ProductListing {
   _id: string;
   product: Product;
-  salon: string; // Reference to salon
-  discount?: number; // Percentage discount
+  salon: string;
+  discount?: number;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -85,12 +82,13 @@ export interface ProductListing {
 export interface Appointment {
   _id: string;
   customer: User;
-  salon: string; // Reference to salon
+  salon: string;
   service: Service;
   startTime: Date;
   endTime: Date;
   status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
   notes?: string;
+  amountPaid?: number; // Added to match API and code usage
   createdAt: Date;
   updatedAt: Date;
 }
@@ -98,10 +96,10 @@ export interface Appointment {
 export interface Order {
   _id: string;
   customer: User;
-  salon: string; // Reference to salon
+  salon: string;
   products: OrderItem[];
   totalAmount: number;
-  commissionAmount: number; // 5% of totalAmount
+  commissionAmount: number;
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   paymentStatus: 'pending' | 'paid' | 'refunded';
   shippingAddress: Address;
@@ -129,9 +127,9 @@ export interface Address {
 export interface Review {
   _id: string;
   customer: User;
-  salon: string; // Reference to salon
+  salon: string;
   service?: Service;
-  rating: number; // 1-5
+  rating: number;
   comment: string;
   createdAt: Date;
   updatedAt: Date;
@@ -139,7 +137,7 @@ export interface Review {
 
 export interface PortfolioItem {
   _id: string;
-  salon: string; // Reference to salon
+  salon: string;
   title: string;
   description?: string;
   image: string;
@@ -150,7 +148,7 @@ export interface PortfolioItem {
 
 export interface Commission {
   _id: string;
-  salon: string; // Reference to salon
+  salon: string;
   order: Order;
   amount: number;
   status: 'pending' | 'paid';
@@ -159,7 +157,7 @@ export interface Commission {
   updatedAt: Date;
 }
 
-// Mock data generators
+// Mock data generators (unchanged, included for completeness)
 export const generateMockSalon = (): Salon => ({
   _id: `salon_${Math.random().toString(36).substr(2, 9)}`,
   name: "Elegance Beauty Salon",
@@ -196,7 +194,7 @@ export const generateMockServices = (): Service[] => [
     name: "Classic Haircut",
     description: "Precision haircut tailored to your style and preferences.",
     duration: 45,
-    price: 45,
+    price: 4500, // Changed to PKR
     category: "Hair",
     image: "https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
     isActive: true,
@@ -209,7 +207,7 @@ export const generateMockServices = (): Service[] => [
     name: "Deluxe Manicure",
     description: "Comprehensive nail care with premium polish application.",
     duration: 60,
-    price: 35,
+    price: 3500, // Changed to PKR
     category: "Nails",
     image: "https://images.unsplash.com/photo-1519014816548-bf5fe059798c?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
     isActive: true,
@@ -222,7 +220,7 @@ export const generateMockServices = (): Service[] => [
     name: "Rejuvenating Facial",
     description: "Deep cleansing facial with premium skincare products.",
     duration: 75,
-    price: 65,
+    price: 6500, // Changed to PKR
     category: "Skin",
     image: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
     isActive: true,
@@ -252,6 +250,7 @@ export const generateMockAppointments = (): Appointment[] => {
       startTime: new Date(today.setHours(10, 0, 0, 0)),
       endTime: new Date(today.setHours(10, 45, 0, 0)),
       status: "confirmed",
+      amountPaid: 4500, // Added, in PKR
       createdAt: new Date(),
       updatedAt: new Date()
     },
@@ -271,6 +270,7 @@ export const generateMockAppointments = (): Appointment[] => {
       startTime: new Date(today.setHours(13, 0, 0, 0)),
       endTime: new Date(today.setHours(14, 0, 0, 0)),
       status: "pending",
+      amountPaid: 3500, // Added, in PKR
       createdAt: new Date(),
       updatedAt: new Date()
     },
@@ -290,6 +290,7 @@ export const generateMockAppointments = (): Appointment[] => {
       startTime: new Date(today.setHours(15, 30, 0, 0)),
       endTime: new Date(today.setHours(16, 45, 0, 0)),
       status: "confirmed",
+      amountPaid: 6500, // Added, in PKR
       createdAt: new Date(),
       updatedAt: new Date()
     }
@@ -301,7 +302,7 @@ export const generateMockProducts = (): Product[] => [
     _id: `product_${Math.random().toString(36).substr(2, 9)}`,
     name: "Hydrating Shampoo",
     description: "Premium hydrating shampoo for all hair types.",
-    price: 24.99,
+    price: 2499, // Changed to PKR
     image: "https://images.unsplash.com/photo-1556227834-09f1de5c3a29?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
     category: "Hair Care",
     stock: 45,
@@ -313,7 +314,7 @@ export const generateMockProducts = (): Product[] => [
     _id: `product_${Math.random().toString(36).substr(2, 9)}`,
     name: "Nourishing Conditioner",
     description: "Deep nourishing conditioner for damaged hair.",
-    price: 22.99,
+    price: 2299, // Changed to PKR
     image: "https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
     category: "Hair Care",
     stock: 38,
@@ -325,7 +326,7 @@ export const generateMockProducts = (): Product[] => [
     _id: `product_${Math.random().toString(36).substr(2, 9)}`,
     name: "Anti-Aging Face Serum",
     description: "Advanced anti-aging serum with hyaluronic acid.",
-    price: 49.99,
+    price: 4999, // Changed to PKR
     image: "https://images.unsplash.com/photo-1571781926291-c477ebfd024b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
     category: "Skin Care",
     stock: 22,
@@ -352,16 +353,16 @@ export const generateMockOrders = (): Order[] => [
       {
         product: generateMockProducts()[0],
         quantity: 1,
-        price: 24.99,
+        price: 2499,
       },
       {
         product: generateMockProducts()[1],
         quantity: 1,
-        price: 22.99,
+        price: 2299,
       }
     ],
-    totalAmount: 47.98,
-    commissionAmount: 2.40, // 5% of totalAmount
+    totalAmount: 4798, // Changed to PKR
+    commissionAmount: 240, // 5% of totalAmount
     status: "processing",
     paymentStatus: "paid",
     shippingAddress: {
@@ -390,12 +391,12 @@ export const generateMockOrders = (): Order[] => [
       {
         product: generateMockProducts()[2],
         quantity: 2,
-        price: 49.99,
+        price: 4999,
         discount: 10
       }
     ],
-    totalAmount: 89.98,
-    commissionAmount: 4.50, // 5% of totalAmount
+    totalAmount: 8998, // Changed to PKR
+    commissionAmount: 450, // 5% of totalAmount
     status: "delivered",
     paymentStatus: "paid",
     shippingAddress: {
@@ -473,7 +474,7 @@ export const generateMockCommissions = (): Commission[] => [
     _id: `commission_${Math.random().toString(36).substr(2, 9)}`,
     salon: "salon_123",
     order: generateMockOrders()[0],
-    amount: 2.40,
+    amount: 240, // Changed to PKR
     status: "pending",
     createdAt: new Date(),
     updatedAt: new Date()
@@ -482,7 +483,7 @@ export const generateMockCommissions = (): Commission[] => [
     _id: `commission_${Math.random().toString(36).substr(2, 9)}`,
     salon: "salon_123",
     order: generateMockOrders()[1],
-    amount: 4.50,
+    amount: 450, // Changed to PKR
     status: "paid",
     paymentDate: new Date(new Date().setDate(new Date().getDate() - 3)),
     createdAt: new Date(new Date().setDate(new Date().getDate() - 7)),

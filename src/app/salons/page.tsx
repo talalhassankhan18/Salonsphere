@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import React from "react";
 import Navbar from "@/common/navbar";
 import Hero from "./components/hero";
@@ -19,62 +19,94 @@ import { MessageSquare } from "lucide-react";
 import { motion } from "framer-motion";
 import { SalonType } from "../../../types";
 
+// Debounce function to limit API calls
+const debounce = (func: (...args: any[]) => void, delay: number) => {
+  let timeoutId: NodeJS.Timeout;
+  return (...args: any[]) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func(...args), delay);
+  };
+};
+
 export default function Page() {
   const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [salonName, setSalonName] = useState("");
   const [location, setLocation] = useState("");
   const [gender, setGender] = useState<"female" | "male" | "unisex" | "">("");
+  const [service, setService] = useState("");
   const [salons, setSalons] = useState<SalonType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchSalons = async () => {
-      try {
-        setIsLoading(true);
-        const response = await fetch("/api/salon");
-        if (!response.ok) {
-          throw new Error(`Failed to fetch salons (${response.status})`);
-        }
-        const data = await response.json();
-        const mappedSalons: SalonType[] = data.map((salon: any) => ({
-          _id: salon._id,
-          name: salon.salonName || salon.name,
-          address: salon.address || "",
-          ratings: salon.ratings || 0,
-          image: salon.avatar || salon.image || "",
-          contact: { phone: salon.contact?.phone || "" },
-          location: {
-            coordinates: [salon.latitude || 0, salon.longitude || 0],
-            city: salon.location?.city || "",
-            state: salon.location?.state || "",
-            postalCode: salon.location?.postalCode || "",
-          },
-          workingHours: salon.workingHours || [],
-          services: salon.services || [],
-          isVerified: salon.isVerified || false,
-          createdAt: salon.createdAt || new Date().toISOString(),
-          updatedAt: salon.updatedAt || new Date().toISOString(),
-          salonType: salon.salonType || "unisex", // Added for gender filtering
-        }));
-        setSalons(mappedSalons);
-      } catch (err: any) {
-        console.error("Error fetching salons:", err);
-        setError("Failed to load salons. Please try again later.");
-      } finally {
-        setIsLoading(false);
+  const fetchSalons = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const query = new URLSearchParams({
+        ...(salonName && { salonName }),
+        ...(location && { address: location }),
+        ...(gender && { salonType: gender }),
+        ...(service && { serviceName: service }),
+      }).toString();
+      console.log("Fetching with Query:", query); // Debug the query
+      const response = await fetch(`/api/salon?${query}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch salons (${response.status})`);
       }
-    };
+      const data = await response.json();
+      const mappedSalons: SalonType[] = data.map((salon: any) => ({
+        _id: salon._id,
+        name: salon.salonName || salon.name || "",
+        address: salon.address || "",
+        ratings: salon.ratings || 0,
+        image: salon.avatar || salon.image || "",
+        contact: { phone: salon.contact?.phone || "" },
+        location: {
+          coordinates: [salon.latitude || 0, salon.longitude || 0],
+          city: salon.location?.city || "",
+          state: salon.location?.state || "",
+          postalCode: salon.location?.postalCode || "",
+        },
+        workingHours: salon.workingHours || [],
+        services: salon.services || [],
+        isVerified: salon.isVerified || false,
+        createdAt: salon.createdAt || new Date().toISOString(),
+        updatedAt: salon.updatedAt || new Date().toISOString(),
+        salonType: salon.salonType || "unisex",
+      }));
+      setSalons(mappedSalons);
+      console.log("Mapped Salons:", JSON.stringify(mappedSalons, null, 2)); // Debug the response
+    } catch (err: any) {
+      console.error("Error fetching salons:", err);
+      setError("Failed to load salons. Please try again later.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [salonName, location, gender, service]);
 
+  // Debounced version of fetchSalons
+  const debouncedFetchSalons = useCallback(debounce(fetchSalons, 500), [fetchSalons]);
+
+  // Fetch salons on initial load
+  useEffect(() => {
     fetchSalons();
   }, []);
 
+  // Fetch salons whenever filter states change
+  useEffect(() => {
+    debouncedFetchSalons();
+  }, [salonName, location, gender, service, debouncedFetchSalons]);
+
+  const handleSearch = () => {
+    console.log("Search Triggered with:", { salonName, location, gender, service }); // Debug search trigger
+    fetchSalons(); // Still allow manual search if needed
+  };
+
   const filteredSalons = salons.filter((salon) => {
-    const matchesName =
-      !salonName || salon.name.toLowerCase().includes(salonName.toLowerCase());
-    const matchesLocation =
-      !location || salon.address.toLowerCase().includes(location.toLowerCase());
+    const salonNameSafe = salon.name || "";
+    const addressSafe = salon.address || "";
+    const matchesName = !salonName || salonNameSafe.toLowerCase().includes(salonName.toLowerCase());
+    const matchesLocation = !location || addressSafe.toLowerCase().includes(location.toLowerCase());
     const matchesGender = !gender || salon.salonType === gender;
     return matchesName && matchesLocation && matchesGender;
   });
@@ -85,7 +117,7 @@ export default function Page() {
 
   return (
     <>
-      <Navbar isLoggedIn={isLoggedIn} handleLogout={handleLogout} />
+      <Navbar />
       <div className="m-4 p-6"></div>
       <Hero
         salonName={salonName}
@@ -94,6 +126,9 @@ export default function Page() {
         setLocation={setLocation}
         gender={gender}
         setGender={setGender}
+        service={service}
+        setService={setService}
+        handleSearch={handleSearch}
       />
       <Saloons
         salons={filteredSalons.slice(0, 4)}

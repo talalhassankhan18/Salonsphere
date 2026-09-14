@@ -4,15 +4,15 @@ import Customer from "@/mongoose-models/Customer";
 
 export async function PUT(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
+  const params = await context.params;
   try {
     await dbConnect();
     const body = await request.json();
     const { notificationId, read } = body;
 
-    const customer = await Customer.findById(id);
+    const customer = await Customer.findById(params.id);
     if (!customer) {
       return NextResponse.json(
         { error: "Customer not found" },

@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, useRef, Suspense } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react"; // Import Suspense
 import Navbar from "@/common/navbar";
 import Footer from "@/common/footer";
 import jsPDF from "jspdf";
@@ -9,6 +10,7 @@ import html2canvas from "html2canvas";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 
+// Component that uses useSearchParams
 const OrderConfirmationContent = () => {
   const searchParams = useSearchParams();
   const orderId = searchParams.get("orderId");
@@ -67,7 +69,7 @@ const OrderConfirmationContent = () => {
   if (error) {
     return (
       <div className="min-h-screen flex flex-col">
-        <Navbar isLoggedIn={true} handleLogout={() => {}} />
+        <Navbar />
         <div className="flex-grow flex items-center justify-center">
           <div className="bg-white shadow-lg rounded-lg p-6 max-w-md text-center">
             <h1 className="text-2xl font-bold text-red-600">
@@ -90,7 +92,7 @@ const OrderConfirmationContent = () => {
   if (!order) {
     return (
       <div className="min-h-screen flex flex-col">
-        <Navbar isLoggedIn={true} handleLogout={() => {}} />
+        <Navbar />
         <div className="flex-grow flex items-center justify-center">
           <span className="loading loading-spinner loading-lg text-blue-600"></span>
         </div>
@@ -106,7 +108,7 @@ const OrderConfirmationContent = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar isLoggedIn={true} handleLogout={() => {}} />
+      <Navbar />
       <div className="flex-grow container mx-auto p-6 pt-20 pb-10">
         <div className="max-w-4xl mx-auto">
           <button
@@ -257,11 +259,21 @@ const OrderConfirmationContent = () => {
   );
 };
 
-// useSearchParams() must sit under a Suspense boundary for static prerendering.
-const OrderConfirmation = () => (
-  <Suspense fallback={null}>
-    <OrderConfirmationContent />
-  </Suspense>
-);
-
-export default OrderConfirmation;
+// Main OrderConfirmation component with Suspense
+export default function OrderConfirmation() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex flex-col">
+          <Navbar />
+          <div className="flex-grow flex items-center justify-center">
+            <span className="loading loading-spinner loading-lg text-blue-600"></span>
+          </div>
+          <Footer />
+        </div>
+      }
+    >
+      <OrderConfirmationContent />
+    </Suspense>
+  );
+}

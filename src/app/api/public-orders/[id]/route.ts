@@ -27,9 +27,9 @@ transporter.verify((error) => {
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
+  const params = await context.params;
   try {
     await dbConnect();
     const session = await getServerSession(authOptions);
@@ -38,7 +38,7 @@ export async function PATCH(
     }
 
     const { status, paymentStatus } = await req.json();
-    // const id = params.id; // Already destructured above
+    const id = params.id;
 
     // Validate status transitions
     const order = await Order.findById(id).lean();

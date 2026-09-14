@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
@@ -111,9 +113,17 @@ const SidebarNavigation = ({
 
   const handleUpgrade = (planName: string) => {
     setShowUpgradePopup(false);
+    console.log("Emails - Session:", session?.user?.email, "SalonDetails:", salonDetails?.email);
+    if (status !== "authenticated") {
+      toast.error("Please log in to upgrade your plan.");
+      window.location.href = `/salon/login?redirect=/salon/register/plan-selection?email=${encodeURIComponent(
+        salonDetails?.email || ""
+      )}&action=upgrade&selectedPlan=${planName}`;
+      return;
+    }
     window.location.href = `/salon/register/plan-selection?email=${encodeURIComponent(
       salonDetails?.email || ""
-    )}&selectedPlan=${planName}`;
+    )}&action=upgrade&selectedPlan=${planName}`;
   };
 
   const handleClosePopup = () => {
@@ -138,6 +148,26 @@ const SidebarNavigation = ({
 
   const upgradePlans: UpgradePlan[] = [
     {
+      name: "Starter",
+      monthlyPrice: 300,
+      yearlyPrice: 300 * 12 * 0.9,
+      productLimit: 0,
+      features: {
+        "Online Appointment": true,
+        "Social Media Integration": true,
+        "Profile Customization": true,
+        Reminders: true,
+        "Business Listing": true,
+        "Product Listing": false,
+        "Product Order Tracking": false,
+        Commission: false,
+        Analytics: false,
+        "Advertisement Boost": false,
+        "Priority Support": false,
+        "Product Limit": "0 products",
+      },
+    },
+    {
       name: "Basic",
       monthlyPrice: 4199,
       yearlyPrice: 4199 * 12 * 0.9,
@@ -147,13 +177,13 @@ const SidebarNavigation = ({
         "Product Order Tracking": true,
         Commission: true,
         "Online Appointment": true,
-        Analytics: false,
-        "Advertisement Boost": false,
         "Social Media Integration": true,
         "Profile Customization": true,
         Reminders: true,
         "Business Listing": true,
         "Priority Support": false,
+        Analytics: false,
+        "Advertisement Boost": false,
         "Product Limit": "100 products",
       },
     },
@@ -196,7 +226,7 @@ const SidebarNavigation = ({
       title: "Products",
       path: "/salon/dashboard/pages/Products",
       icon: <ShoppingBag size={20} />,
-      restrictedPlans: ["Free Trial"],
+      restrictedPlans: ["Starter"],
     },
     {
       title: "Appointments",
@@ -226,19 +256,19 @@ const SidebarNavigation = ({
       title: "Analytics",
       path: "/salon/dashboard/pages/Analytics",
       icon: <BarChart size={20} />,
-      restrictedPlans: ["Free Trial", "Basic"],
+      restrictedPlans: ["Starter", "Basic"],
     },
     {
       title: "Orders",
       path: "/salon/dashboard/pages/Orders",
       icon: <Package size={20} />,
-      restrictedPlans: ["Free Trial"],
+      restrictedPlans: ["Starter"],
     },
     {
       title: "Commission",
       path: "/salon/dashboard/pages/Commission",
       icon: <DollarSign size={20} />,
-      restrictedPlans: ["Free Trial"],
+      restrictedPlans: ["Starter"],
     },
     {
       title: "Settings",
@@ -254,19 +284,21 @@ const SidebarNavigation = ({
 
   // Filter upgrade plans based on current plan
   const validUpgrades: Record<string, string[]> = {
-    "Free Trial": ["Basic", "Premium"],
+    Starter: ["Basic", "Premium"],
     Basic: ["Premium"],
     Premium: [],
   };
-  const currentPlanName = salonDetails?.plan?.name || "Free Trial";
-  const currentPlanFeatures = salonDetails?.plan?.features || [];
+  const currentPlanName = salonDetails?.plan?.name || "Starter";
+  console.log("Current plan name:", currentPlanName);
+
   const availablePlans = upgradePlans.filter((plan) =>
-    validUpgrades[currentPlanName].includes(plan.name)
+    validUpgrades[currentPlanName]?.includes(plan.name) ?? false
   );
 
   // Determine restricted features for the current plan
+  const currentPlanFeatures = salonDetails?.plan?.features || [];
   const isFeatureRestricted = (feature: string) => {
-    if (feature === "Product Limit") return false; // Handled separately
+    if (feature === "Product Limit") return false;
     return !currentPlanFeatures.includes(feature);
   };
 
@@ -411,7 +443,7 @@ const SidebarNavigation = ({
             </h2>
             <p className="text-sm text-gray-600 mb-6 text-center">
               The "{restrictedItem}" feature is not available in your current
-              plan ({salonDetails?.plan?.name || "Free Trial"}). Upgrade to
+              plan ({salonDetails?.plan?.name || "Starter"}). Upgrade to
               access this feature.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

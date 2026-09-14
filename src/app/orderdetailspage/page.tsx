@@ -47,7 +47,7 @@ const OrderDetailsPage = () => {
   if (loading) {
     return (
       <>
-        <Navbar isLoggedIn={true} handleLogout={handleLogout} />
+        <Navbar />
         <div className="min-h-[70vh] flex items-center justify-center">
           <span className="loading loading-spinner loading-lg"></span>
         </div>
@@ -59,7 +59,7 @@ const OrderDetailsPage = () => {
   if (error || !order) {
     return (
       <>
-        <Navbar isLoggedIn={true} handleLogout={handleLogout} />
+        <Navbar />
         <div className="min-h-[70vh] px-6 py-10 bg-gray-50 flex justify-center">
           <div className="bg-white shadow-lg rounded-lg p-6 max-w-2xl w-full">
             <h1 className="text-3xl font-bold text-center text-red-600 mb-6">
@@ -84,7 +84,7 @@ const OrderDetailsPage = () => {
 
   return (
     <>
-      <Navbar isLoggedIn={true} handleLogout={handleLogout} />
+      <Navbar />
       <div className="min-h-[70vh] px-6 py-10 bg-gray-50 flex justify-center">
         <div className="bg-white shadow-lg rounded-lg p-6 max-w-3xl w-full">
           <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef, Suspense } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
+import { Suspense } from "react"; // Import Suspense
 import RegistrationStepper from "../../components/RegistrationStepper";
 import LoadingSpinner from "@/common/LoadingSpinner";
 import { toast } from "sonner";
@@ -45,7 +46,8 @@ interface SalonDetails {
   ownerName: string;
 }
 
-function PaymentPageContent() {
+// Component that uses useSearchParams
+const PaymentContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [plan, setPlan] = useState<PlanData | null>(null);
@@ -455,13 +457,19 @@ function PaymentPageContent() {
       </div>
     </div>
   );
-}
+};
 
-// useSearchParams() must sit under a Suspense boundary for static prerendering.
+// Main PaymentPage component with Suspense
 export default function PaymentPage() {
   return (
-    <Suspense fallback={null}>
-      <PaymentPageContent />
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <LoadingSpinner />
+        </div>
+      }
+    >
+      <PaymentContent />
     </Suspense>
   );
 }

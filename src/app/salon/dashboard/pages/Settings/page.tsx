@@ -14,7 +14,6 @@ import {
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Separator } from "../../components/ui/separator";
-import { Switch } from "../../components/ui/switch";
 import { Checkbox } from "../../components/ui/checkbox";
 import { Label } from "../../components/ui/label";
 import {
@@ -28,12 +27,8 @@ import {
 import { toast } from "@/hooks/use-toast";
 import {
   Lock,
-  Bell,
-  CreditCard,
   Building,
   Clock,
-  Shield,
-  Palette,
   Check,
   Plus,
 } from "lucide-react";
@@ -76,15 +71,6 @@ const Settings: React.FC = () => {
   };
   const salonId = session?.user?.salonId ?? null;
 
-  const [isNotificationsEnabled, setIsNotificationsEnabled] =
-    useState<boolean>(true);
-  const [isMarketingEmailsEnabled, setIsMarketingEmailsEnabled] =
-    useState<boolean>(false);
-  const [isAppointmentRemindersEnabled, setIsAppointmentRemindersEnabled] =
-    useState<boolean>(true);
-  const [isPromotionalUpdatesEnabled, setIsPromotionalUpdatesEnabled] =
-    useState<boolean>(true);
-  const [theme, setTheme] = useState<"light" | "dark">("light");
   const [salon, setSalon] = useState<SalonDetails | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -676,59 +662,14 @@ const Settings: React.FC = () => {
       .padStart(2, "0")}`;
   };
 
-  // Other handlers
-  const handleSaveNotifications = () => {
-    toast({
-      title: "Notifications updated",
-      description: "Your notification settings have been updated",
-    });
-  };
-
-  const handleSaveBilling = () => {
-    toast({
-      title: "Billing info updated",
-      description: "Your billing information has been updated",
-    });
-  };
-
-  const handleSavePrivacy = () => {
-    toast({
-      title: "Privacy settings updated",
-      description: "Your privacy settings have been updated successfully",
-    });
-  };
-
-  const toggleTheme = () => {
-    setTheme(theme === "light" ? "dark" : "light");
-    toast({
-      title: "Theme changed",
-      description: `Theme switched to ${
-        theme === "light" ? "dark" : "light"
-      } mode`,
-    });
-  };
-
-  const handleSwitchChange =
-    (setter: React.Dispatch<React.SetStateAction<boolean>>) =>
-    (checked: boolean) =>
-      setter(checked);
-
   return (
     <DashboardLayout title="Settings">
       <div className="space-y-6">
         <Tabs defaultValue="salon" className="space-y-4">
-          <TabsList className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
+          <TabsList className="grid grid-cols-3 gap-2">
             <TabsTrigger value="password">
               <Lock className="mr-2 h-4 w-4" />
               Password
-            </TabsTrigger>
-            <TabsTrigger value="notifications">
-              <Bell className="mr-2 h-4 w-4" />
-              Notifications
-            </TabsTrigger>
-            <TabsTrigger value="billing">
-              <CreditCard className="mr-2 h-4 w-4" />
-              Billing
             </TabsTrigger>
             <TabsTrigger value="salon">
               <Building className="mr-2 h-4 w-4" />
@@ -737,14 +678,6 @@ const Settings: React.FC = () => {
             <TabsTrigger value="scheduling">
               <Clock className="mr-2 h-4 w-4" />
               Scheduling
-            </TabsTrigger>
-            <TabsTrigger value="privacy">
-              <Shield className="mr-2 h-4 w-4" />
-              Privacy
-            </TabsTrigger>
-            <TabsTrigger value="appearance">
-              <Palette className="mr-2 h-4 w-4" />
-              Appearance
             </TabsTrigger>
           </TabsList>
 
@@ -803,167 +736,6 @@ const Settings: React.FC = () => {
                 <Button onClick={handleSavePassword}>
                   <Check className="mr-2 h-4 w-4" />
                   Update Password
-                </Button>
-              </CardFooter>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="notifications" className="space-y-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Notification Settings</CardTitle>
-                <CardDescription>
-                  Manage your notification preferences
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="notifications" className="font-medium">
-                      Enable All Notifications
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      Master toggle for all notifications
-                    </p>
-                  </div>
-                  <Switch
-                    id="notifications"
-                    checked={isNotificationsEnabled}
-                    onCheckedChange={handleSwitchChange(
-                      setIsNotificationsEnabled
-                    )}
-                  />
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label
-                      htmlFor="appointmentReminders"
-                      className="font-medium"
-                    >
-                      Appointment Reminders
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      Get notified before scheduled appointments
-                    </p>
-                  </div>
-                  <Switch
-                    id="appointmentReminders"
-                    checked={isAppointmentRemindersEnabled}
-                    onCheckedChange={handleSwitchChange(
-                      setIsAppointmentRemindersEnabled
-                    )}
-                    disabled={!isNotificationsEnabled}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="marketingEmails" className="font-medium">
-                      Marketing Emails
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      Receive promotional emails and offers
-                    </p>
-                  </div>
-                  <Switch
-                    id="marketingEmails"
-                    checked={isMarketingEmailsEnabled}
-                    onCheckedChange={handleSwitchChange(
-                      setIsMarketingEmailsEnabled
-                    )}
-                    disabled={!isNotificationsEnabled}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="promotionalUpdates" className="font-medium">
-                      Promotional Updates
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      Receive updates about new services and products
-                    </p>
-                  </div>
-                  <Switch
-                    id="promotionalUpdates"
-                    checked={isPromotionalUpdatesEnabled}
-                    onCheckedChange={handleSwitchChange(
-                      setIsPromotionalUpdatesEnabled
-                    )}
-                    disabled={!isNotificationsEnabled}
-                  />
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button onClick={handleSaveNotifications}>
-                  <Check className="mr-2 h-4 w-4" />
-                  Save Settings
-                </Button>
-              </CardFooter>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="billing" className="space-y-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Billing Information</CardTitle>
-                <CardDescription>
-                  Update your billing details and payment methods
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="cardName">Name on Card</Label>
-                    <Input id="cardName" defaultValue="John Doe" />
-                  </div>
-                  <div>
-                    <Label htmlFor="cardNumber">Card Number</Label>
-                    <Input id="cardNumber" placeholder="**** **** **** ****" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="expiry">Expiry Date</Label>
-                    <Input id="expiry" placeholder="MM/YY" />
-                  </div>
-                  <div>
-                    <Label htmlFor="cvv">CVV</Label>
-                    <Input id="cvv" placeholder="CVV" />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="address">Billing Address</Label>
-                  <Input id="address" placeholder="123 Main Street" />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="city">City</Label>
-                    <Input id="city" placeholder="New York" />
-                  </div>
-                  <div>
-                    <Label htmlFor="zipCode">Zip/Postal Code</Label>
-                    <Input id="zipCode" placeholder="10001" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="state">State/Province</Label>
-                    <Input id="state" placeholder="NY" />
-                  </div>
-                  <div>
-                    <Label htmlFor="country">Country</Label>
-                    <Input id="country" placeholder="United States" />
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter className="flex gap-2">
-                <Button variant="outline">
-                  <CreditCard className="mr-2 h-4 w-4" />
-                  Add New Card
-                </Button>
-                <Button onClick={handleSaveBilling}>
-                  <Check className="mr-2 h-4 w-4" />
-                  Save Changes
                 </Button>
               </CardFooter>
             </Card>
@@ -1238,103 +1010,6 @@ const Settings: React.FC = () => {
                       Save Scheduling Preferences
                     </>
                   )}
-                </Button>
-              </CardFooter>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="privacy" className="space-y-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Privacy Settings</CardTitle>
-                <CardDescription>
-                  Manage your privacy and data sharing preferences
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="dataSharing" className="font-medium">
-                      Data Sharing
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      Allow anonymous usage data to improve services
-                    </p>
-                  </div>
-                  <Switch id="dataSharing" defaultChecked />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="showProfile" className="font-medium">
-                      Public Profile
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      Make your profile visible to clients
-                    </p>
-                  </div>
-                  <Switch id="showProfile" defaultChecked />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="showPortfolio" className="font-medium">
-                      Portfolio Visibility
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      Allow your work portfolio to be publicly visible
-                    </p>
-                  </div>
-                  <Switch id="showPortfolio" defaultChecked />
-                </div>
-                <Separator />
-                <div className="space-y-2">
-                  <Label className="font-medium">Data Management</Label>
-                  <Button variant="outline" className="w-full">
-                    <Building className="mr-2 h-4 w-4" />
-                    Manage Client Data Access
-                  </Button>
-                  <Button variant="outline" className="w-full">
-                    Download My Data
-                  </Button>
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button onClick={handleSavePrivacy}>
-                  <Check className="mr-2 h-4 w-4" />
-                  Save Privacy Settings
-                </Button>
-              </CardFooter>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="appearance" className="space-y-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Appearance</CardTitle>
-                <CardDescription>
-                  Customize the look and feel of your dashboard
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="theme" className="font-medium">
-                      Theme
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      Switch between light and dark mode
-                    </p>
-                  </div>
-                  <Switch
-                    id="theme"
-                    checked={theme === "dark"}
-                    onCheckedChange={toggleTheme}
-                  />
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button onClick={toggleTheme}>
-                  <Check className="mr-2 h-4 w-4" />
-                  Save Appearance
                 </Button>
               </CardFooter>
             </Card>

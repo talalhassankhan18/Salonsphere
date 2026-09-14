@@ -292,7 +292,7 @@ const Checkout = () => {
   if (cartItems.length === 0) {
     return (
       <>
-        <Navbar isLoggedIn={true} handleLogout={handleLogout} />
+        <Navbar />
         <div className="hero min-h-[70vh] bg-base-200">
           <div className="hero-content text-center">
             <div className="max-w-md">
@@ -313,7 +313,7 @@ const Checkout = () => {
 
   return (
     <>
-      <Navbar isLoggedIn={!!session} handleLogout={handleLogout} />
+      <Navbar />
       <div className="m-4 p-6"></div>
       <div className="flex min-h-[70vh] justify-center bg-gray-50 p-2 lg:p-8">
         <div className="flex w-full max-w-2xl flex-col gap-6 rounded-lg bg-white p-6 shadow-lg">

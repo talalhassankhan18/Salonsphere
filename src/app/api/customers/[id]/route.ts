@@ -6,15 +6,15 @@ import { requireSuperAdminOrSelf } from "@/lib/auth/guards";
 // GET customer by ID with related orders and notifications
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
-  const denied = await requireSuperAdminOrSelf(id);
+  const params = await context.params;
+  const denied = await requireSuperAdminOrSelf(params.id);
   if (denied) return denied;
 
   try {
     await dbConnect();
-    const customer = await Customer.findById(id)
+    const customer = await Customer.findById(params.id)
       .select("name email createdAt isVerified authMethod notifications orders")
       .populate("orders", "orderId total status createdAt")
       .lean();
@@ -35,10 +35,10 @@ export async function GET(
 // PUT update customer name & email by ID
 export async function PUT(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
-  const denied = await requireSuperAdminOrSelf(id);
+  const params = await context.params;
+  const denied = await requireSuperAdminOrSelf(params.id);
   if (denied) return denied;
 
   try {
@@ -54,7 +54,7 @@ export async function PUT(
     }
 
     const updatedCustomer = await Customer.findByIdAndUpdate(
-      id,
+      params.id,
       { name, email },
       { new: true, runValidators: true }
     )

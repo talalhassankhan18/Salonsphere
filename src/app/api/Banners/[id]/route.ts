@@ -11,9 +11,10 @@ cloudinary.v2.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
+  const params = await context.params;
   await dbConnect();
+  const id = params.id;
 
   try {
     const banner = await Banner.findById(id).lean();
@@ -33,12 +34,13 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   }
 }
 
-export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function PUT(request: Request, context: { params: Promise<{ id: string }> }) {
+  const params = await context.params;
   const denied = await requireSuperAdmin();
   if (denied) return denied;
 
-  const { id } = await params;
   await dbConnect();
+  const id = params.id;
 
   try {
     const formData = await request.formData();
@@ -98,12 +100,13 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(request: Request, context: { params: Promise<{ id: string }> }) {
+  const params = await context.params;
   const denied = await requireSuperAdmin();
   if (denied) return denied;
 
-  const { id } = await params;
   await dbConnect();
+  const id = params.id;
 
   try {
     const banner = await Banner.findByIdAndDelete(id).lean();

@@ -72,7 +72,7 @@ const RecommendedSalons = ({
           <span className="pl-4">Recommended Salons</span>
         </h3>
       </Link>
-      <CardList cards={salons} dataType="salon" shouldAnimate={true} />
+      <CardList cards={salons} dataType="salon" shouldAnimate={false} />
     </div>
   );
 };

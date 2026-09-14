@@ -6,9 +6,9 @@ import dbConnect from "@/dbConnect";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
+  const params = await context.params;
   await dbConnect();
   const session = await getServerSession(authOptions);
   if (!session || !session.user) {
@@ -20,7 +20,7 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
-  if (id !== session.user.salonId) {
+  if (params.id !== session.user.salonId) {
     return NextResponse.json(
       { error: "You can only view orders for your salon" },
       { status: 403 }
@@ -28,7 +28,7 @@ export async function GET(
   }
 
   try {
-    const orders = await Order.find({ "items.salonId": id })
+    const orders = await Order.find({ "items.salonId": params.id })
       .populate("items.productId", "name price imageUrls")
       .populate("items.salonId", "salonName")
       .lean();

@@ -3,15 +3,15 @@ import mongoose from 'mongoose';
 import Coupon from '@/mongoose-models/coupons';
 import { requireSuperAdmin } from "@/lib/auth/guards";
 
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
+  const params = await context.params;
   const denied = await requireSuperAdmin();
   if (denied) return denied;
 
-  const { id } = await params;
   try {
     await mongoose.connect(process.env.MONGODB_URI!);
     
-    const coupon = await Coupon.findById(id);
+    const coupon = await Coupon.findById(params.id);
     
     if (!coupon) {
       return NextResponse.json(
@@ -30,11 +30,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   }
 }
 
-export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function PUT(request: Request, context: { params: Promise<{ id: string }> }) {
+  const params = await context.params;
   const denied = await requireSuperAdmin();
   if (denied) return denied;
 
-  const { id } = await params;
   try {
     await mongoose.connect(process.env.MONGODB_URI!);
     
@@ -78,7 +78,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
     // Update the coupon
     const coupon = await Coupon.findByIdAndUpdate(
-      id,
+      params.id,
       {
         code,
         discount,
@@ -115,15 +115,15 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(request: Request, context: { params: Promise<{ id: string }> }) {
+  const params = await context.params;
   const denied = await requireSuperAdmin();
   if (denied) return denied;
 
-  const { id } = await params;
   try {
     await mongoose.connect(process.env.MONGODB_URI!);
     
-    const coupon = await Coupon.findById(id);
+    const coupon = await Coupon.findById(params.id);
     
     if (!coupon) {
       return NextResponse.json(
@@ -132,7 +132,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
       );
     }
 
-    await Coupon.findByIdAndDelete(id);
+    await Coupon.findByIdAndDelete(params.id);
     
     return NextResponse.json({ success: true, message: 'Coupon deleted' });
   } catch (error) {

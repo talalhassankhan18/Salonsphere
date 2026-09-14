@@ -1,14 +1,16 @@
 // src/app/salon/register/verification.tsx
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react"; // Import Suspense
 import RegistrationStepper from "../../components/RegistrationStepper";
 import LoadingSpinner from "@/common/LoadingSpinner";
 import toast from "react-hot-toast";
 import { getSession, setSession } from "@/lib/session";
 
-function VerificationPageContent() {
+// Component that uses useSearchParams
+const VerificationContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState<string>("");
@@ -340,13 +342,19 @@ function VerificationPageContent() {
       </div>
     </div>
   );
-}
+};
 
-// useSearchParams() must sit under a Suspense boundary for static prerendering.
+// Main VerificationPage component with Suspense
 export default function VerificationPage() {
   return (
-    <Suspense fallback={null}>
-      <VerificationPageContent />
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <LoadingSpinner />
+        </div>
+      }
+    >
+      <VerificationContent />
     </Suspense>
   );
 }

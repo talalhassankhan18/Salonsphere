@@ -13,12 +13,13 @@ interface ICategory {
   featured: boolean;
 }
 
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
+  const params = await context.params;
   const denied = await requireSuperAdmin();
   if (denied) return denied;
 
-  const { id } = await params;
   await dbConnect();
+  const id = params.id;
 
   try {
     const category = await Category.findOne({ id: parseInt(id, 10) }).lean() as ICategory | null;
@@ -32,12 +33,13 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   }
 }
 
-export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function PUT(request: Request, context: { params: Promise<{ id: string }> }) {
+  const params = await context.params;
   const denied = await requireSuperAdmin();
   if (denied) return denied;
 
-  const { id } = await params;
   await dbConnect();
+  const id = params.id;
 
   try {
     const body = await request.json();
@@ -64,12 +66,13 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(request: Request, context: { params: Promise<{ id: string }> }) {
+  const params = await context.params;
   const denied = await requireSuperAdmin();
   if (denied) return denied;
 
-  const { id } = await params;
   await dbConnect();
+  const id = params.id;
 
   try {
     const category = await Category.findOneAndDelete({ id: parseInt(id, 10) }).lean() as ICategory | null;

@@ -7,6 +7,7 @@ import LoadingSpinner from "@/common/LoadingSpinner";
 import toast from "react-hot-toast";
 import { setSession } from "@/lib/session";
 import axios from "axios";
+import { validatePakistaniPhone, formatPakistaniPhone } from "@/lib/PhoneUtils";
 
 interface FormData {
   name: string;
@@ -17,8 +18,8 @@ interface FormData {
   password: string;
   confirmPassword: string;
   salonType: string;
-  latitude?: string; // Added for geocoding
-  longitude?: string; // Added for geocoding
+  latitude?: string;
+  longitude?: string;
 }
 
 interface FormErrors {
@@ -46,8 +47,8 @@ export default function BasicInfoPage() {
     password: "",
     confirmPassword: "",
     salonType: "",
-    latitude: "", // Initialize
-    longitude: "", // Initialize
+    latitude: "",
+    longitude: "",
   });
   const [avatar, setAvatar] = useState<File | null>(null);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -61,6 +62,12 @@ export default function BasicInfoPage() {
     setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setFormData((prev) => ({ ...prev, phone: value }));
+    setErrors((prev) => ({ ...prev, phone: "" }));
+  };
+
   const handleAddressChange = async (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -70,10 +77,9 @@ export default function BasicInfoPage() {
 
     if (address.trim()) {
       try {
+        const query = `${encodeURIComponent(address)}, Pakistan`;
         const response = await axios.get(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-            address
-          )}`
+          `https://nominatim.openstreetmap.org/search?format=json&q=${query}&addressdetails=1&limit=1`
         );
         const data = response.data;
         if (data.length > 0) {
@@ -145,8 +151,9 @@ export default function BasicInfoPage() {
     if (!formData.name) newErrors.name = "Owner name is required";
     if (!formData.salonName) newErrors.salonName = "Salon name is required";
     if (!formData.phone) newErrors.phone = "Phone number is required";
-    else if (!/^\d{10}$/.test(formData.phone))
-      newErrors.phone = "Phone number must be 10 digits";
+    else if (!validatePakistaniPhone(formData.phone))
+      newErrors.phone =
+        "Phone number must be in Pakistani format (e.g., 03335759985)";
     if (!formData.username) newErrors.username = "Username is required";
     if (!formData.address) newErrors.address = "Address is required";
     if (!formData.salonType) newErrors.salonType = "Salon type is required";
@@ -183,7 +190,7 @@ export default function BasicInfoPage() {
       formDataToSend.append("email", email);
       formDataToSend.append("name", formData.name);
       formDataToSend.append("salonName", formData.salonName);
-      formDataToSend.append("phone", formData.phone);
+      formDataToSend.append("phone", formatPakistaniPhone(formData.phone));
       formDataToSend.append("username", formData.username);
       formDataToSend.append("address", formData.address);
       formDataToSend.append("salonType", formData.salonType);
@@ -382,17 +389,12 @@ export default function BasicInfoPage() {
                 type="text"
                 name="phone"
                 value={formData.phone}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/\D/g, "").slice(0, 10);
-                  setFormData((prev) => ({ ...prev, phone: value }));
-                  setErrors((prev) => ({ ...prev, phone: "" }));
-                }}
+                onChange={handlePhoneChange}
                 className={`mt-1 w-full px-4 py-3 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#B4004E] focus:border-transparent transition-all ${
                   errors.phone ? "border-red-500" : "border-gray-300"
                 }`}
-                placeholder="Enter your phone number"
+                placeholder="e.g., 03335759985"
                 required
-                maxLength={10}
               />
               {errors.phone && (
                 <p className="mt-1 text-xs text-red-500">{errors.phone}</p>

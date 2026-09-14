@@ -14,9 +14,9 @@ export async function POST() {
     });
 
     for (const salon of salons) {
-      const address = encodeURIComponent(salon.address);
+      const address = encodeURIComponent(`${salon.address}, Pakistan`);
       const response = await axios.get(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${address}`
+        `https://nominatim.openstreetmap.org/search?format=json&q=${address}&addressdetails=1&limit=1`
       );
       const data = response.data;
 

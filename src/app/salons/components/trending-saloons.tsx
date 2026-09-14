@@ -68,7 +68,7 @@ const TrendingSalons = ({ salons, isLoading, error }: TrendingSalonsProps) => {
           <span className="pl-4">Trending Salons</span>
         </h3>
       </Link>
-      <CardList cards={salons} dataType="salon" shouldAnimate={true} />
+      <CardList cards={salons} dataType="salon" shouldAnimate={false} />
     </div>
   );
 };

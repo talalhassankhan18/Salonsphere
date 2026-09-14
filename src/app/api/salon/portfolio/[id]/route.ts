@@ -9,12 +9,12 @@ import { uploadImage } from "@/lib/cloudinary";
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
+  const params = await context.params;
   try {
     await dbConnect();
-    console.log("PUT /api/salon/portfolio/[id] called, id:", id);
+    console.log("PUT /api/salon/portfolio/[id] called, id:", params.id);
 
     const session = await getServerSession(authOptions);
     if (!session || session.user.role !== "salon_admin") {
@@ -22,7 +22,7 @@ export async function PUT(
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    // const { id } = params; // Already destructured above
+    const { id } = params;
     if (!mongoose.isValidObjectId(id)) {
       console.error("Invalid portfolio ID:", id);
       return NextResponse.json(
@@ -111,12 +111,12 @@ export async function PUT(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
+  const params = await context.params;
   try {
     await dbConnect();
-    console.log("DELETE /api/salon/portfolio/[id] called, id:", id);
+    console.log("DELETE /api/salon/portfolio/[id] called, id:", params.id);
 
     const session = await getServerSession(authOptions);
     if (!session || session.user.role !== "salon_admin") {
@@ -124,7 +124,7 @@ export async function DELETE(
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    // const { id } = params; // Already destructured above
+    const { id } = params;
     if (!mongoose.isValidObjectId(id)) {
       console.error("Invalid portfolio ID:", id);
       return NextResponse.json(

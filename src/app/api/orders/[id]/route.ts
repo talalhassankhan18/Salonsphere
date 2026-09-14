@@ -18,8 +18,6 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Verify SMTP config once at startup, but not while `next build` is
-// importing route modules for static analysis.
 if (process.env.NEXT_PHASE !== "phase-production-build") {
   transporter.verify((error) => {
     if (error) console.error("❌ Email transporter error:", error.message);
@@ -29,9 +27,9 @@ if (process.env.NEXT_PHASE !== "phase-production-build") {
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
+  const params = await context.params;
   await dbConnect();
   const session = await getServerSession(authOptions);
   if (!session || !session.user) {
@@ -43,7 +41,7 @@ export async function GET(
     return NextResponse.json({ error: "Role not found" }, { status: 403 });
   }
 
-  const order = await Order.findById(id)
+  const order = await Order.findById(params.id)
     .populate("items.productId", "name price imageUrls")
     .populate("items.salonId", "salonName")
     .populate("customerId", "name email")
@@ -74,9 +72,9 @@ export async function GET(
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { id: orderId } = await params;
+  const params = await context.params;
   await dbConnect();
   const session = await getServerSession(authOptions);
   if (!session || !session.user) {
@@ -89,7 +87,7 @@ export async function PATCH(
   }
 
   const { status, paymentStatus } = await req.json();
-  // const orderId = params.id; // Already destructured above
+  const orderId = params.id;
 
   const order = await Order.findById(orderId)
     .populate("items.productId", "name price imageUrls")
@@ -296,9 +294,9 @@ export async function PATCH(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
+  const params = await context.params;
   await dbConnect();
   const session = await getServerSession(authOptions);
   if (!session || !session.user) {
@@ -314,7 +312,7 @@ export async function DELETE(
   mongoSession.startTransaction();
 
   try {
-    const order = await Order.findById(id)
+    const order = await Order.findById(params.id)
       .populate("items.productId", "name price")
       .populate("items.salonId", "salonName")
       .session(mongoSession);

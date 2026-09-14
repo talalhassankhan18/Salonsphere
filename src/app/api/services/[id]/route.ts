@@ -19,12 +19,12 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  let serviceId: string | undefined; // Declare serviceId outside try block
+  let serviceId: string | undefined;
   try {
     await ensureDbConnection();
 
     const { id } = await params;
-    serviceId = id; // Assign serviceId here
+    serviceId = id;
     const salonId = req.nextUrl.searchParams.get("salonId");
 
     if (!mongoose.Types.ObjectId.isValid(serviceId)) {
@@ -41,7 +41,6 @@ export async function GET(
       return NextResponse.json({ error: "Service not found" }, { status: 404 });
     }
 
-    // Validate service belongs to salon if salonId is provided
     if (salonId) {
       if (!mongoose.Types.ObjectId.isValid(salonId)) {
         console.error(`Invalid salon ID: ${salonId}`);
@@ -79,12 +78,12 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  let serviceId: string | undefined; // Declare serviceId outside try block
+  let serviceId: string | undefined;
   try {
     await ensureDbConnection();
 
     const { id } = await params;
-    serviceId = id; // Assign serviceId here
+    serviceId = id;
     const body = await req.json();
     const {
       name,
@@ -153,13 +152,17 @@ export async function PUT(
       );
     }
 
-    // Validate image URL (if provided)
-    if (image && !/^https?:\/\/.+\.(jpg|jpeg|png|webp)$/.test(image)) {
-      console.error(`Invalid image URL for service ${serviceId}: ${image}`);
-      return NextResponse.json(
-        { error: "Image must be a valid URL (jpg, jpeg, png, webp)" },
-        { status: 400 }
-      );
+    // Validate image (accept base64 or valid URL)
+    if (image) {
+      const isBase64 = image.startsWith("data:image/");
+      const isValidUrl = /^https?:\/\/.+\.(jpg|jpeg|png|webp)$/i.test(image);
+      if (!isBase64 && !isValidUrl) {
+        console.error(`Invalid image format for service ${serviceId}`);
+        return NextResponse.json(
+          { error: "Image must be a valid URL (jpg, jpeg, png, webp) or base64 string" },
+          { status: 400 }
+        );
+      }
     }
 
     // Validate isActive (if provided)
@@ -196,7 +199,7 @@ export async function PUT(
         price: parsedPrice,
         duration: parsedDuration,
         category: category.trim(),
-        image: image || service.image,
+        image: image || service.image, // Keep existing image if none provided
         gender,
         isActive: isActive !== undefined ? isActive : service.isActive,
         updatedAt: new Date(),
@@ -227,12 +230,12 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  let serviceId: string | undefined; // Declare serviceId outside try block
+  let serviceId: string | undefined;
   try {
     await ensureDbConnection();
 
     const { id } = await params;
-    serviceId = id; // Assign serviceId here
+    serviceId = id;
 
     if (!mongoose.Types.ObjectId.isValid(serviceId)) {
       console.error(`Invalid service ID: ${serviceId}`);

@@ -66,7 +66,7 @@ const Page = async ({ params }: { params: Promise<Params> }) => {
 
   try {
     // Fetch product data from the API
-    const response = await fetch(`http://localhost:3000/api/products/${id}`, {
+    const response = await fetch(`https://salonsphere.vercel.app/api/products/${id}`, {
       cache: "no-store", // Ensure fresh data
     });
 

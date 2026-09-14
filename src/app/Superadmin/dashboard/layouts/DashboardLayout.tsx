@@ -22,6 +22,7 @@ import {
   SheetTrigger,
 } from "@/app/Superadmin/dashboard/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 interface DashboardLayoutProps {
   children?: ReactNode;
@@ -60,7 +61,7 @@ const DashboardLayout = ({ children, title }: DashboardLayoutProps) => {
                   </SheetContent>
                 </Sheet>
               )}
-              <div
+              {/* <div
                 className={cn(
                   "relative transition-all duration-300 ease-in-out",
                   isSearchFocused ? "w-full max-w-xl" : "w-full max-w-xs"
@@ -73,23 +74,34 @@ const DashboardLayout = ({ children, title }: DashboardLayoutProps) => {
                   onFocus={() => setIsSearchFocused(true)}
                   onBlur={() => setIsSearchFocused(false)}
                 />
-              </div>
+              </div> */}
               {title && <h1 className="text-xl font-semibold ml-4">{title}</h1>}
             </div>
             <div className="flex items-center gap-2">
-              <Button
+              {/* <Button
                 variant="ghost"
                 size="icon"
                 className="rounded-full relative"
               >
                 <Bell className="h-5 w-5" />
                 <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full"></span>
-              </Button>
-              <ThemeToggle />
-              <Avatar className="h-9 w-9">
+              </Button> */}
+              {/* <ThemeToggle /> */}
+              {/* Logo */}
+              <div className="flex justify-center">
+                <Image
+                  src="/assets/images/logo.png"
+                  alt="Salon Logo"
+                  width={100}
+                  height={100}
+                  className="rounded-full"
+                />
+              </div>
+              {/* <Avatar className="h-9 w-9">
                 <AvatarImage src="/placeholder.svg" alt="Avatar" />
-                <AvatarFallback>SS</AvatarFallback>
-              </Avatar>
+                <AvatarFallback>
+                </AvatarFallback>
+              </Avatar> */}
             </div>
           </header>
           <main className="flex-1 overflow-y-auto transition-all duration-300 ease-in-out">
