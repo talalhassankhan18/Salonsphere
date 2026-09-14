@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -124,7 +124,7 @@ const Stock = () => {
     }
   };
 
-  const fetchStock = async () => {
+  const fetchStock = useCallback(async () => {
     try {
       const response = await fetch(`/api/Stock?search=${searchTerm}`, {
         cache: "no-store",
@@ -146,12 +146,12 @@ const Stock = () => {
         variant: "destructive",
       });
     }
-  };
+  }, [searchTerm]);
 
   useEffect(() => {
     fetchProducts();
     fetchStock();
-  }, [searchTerm]);
+  }, [fetchStock]);
 
   useEffect(() => {
     if (editingStock) {

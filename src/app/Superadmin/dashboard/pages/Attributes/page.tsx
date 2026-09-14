@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -111,7 +111,7 @@ const Attributes = () => {
     required: false,
   });
 
-  const fetchAttributes = async () => {
+  const fetchAttributes = useCallback(async () => {
     try {
       const response = await fetch(`/api/Attribute?search=${searchTerm}`, {
         cache: 'no-store',
@@ -133,11 +133,11 @@ const Attributes = () => {
         variant: 'destructive',
       });
     }
-  };
+  }, [searchTerm]);
 
   useEffect(() => {
     fetchAttributes();
-  }, [searchTerm]);
+  }, [fetchAttributes]);
 
   const handleAddAttribute = async (e: React.FormEvent) => {
     e.preventDefault();

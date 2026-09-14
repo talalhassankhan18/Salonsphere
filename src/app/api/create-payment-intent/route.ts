@@ -1,15 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error("STRIPE_SECRET_KEY is not defined");
+// Lazy: a missing key must fail this request, not `next build` (which
+// imports every route while collecting page data).
+let stripeClient: Stripe | null = null;
+function getStripe(): Stripe {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error("STRIPE_SECRET_KEY is not defined");
+  }
+  return (stripeClient ??= new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: "2025-02-24.acacia",
+  }));
 }
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2025-02-24.acacia",
-});
 
 export async function POST(request: NextRequest) {
   try {
+    const stripe = getStripe();
     const { amount, currency } = await request.json();
 
     if (!amount || !currency) {

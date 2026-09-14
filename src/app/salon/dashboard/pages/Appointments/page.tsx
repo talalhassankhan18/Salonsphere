@@ -1,6 +1,6 @@
 
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import DashboardLayout from "../../components/layout/DashboardLayout";
 import { format } from "date-fns";
@@ -120,14 +120,7 @@ const Appointments: React.FC = () => {
     fetchSalonId();
   }, [status, session]);
 
-  useEffect(() => {
-    if (salonId) {
-      fetchAppointments();
-      fetchNotifications();
-    }
-  }, [salonId]);
-
-  const fetchAppointments = async () => {
+  const fetchAppointments = useCallback(async () => {
     try {
       console.log(`Fetching appointments for salonId: ${salonId}`);
       const response = await fetch(
@@ -181,9 +174,9 @@ const Appointments: React.FC = () => {
         variant: "destructive",
       });
     }
-  };
+  }, [salonId]);
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     if (!salonId) {
       console.error("salonId is not provided, cannot fetch notifications");
       return;
@@ -202,7 +195,15 @@ const Appointments: React.FC = () => {
         variant: "destructive",
       });
     }
-  };
+  }, [salonId]);
+
+  // After fetchNotifications: the deps array is evaluated during render.
+  useEffect(() => {
+    if (salonId) {
+      fetchAppointments();
+      fetchNotifications();
+    }
+  }, [salonId, fetchAppointments, fetchNotifications]);
 
   const markAsRead = async (notificationId: string) => {
     try {

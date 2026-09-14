@@ -5,14 +5,20 @@ import Salon, { ISalon } from "@/mongoose-models/Salon";
 import { sendPaymentConfirmationEmail } from "@/lib/email/emailService";
 import { Document } from "mongoose";
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error("STRIPE_SECRET_KEY is not defined");
+// Lazy: a missing key must fail this request, not `next build` (which
+// imports every route while collecting page data).
+let stripeClient: Stripe | null = null;
+function getStripe(): Stripe {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error("STRIPE_SECRET_KEY is not defined");
+  }
+  return (stripeClient ??= new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: "2025-02-24.acacia",
+  }));
 }
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2025-02-24.acacia",
-});
 
 export async function POST(req: NextRequest) {
+  const stripe = getStripe();
   await dbConnect();
 
   try {

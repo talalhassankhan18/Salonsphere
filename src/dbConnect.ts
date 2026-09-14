@@ -12,22 +12,16 @@ declare global {
   var mongoose: CachedMongoose | undefined;
 }
 
-// Retrieve environment variables
-const MONGODB_URI = process.env.MONGODB_URI as string | undefined;
-const DB_NAME = process.env.DB_NAME as string | undefined;
-
-// Validate environment variables
-if (!MONGODB_URI) {
-  throw new Error("MONGODB_URI environment variable is not defined");
+// Read + validate env lazily, at connect time. Doing it at module load made
+// `next build` crash on any host without these vars set (Next imports every
+// route while collecting page data), and the env is only needed to connect.
+function getDbConfig(): { uri: string; dbName: string } {
+  const uri = process.env.MONGODB_URI;
+  const dbName = process.env.DB_NAME;
+  if (!uri) throw new Error("MONGODB_URI environment variable is not defined");
+  if (!dbName) throw new Error("DB_NAME environment variable is not defined");
+  return { uri, dbName };
 }
-
-if (!DB_NAME) {
-  throw new Error("DB_NAME environment variable is not defined");
-}
-
-// Type assertion is safe due to validation above
-const validatedMONGODB_URI: string = MONGODB_URI;
-const validatedDB_NAME: string = DB_NAME;
 
 // Initialize cached connection
 const cached: CachedMongoose = global.mongoose ?? { conn: null, promise: null };
@@ -45,8 +39,9 @@ async function dbConnect(): Promise<typeof mongoose> {
 
   // If no promise exists, create a new connection promise
   if (!cached.promise) {
+    const { uri, dbName } = getDbConfig();
     const opts = {
-      dbName: validatedDB_NAME,
+      dbName,
       bufferCommands: false, // Disable buffering for failed commands
       maxPoolSize: 10, // Maximum number of socket connections
       // Fail fast when the DB is unreachable so pages show their error state
@@ -59,9 +54,9 @@ async function dbConnect(): Promise<typeof mongoose> {
       family: 4, // mongod binds 127.0.0.1 only; skip the doomed ::1 attempt
     };
 
-    console.log(`Connecting to MongoDB (dbName: ${validatedDB_NAME})`);
+    console.log(`Connecting to MongoDB (dbName: ${dbName})`);
     cached.promise = mongoose
-      .connect(validatedMONGODB_URI, opts)
+      .connect(uri, opts)
       .then((mongooseInstance) => {
         console.log("MongoDB connected successfully");
         return mongooseInstance;

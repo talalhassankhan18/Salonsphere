@@ -115,7 +115,6 @@ const Settings: React.FC = () => {
 
   // Fetch salon details on mount
   useEffect(() => {
-    console.log("Session status:", status, "Session user:", session?.user);
     async function fetchSalonDetails() {
       if (status === "loading" || !salonId) {
         console.log("Skipping fetch: status loading or no salonId");
@@ -150,17 +149,18 @@ const Settings: React.FC = () => {
           username: data.username || "",
         });
         setAvatarPreview(data.avatar || "/placeholder.svg");
-        setSchedulingForm({
+        // Functional update: reads the previous form without depending on it.
+        setSchedulingForm((prev) => ({
           businessHours:
             data.scheduling?.businessHours.map((hour) => ({
               ...hour,
               openTime: hour.isOpen ? convertTo24Hour(hour.openTime) : null,
               closeTime: hour.isOpen ? convertTo24Hour(hour.closeTime) : null,
-            })) || schedulingForm.businessHours,
+            })) || prev.businessHours,
           appointmentBuffer: data.scheduling?.appointmentBuffer || 15,
           allowOnlineBooking: data.scheduling?.allowOnlineBooking ?? true,
           requireConfirmation: data.scheduling?.requireConfirmation ?? true,
-        });
+        }));
       } catch (err: any) {
         console.error("Error fetching salon details:", err);
         setError(err.message || "Failed to load salon details");
@@ -654,7 +654,8 @@ const Settings: React.FC = () => {
   const convertTo24Hour = (time: string | null): string | null => {
     if (!time) return null;
     const [timePart, period] = time.split(" ");
-    let [hours, minutes] = timePart.split(":").map(Number);
+    const [rawHours, minutes] = timePart.split(":").map(Number);
+    let hours = rawHours;
     if (period === "PM" && hours !== 12) hours += 12;
     if (period === "AM" && hours === 12) hours = 0;
     return `${hours.toString().padStart(2, "0")}:${minutes

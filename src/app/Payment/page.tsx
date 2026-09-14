@@ -7,10 +7,11 @@ import { loadStripe } from "@stripe/stripe-js";
 import BillingAddressForm from "./Checkout/components/BillingAddress";
 import { FaCcVisa, FaCcMastercard, FaCcAmex, FaCcDiscover, FaPaypal, FaGooglePay, FaLock } from "react-icons/fa";
 
-if (process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY === undefined) {
-  throw new Error("NEXT_PUBLIC_STRIPE_PUBLIC_KEY is not defined");
-}
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY);
+// null when the key is absent: <Elements> then renders nothing instead of the
+// whole page (and the build) crashing.
+const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY
+  ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY)
+  : null;
 
 export default function Home() {
   const amount = 49.99;

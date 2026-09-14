@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import React from "react";
 import Navbar from "@/common/navbar";
 import Hero from "./components/hero";
@@ -84,18 +84,22 @@ export default function Page() {
     }
   }, [salonName, location, gender, service]);
 
-  // Debounced version of fetchSalons
-  const debouncedFetchSalons = useCallback(debounce(fetchSalons, 500), [fetchSalons]);
+  // Debounced version of fetchSalons (useMemo: we want the debounced *value*,
+  // not a memoised callback wrapping an already-created function).
+  const debouncedFetchSalons = useMemo(() => debounce(fetchSalons, 500), [fetchSalons]);
 
-  // Fetch salons on initial load
+  // Immediate on first load, debounced when the filters change. (Previously
+  // two effects both ran on mount → an immediate fetch plus a second one
+  // 500 ms later.)
+  const isFirstLoad = useRef(true);
   useEffect(() => {
-    fetchSalons();
-  }, []);
-
-  // Fetch salons whenever filter states change
-  useEffect(() => {
+    if (isFirstLoad.current) {
+      isFirstLoad.current = false;
+      fetchSalons();
+      return;
+    }
     debouncedFetchSalons();
-  }, [salonName, location, gender, service, debouncedFetchSalons]);
+  }, [fetchSalons, debouncedFetchSalons]);
 
   const handleSearch = () => {
     console.log("Search Triggered with:", { salonName, location, gender, service }); // Debug search trigger

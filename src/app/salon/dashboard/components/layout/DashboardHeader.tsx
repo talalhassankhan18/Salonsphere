@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useCallback, useState, useEffect, useRef } from "react";
 import { Bell, Menu } from "lucide-react";
 import { Button } from "@/app/Superadmin/dashboard/components/ui/button";
 import {
@@ -37,7 +37,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   const eventSourceRef = useRef<EventSource | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     if (!userId || !/^[0-9a-fA-F]{24}$/.test(userId)) {
       console.error("Invalid userId, cannot fetch notifications");
       return;
@@ -51,9 +51,9 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     } catch (error) {
       console.error("Error fetching notifications:", error);
     }
-  };
+  }, [userId]);
 
-  const initializeSSE = () => {
+  const initializeSSE = useCallback(() => {
     if (!userId || !/^[0-9a-fA-F]{24}$/.test(userId)) {
       console.error("Invalid userId, skipping SSE connection");
       return;
@@ -100,7 +100,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     }, 30000);
 
     return () => clearInterval(heartbeat);
-  };
+  }, [userId]);
 
   useEffect(() => {
     fetchNotifications();
@@ -112,7 +112,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         console.log("SSE connection closed");
       }
     };
-  }, [userId]);
+  }, [fetchNotifications, initializeSSE]);
 
   const playSound = () => {
     if (!audioRef.current) {

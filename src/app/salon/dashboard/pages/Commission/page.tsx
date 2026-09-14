@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useIsMobile } from "../../hooks/use-mobile";
@@ -98,7 +98,7 @@ const Commission: React.FC = () => {
     }
   }, [status, router]);
 
-  const fetchCommissions = async () => {
+  const fetchCommissions = useCallback(async () => {
     if (status !== "authenticated" || !salonId || !userId) {
       setError("Session data missing. Please log in again.");
       setLoading(false);
@@ -191,13 +191,13 @@ const Commission: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [status, salonId, userId]);
 
   useEffect(() => {
     fetchCommissions();
     const interval = setInterval(fetchCommissions, 30 * 1000);
     return () => clearInterval(interval);
-  }, [salonId, userId, status]);
+  }, [fetchCommissions]);
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);

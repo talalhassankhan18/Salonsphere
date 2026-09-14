@@ -110,6 +110,10 @@ const PlanSelectionContent: React.FC = () => {
     const paramsEmail = searchParams.get("email") || "";
     const action = searchParams.get("action");
     const selectedPlanName = searchParams.get("selectedPlan");
+    // setEmail() below does not update `email` within this same run, so use
+    // the resolved value directly — reading the state here compared the
+    // account email against "" and always reported a mismatch.
+    const resolvedEmail = sessionEmail || paramsEmail;
 
     // Set email from session or params
     if (sessionEmail) {
@@ -143,7 +147,7 @@ const PlanSelectionContent: React.FC = () => {
           status === "authenticated" &&
           session?.user?.email
         ) {
-          if (session.user.email.toLowerCase() !== email.toLowerCase()) {
+          if (session.user.email.toLowerCase() !== resolvedEmail.toLowerCase()) {
             toast.error(
               "Email mismatch. Please use the same email as your account."
             );
@@ -155,7 +159,7 @@ const PlanSelectionContent: React.FC = () => {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              email: email,
+              email: resolvedEmail,
               action: "get",
             }),
           });
@@ -178,7 +182,7 @@ const PlanSelectionContent: React.FC = () => {
               "Content-Type": "application/json",
               "x-action": "upgrade",
             },
-            body: JSON.stringify({ email }),
+            body: JSON.stringify({ email: resolvedEmail }),
           });
           const progressData = await progressResponse.json();
           console.log(
@@ -205,7 +209,7 @@ const PlanSelectionContent: React.FC = () => {
               }
             );
             router.push(
-              `${progressData.nextStep}?email=${encodeURIComponent(email)}`
+              `${progressData.nextStep}?email=${encodeURIComponent(resolvedEmail)}`
             );
             return;
           }
@@ -222,7 +226,7 @@ const PlanSelectionContent: React.FC = () => {
           toast.error("Please log in to upgrade your plan.");
           router.push(
             `/salon/login?redirect=/salon/register/plan-selection?email=${encodeURIComponent(
-              email
+              resolvedEmail
             )}&action=upgrade${
               selectedPlanName ? `&selectedPlan=${selectedPlanName}` : ""
             }`

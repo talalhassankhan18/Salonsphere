@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useIsMobile } from "../../hooks/use-mobile";
@@ -88,6 +88,20 @@ interface BestSellingProduct {
   commission: number;
 }
 
+// Module-level fallbacks so fetchAnalyticsData need not depend on them.
+const dummyServicesData: ServicesData[] = [
+  { name: "Haircut", value: 5 },
+  { name: "Facial", value: 3 },
+  { name: "Manicure", value: 2 },
+  { name: "Pedicure", value: 1 },
+];
+
+const dummyBestSellingProducts: BestSellingProduct[] = [
+  { productId: "dummy1", productName: "Shampoo", sold: 10, commission: 150 },
+  { productId: "dummy2", productName: "Conditioner", sold: 8, commission: 120 },
+  { productId: "dummy3", productName: "Hair Oil", sold: 5, commission: 75 },
+];
+
 const Analytics: React.FC = () => {
   const isMobile = useIsMobile();
   const { data: session, status } = useSession();
@@ -112,19 +126,6 @@ const Analytics: React.FC = () => {
   const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
 
   // Dummy data for when real-time data is unavailable
-  const dummyServicesData: ServicesData[] = [
-    { name: "Haircut", value: 5 },
-    { name: "Facial", value: 3 },
-    { name: "Manicure", value: 2 },
-    { name: "Pedicure", value: 1 },
-  ];
-
-  const dummyBestSellingProducts: BestSellingProduct[] = [
-    { productId: "dummy1", productName: "Shampoo", sold: 10, commission: 150 },
-    { productId: "dummy2", productName: "Conditioner", sold: 8, commission: 120 },
-    { productId: "dummy3", productName: "Hair Oil", sold: 5, commission: 75 },
-  ];
-
   useEffect(() => {
     setSidebarOpen(!isMobile);
   }, [isMobile]);
@@ -135,7 +136,7 @@ const Analytics: React.FC = () => {
     }
   }, [status, router]);
 
-  const fetchAnalyticsData = async () => {
+  const fetchAnalyticsData = useCallback(async () => {
     if (status !== "authenticated" || !salonId || !userId) {
       setError("Session data missing. Please log in again.");
       setLoading(false);
@@ -330,13 +331,13 @@ const Analytics: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [status, salonId, userId]);
 
   useEffect(() => {
     fetchAnalyticsData();
     const interval = setInterval(fetchAnalyticsData, 30 * 1000);
     return () => clearInterval(interval);
-  }, [salonId, userId, status]);
+  }, [fetchAnalyticsData]);
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);

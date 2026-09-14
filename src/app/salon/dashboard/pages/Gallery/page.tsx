@@ -31,7 +31,6 @@ const Gallery: React.FC = () => {
       return;
     }
 
-    console.log("Session:", session); // Debug log
 
     if (!salonId) {
       setError("Salon ID not found. Please log in as a salon admin.");

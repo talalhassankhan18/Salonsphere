@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useIsMobile } from "../../hooks/use-mobile";
@@ -65,7 +65,7 @@ const Orders: React.FC = () => {
 
   console.log("Session data:", { userId, salonId, userRole });
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     if (status !== "authenticated" || !salonId || !userId) {
       console.error("Missing session data:", { status, salonId, userId });
       setError("Session data missing. Please log in again.");
@@ -130,7 +130,7 @@ const Orders: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [status, salonId, userId]);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -146,7 +146,7 @@ const Orders: React.FC = () => {
     fetchOrders();
     const interval = setInterval(fetchOrders, 30 * 1000);
     return () => clearInterval(interval);
-  }, [salonId, userId, status]);
+  }, [fetchOrders]);
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);

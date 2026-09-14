@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import {
@@ -171,7 +171,7 @@ const ProductStats = () => {
     }
   };
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       const query = new URLSearchParams();
       if (searchTerm) query.set("search", searchTerm);
@@ -199,14 +199,14 @@ const ProductStats = () => {
         variant: "destructive",
       });
     }
-  };
+  }, [searchTerm, filters]);
 
   useEffect(() => {
     if (status === "loading") return;
 
     fetchSalons();
     fetchStats();
-  }, [status, session, router, searchTerm, filters]);
+  }, [status, fetchStats]);
 
   const filteredStats = stats.filter((stat) => {
     let matches = true;

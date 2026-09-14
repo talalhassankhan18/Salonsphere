@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -163,7 +163,7 @@ const Coupons = () => {
     endDate: '',
   });
 
-  const fetchCoupons = async () => {
+  const fetchCoupons = useCallback(async () => {
     try {
       const response = await fetch(`/api/coupons?search=${searchTerm}`, {
         cache: 'no-store',
@@ -191,11 +191,11 @@ const Coupons = () => {
         variant: 'destructive',
       });
     }
-  };
+  }, [searchTerm]);
 
   useEffect(() => {
     fetchCoupons();
-  }, [searchTerm]);
+  }, [fetchCoupons]);
 
   const handleAddCoupon = async (e: React.FormEvent) => {
     e.preventDefault();

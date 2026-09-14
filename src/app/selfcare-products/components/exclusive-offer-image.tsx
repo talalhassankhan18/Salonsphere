@@ -24,6 +24,9 @@ interface BannerResponse {
   data: Banner[];
 }
 
+// Module-level so the effect below need not depend on it.
+const defaultImages = [shopBrand1.src, shopBrand2.src, shopBrand3.src];
+
 const AutoSliderShopBrand = ({
   srcs = [],
   delay = 10000, // Default to 1 second
@@ -33,7 +36,6 @@ const AutoSliderShopBrand = ({
   const [error, setError] = React.useState<string | null>(null);
 
   // Default images as fallback
-  const defaultImages = [shopBrand1.src, shopBrand2.src, shopBrand3.src];
 
   // Fetch banners from API
   React.useEffect(() => {

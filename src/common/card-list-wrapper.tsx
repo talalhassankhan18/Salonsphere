@@ -30,13 +30,15 @@ const CardListWrapper = ({
       { threshold: 0.8 }
     );
 
-    if (containerRef.current) {
-      observer.observe(containerRef.current);
+    // Capture the node now: by the time cleanup runs the ref may point elsewhere.
+    const node = containerRef.current;
+    if (node) {
+      observer.observe(node);
     }
 
     return () => {
-      if (containerRef.current) {
-        observer.unobserve(containerRef.current);
+      if (node) {
+        observer.unobserve(node);
       }
     };
   }, [hasAnimated, shouldAnimate]);

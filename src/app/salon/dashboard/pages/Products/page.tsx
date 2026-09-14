@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import { useIsMobile } from "../../hooks/use-mobile";
 import SidebarNavigation from "../../components/layout/SidebarNavigation";
 import DashboardHeader from "../../components/layout/DashboardHeader";
@@ -119,7 +119,7 @@ const Products: React.FC = () => {
     fetchSalonDetails();
   }, [session, status, router]);
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     if (!salonId) return;
 
     try {
@@ -174,13 +174,13 @@ const Products: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [salonId, search]);
 
   useEffect(() => {
     if (salonId && status === "authenticated") {
       fetchProducts();
     }
-  }, [salonId, search, status]);
+  }, [salonId, status, fetchProducts]);
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);

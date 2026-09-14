@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Calendar, User, ShoppingBag, Star, Clock } from 'lucide-react';
 import { format } from 'date-fns';
@@ -26,15 +26,7 @@ const RecentActivitiesTable: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (status === "authenticated" && salonId) {
-      fetchActivities();
-      const interval = setInterval(fetchActivities, 30 * 1000); // Poll every 30 seconds
-      return () => clearInterval(interval);
-    }
-  }, [status, salonId]);
-
-  const fetchActivities = async () => {
+  const fetchActivities = useCallback(async () => {
     if (!salonId) {
       setError("Salon ID not found.");
       setLoading(false);
@@ -107,7 +99,16 @@ const RecentActivitiesTable: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [salonId]);
+
+  // After fetchActivities: the deps array is evaluated during render.
+  useEffect(() => {
+    if (status === "authenticated" && salonId) {
+      fetchActivities();
+      const interval = setInterval(fetchActivities, 30 * 1000); // Poll every 30 seconds
+      return () => clearInterval(interval);
+    }
+  }, [status, salonId, fetchActivities]);
 
   const getActivityIcon = (type: ActivityType) => {
     switch (type) {

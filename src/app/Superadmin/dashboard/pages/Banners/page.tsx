@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -176,7 +176,7 @@ const Banners = () => {
   const bannerTypes = ["Hero Slider", "Category Banner", "Side Banner", "Popup"];
   const bannerLocations = ["Homepage", "Category Page", "Sidebar", "All Pages"];
 
-  const fetchBanners = async () => {
+  const fetchBanners = useCallback(async () => {
     try {
       const response = await fetch(`/api/Banners?search=${searchTerm}`, {
         cache: "no-store",
@@ -198,11 +198,11 @@ const Banners = () => {
         variant: "destructive",
       });
     }
-  };
+  }, [searchTerm]);
 
   useEffect(() => {
     fetchBanners();
-  }, [searchTerm]);
+  }, [fetchBanners]);
 
   useEffect(() => {
     if (editingBanner) {

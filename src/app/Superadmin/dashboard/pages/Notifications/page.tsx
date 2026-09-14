@@ -245,7 +245,7 @@ const Notifications = () => {
       }
     };
     fetchNotifications();
-  }, []);
+  }, [toast]);
 
   // Fetch users (salons and customers) for specific target
   useEffect(() => {
@@ -285,7 +285,7 @@ const Notifications = () => {
       }
     };
     fetchUsers();
-  }, []);
+  }, [toast]);
 
   // Filter notifications
   const filteredNotifications = notifications.filter(

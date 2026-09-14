@@ -2,24 +2,28 @@ import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 
 // No hardcoded fallback: a guessable secret lets anyone forge session cookies.
-const secretKey = process.env.SESSION_SECRET || process.env.NEXTAUTH_SECRET;
-if (!secretKey) {
-  throw new Error(
-    "SESSION_SECRET (or NEXTAUTH_SECRET) must be set to sign session cookies"
-  );
+// Resolved lazily so importing this module (which `next build` does for every
+// route) never throws — only actually signing/verifying without a secret does.
+function getKey(): Uint8Array {
+  const secretKey = process.env.SESSION_SECRET || process.env.NEXTAUTH_SECRET;
+  if (!secretKey) {
+    throw new Error(
+      "SESSION_SECRET (or NEXTAUTH_SECRET) must be set to sign session cookies"
+    );
+  }
+  return new TextEncoder().encode(secretKey);
 }
-const key = new TextEncoder().encode(secretKey);
 
 export async function encrypt(payload: any) {
   return new SignJWT(payload)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("2h")
-    .sign(key);
+    .sign(getKey());
 }
 
 export async function decrypt(input: string): Promise<any> {
-  const { payload } = await jwtVerify(input, key, {
+  const { payload } = await jwtVerify(input, getKey(), {
     algorithms: ["HS256"],
   });
   return payload;

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import StatsCard from "./StatsCard";
 import AppointmentList from "./AppointmentList";
@@ -62,16 +62,11 @@ const DashboardOverview: React.FC = () => {
     reviews: Review[];
     commissions: Commission[];
   } | null>(null);
+  // Mirror of prevData for use inside fetchData without making it a dependency
+  // (reading the state there would re-create fetchData after every fetch → loop).
+  const prevDataRef = useRef<typeof prevData>(null);
 
-  useEffect(() => {
-    if (status === "authenticated" && salonId) {
-      fetchData();
-      const interval = setInterval(fetchData, 15 * 60 * 1000); // 15 minutes
-      return () => clearInterval(interval);
-    }
-  }, [status, salonId]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (!salonId) {
       setError("Salon ID not found.");
       setLoading(false);
@@ -193,12 +188,12 @@ const DashboardOverview: React.FC = () => {
       const validReviews: Review[] = Array.isArray(reviewsData) ? reviewsData : [];
 
       // Calculate metrics for trends before updating state
-      const prevTotalAppointments = prevData?.appointments?.length || 0;
-      const prevTotalReviews = prevData?.reviews?.length || 0;
+      const prevTotalAppointments = prevDataRef.current?.appointments?.length || 0;
+      const prevTotalReviews = prevDataRef.current?.reviews?.length || 0;
       const prevTotalRevenue =
-        (prevData?.appointments?.reduce((acc, appt) => acc + (appt.amountPaid || 0), 0) || 0) +
-        (prevData?.commissions?.reduce((acc, comm) => acc + comm.amount, 0) || 0);
-      const prevTotalCommission = prevData?.commissions?.reduce((acc, comm) => acc + comm.amount, 0) || 0;
+        (prevDataRef.current?.appointments?.reduce((acc, appt) => acc + (appt.amountPaid || 0), 0) || 0) +
+        (prevDataRef.current?.commissions?.reduce((acc, comm) => acc + comm.amount, 0) || 0);
+      const prevTotalCommission = prevDataRef.current?.commissions?.reduce((acc, comm) => acc + comm.amount, 0) || 0;
 
       // Update state
       setAppointments(mappedAppointments);
@@ -226,17 +221,28 @@ const DashboardOverview: React.FC = () => {
       setRevenueData(revenueChartData);
 
       // Update prevData with current data
-      setPrevData({
+      const snapshot = {
         appointments: mappedAppointments,
         reviews: validReviews,
         commissions: commissionData,
-      });
+      };
+      prevDataRef.current = snapshot;
+      setPrevData(snapshot);
     } catch (err: any) {
       setError(err.message || "Failed to load data");
     } finally {
       setLoading(false);
     }
-  };
+  }, [salonId]);
+
+  // After fetchData: its deps array is read during render.
+  useEffect(() => {
+    if (status === "authenticated" && salonId) {
+      fetchData();
+      const interval = setInterval(fetchData, 15 * 60 * 1000); // 15 minutes
+      return () => clearInterval(interval);
+    }
+  }, [status, salonId, fetchData]);
 
   // Calculate metrics
   const totalAppointments = appointments.length;

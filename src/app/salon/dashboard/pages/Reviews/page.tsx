@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useIsMobile } from "../../hooks/use-mobile";
 import SidebarNavigation from "../../components/layout/SidebarNavigation";
@@ -16,14 +16,7 @@ const Reviews: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    setSidebarOpen(!isMobile);
-    if (session?.user?.salonId) {
-      fetchReviews();
-    }
-  }, [isMobile, session]);
-
-  const fetchReviews = async () => {
+  const fetchReviews = useCallback(async () => {
     try {
       setLoading(true);
       const salonId = session?.user?.salonId; // Use salonId from session
@@ -37,7 +30,15 @@ const Reviews: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [session]);
+
+  // Must come after fetchReviews: the deps array is evaluated during render.
+  useEffect(() => {
+    setSidebarOpen(!isMobile);
+    if (session?.user?.salonId) {
+      fetchReviews();
+    }
+  }, [isMobile, session, fetchReviews]);
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);

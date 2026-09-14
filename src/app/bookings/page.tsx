@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
   Table,
@@ -61,23 +61,9 @@ const BookingsContent: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const emailParam = searchParams.get("email");
-    if (emailParam) {
-      setEmail(emailParam);
-      handleEmailSubmit(emailParam);
-    }
-  }, [searchParams]);
-
-  const handleEmailSubmit = async (emailInput: string | React.FormEvent) => {
-    let emailToFetch: string;
-    if (typeof emailInput === "string") {
-      emailToFetch = emailInput;
-    } else {
-      emailInput.preventDefault();
-      emailToFetch = email;
-    }
-
+  // No reactive deps: takes the email explicitly and only calls setters
+  // (and the module-level toast), so the effect above can list it safely.
+  const fetchBookings = useCallback(async (emailToFetch: string) => {
     if (!emailToFetch) {
       setError("Please enter an email address");
       setLoading(false);
@@ -119,6 +105,20 @@ const BookingsContent: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  // After fetchBookings: its deps array is evaluated during render.
+  useEffect(() => {
+    const emailParam = searchParams.get("email");
+    if (emailParam) {
+      setEmail(emailParam);
+      fetchBookings(emailParam);
+    }
+  }, [searchParams, fetchBookings]);
+
+  const handleEmailSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    fetchBookings(email);
   };
 
   const handleCancelBooking = async (bookingId: string) => {
@@ -135,7 +135,7 @@ const BookingsContent: React.FC = () => {
         throw new Error(errorData.message || "Failed to cancel booking");
       }
 
-      await handleEmailSubmit(email);
+      await fetchBookings(email);
       toast({
         title: "Booking Cancelled",
         description: "Your booking has been cancelled.",
