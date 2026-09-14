@@ -49,10 +49,14 @@ async function dbConnect(): Promise<typeof mongoose> {
       dbName: validatedDB_NAME,
       bufferCommands: false, // Disable buffering for failed commands
       maxPoolSize: 10, // Maximum number of socket connections
-      serverSelectionTimeoutMS: 5000, // Timeout for server selection
+      // Fail fast when the DB is unreachable so pages show their error state
+      // in ~3 s instead of hanging 11 s per request (5 s selection × two
+      // address families). Reconnection is handled by the listeners below.
+      serverSelectionTimeoutMS: 3000,
       socketTimeoutMS: 45000, // Timeout for socket inactivity
-      connectTimeoutMS: 10000, // Timeout for initial connection
+      connectTimeoutMS: 5000,
       heartbeatFrequencyMS: 10000, // Frequency of server monitoring
+      family: 4, // mongod binds 127.0.0.1 only; skip the doomed ::1 attempt
     };
 
     console.log(`Connecting to MongoDB (dbName: ${validatedDB_NAME})`);
