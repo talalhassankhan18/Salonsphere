@@ -4,10 +4,14 @@
 import { revalidatePath } from "next/cache";
 import dbConnect from "@/lib/mongoose";
 import User from "@/mongoose-models/User";
+import { isSuperAdminRequest } from "@/lib/auth/guards";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 
 export async function createUser(prevState: unknown, formData: FormData) {
+  if (!(await isSuperAdminRequest())) {
+    throw new Error("Unauthorized: super-admin login required");
+  }
   // Define schema for validation
   const schema = z.object({
     name: z.string().min(1, "Name is required"),

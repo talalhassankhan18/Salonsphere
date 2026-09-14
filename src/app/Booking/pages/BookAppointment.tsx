@@ -1,6 +1,5 @@
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { format, addDays } from "date-fns";
 import {
@@ -49,7 +48,7 @@ const BookAppointment: React.FC = () => {
   const [selectedTab, setSelectedTab] = useState("salons");
   const [selectedSalon, setSelectedSalon] = useState<Salon | null>(null);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedTimeSlots, setSelectedTimeSlots] = useState<string[]>([]);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [serviceReviews, setServiceReviews] = useState<Review[]>([]);

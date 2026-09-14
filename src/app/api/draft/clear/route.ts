@@ -14,7 +14,7 @@ export async function POST(req: Request) {
     await Draft.deleteOne({ email, type });
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    console.error("Draft clear error:", { error: error.message, email: req.body?.email });
+    console.error("Draft clear error:", { error: error.message });
     return NextResponse.json({ error: "Failed to clear draft" }, { status: 500 });
   }
 }

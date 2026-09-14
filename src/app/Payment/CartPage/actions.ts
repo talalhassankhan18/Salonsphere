@@ -1,7 +1,7 @@
 "use server";
 
 import Subscription from "@/mongoose-models/subscription"; // Adjust path if different
-import { verifySession } from "@/lib/session";
+import { verifySession } from "@/lib/session.server";
 import connectDB from "@/lib/mongoose"; // If you have a db connection helper
 
 // Fetch Subscription Plan for Logged-in User

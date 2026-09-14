@@ -15,6 +15,8 @@ const commonFeatures = [
   "Advertisement Boost",
   "Priority Support",
   "Product Listing Limit",
+  "Orders Management", 
+  "Commission Tracking",
 ];
 
 const subscriptionPlans = [

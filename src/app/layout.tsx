@@ -1,13 +1,8 @@
-"use client";
-import React from "react";
+import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
-import Footer from "@/common/footer";
 import "swiper/css/bundle";
-import { CartStoreProvider } from "@/store/cartStoreContext";
-import CookieBanner from "@/common/cookie-banner";
-import ToastComponent from "./components/toast-component";
-import Providers from "./providers/AuthProvider";
+import AppProviders from "./providers/AppProviders";
 
 // Import fonts
 const poppinsRegular = localFont({
@@ -22,23 +17,38 @@ const poppinsBold = localFont({
   weight: "700",
 });
 
+export const metadata: Metadata = {
+  title: {
+    default: "SalonSphere",
+    template: "%s | SalonSphere",
+  },
+  description:
+    "Discover and book salon services, shop self-care products, and manage your salon — all in one place.",
+  applicationName: "SalonSphere",
+  icons: {
+    icon: "/assets/images/logo.png",
+    apple: "/assets/images/logo.png",
+  },
+};
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" data-theme="light" title="SalonSphere">
+    <html lang="en" data-theme="light" suppressHydrationWarning>
+      {/*
+        suppressHydrationWarning on <body>: browser extensions (ColorZilla adds
+        cz-shortcut-listen, Grammarly adds data-gr-*, etc.) inject attributes
+        before React hydrates. It only silences attribute diffs on this element,
+        not on any children, so real hydration bugs still surface.
+      */}
       <body
+        suppressHydrationWarning
         className={`${poppinsRegular.variable} ${poppinsBold.variable} container mx-auto bg-base-100 antialiased`}
       >
-        <CartStoreProvider>
-          <Providers>
-            {children}
-            <ToastComponent />
-            <CookieBanner />
-          </Providers>
-        </CartStoreProvider>
+        <AppProviders>{children}</AppProviders>
       </body>
     </html>
   );

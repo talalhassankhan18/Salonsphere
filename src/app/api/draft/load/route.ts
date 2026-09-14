@@ -18,7 +18,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ draft });
   } catch (error: any) {
-    console.error("Draft load error:", { error: error.message, email: req.body?.email });
+    console.error("Draft load error:", { error: error.message });
     return NextResponse.json({ error: "Failed to load draft" }, { status: 500 });
   }
 }

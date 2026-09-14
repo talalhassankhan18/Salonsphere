@@ -1,13 +1,13 @@
 import CardList from "@/common/card-list";
-import { SalonType } from "../../../types";
+import { SalonCardType } from "../../../types";
 import Link from "next/link";
 import { SalonsData } from "@/data";
 
 type Props = {
-	salons?: SalonType[];
+	salons?: SalonCardType[];
 };
 const SalonCardList = ({ salons = [] }: Props) => {
-	const allSalons: SalonType[] = salons.length > 0 ? salons : SalonsData;
+	const allSalons: SalonCardType[] = salons.length > 0 ? salons : SalonsData;
 	return (
 		<div className="px-2">
 			<Link href={"/salons"} className="prose lg:prose-xl">

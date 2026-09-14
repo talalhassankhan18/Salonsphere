@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 
-const starting = () => {
+const Starting = () => {
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
@@ -51,10 +51,10 @@ const starting = () => {
               isLoaded && "animate-slideUp"
             )}>
               <button className="min-w-[160px] rounded-full">
-                <Link to="/salons">Find Salons</Link>
+                <Link href="/salons">Find Salons</Link>
               </button>
               <button className="min-w-[160px] rounded-full">
-                <Link to="/products">Shop Products</Link>
+                <Link href="/selfcare-products">Shop Products</Link>
               </button>
             </div>
             
@@ -124,4 +124,4 @@ const starting = () => {
   );
 };
 
-export default starting;
+export default Starting;

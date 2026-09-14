@@ -1,99 +1,71 @@
 "use client";
+
 import { screenBreakpoints } from "@/hooks";
 import { cn } from "@/lib/utils";
 import React, { useEffect, useRef, useState } from "react";
-import { Scrollbar } from "swiper/modules";
-import { Swiper, SwiperSlide } from "swiper/react";
-
-const keyframes = `
-  @keyframes moveLeftAndBack {
-    0%, 100% { transform: translateX(0); }
-    50% { transform: translateX(-50px); }
-  }
-`;
 
 type Props = {
-	cards: JSX.Element[];
-	shouldAnimate?: boolean;
-	className?: string;
+  cards: React.JSX.Element[];
+  shouldAnimate?: boolean;
+  className?: string;
 };
 
 const CardListWrapper = ({
-	cards,
-	shouldAnimate = false,
-	className,
+  cards,
+  shouldAnimate = false,
+  className,
 }: Props) => {
-	const containerRef = useRef<HTMLDivElement>(null);
-	const [hasAnimated, setHasAnimated] = useState(false);
+  const containerRef = useRef(null);
+  const [hasAnimated, setHasAnimated] = useState(false);
 
-	useEffect(() => {
-		if (!shouldAnimate) return;
-		const observer = new IntersectionObserver(
-			([entry]) => {
-				if (entry.isIntersecting && !hasAnimated) {
-					setHasAnimated(true);
-					observer.disconnect();
-				}
-			},
-			{ threshold: 0.8 },
-		);
+  useEffect(() => {
+    if (!shouldAnimate) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !hasAnimated) {
+          setHasAnimated(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.8 }
+    );
 
-		if (containerRef.current) {
-			observer.observe(containerRef.current);
-		}
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
 
-		return () => {
-			if (containerRef.current) {
-				observer.unobserve(containerRef.current);
-			}
-		};
-	}, [hasAnimated, shouldAnimate]);
+    return () => {
+      if (containerRef.current) {
+        observer.unobserve(containerRef.current);
+      }
+    };
+  }, [hasAnimated, shouldAnimate]);
 
-	return (
-		<>
-			<style>{keyframes}</style>
-			<div className="relative hidden lg:block">
-				<Swiper
-					modules={[Scrollbar]}
-					spaceBetween={30}
-					breakpoints={{
-						[screenBreakpoints.sm]: { slidesPerView: 1 },
-						[screenBreakpoints.md]: { slidesPerView: 2 },
-						[screenBreakpoints.lg]: { slidesPerView: 3 },
-						[screenBreakpoints.xl]: { slidesPerView: 4 },
-						[screenBreakpoints["2xl"]]: { slidesPerView: 5 },
-					}}
-					onSlideChange={() => console.log("slide change")}
-					onSwiper={(swiper) => console.log(swiper)}
-					className="my-2 w-full md:my-8 "
-				>
-					{cards.map((c, i) => (
-						<SwiperSlide key={i} className="">
-							{c}
-						</SwiperSlide>
-					))}
-				</Swiper>
-			</div>
-			<div
-				className={cn(
-					"no-scrollbar flex select-none overflow-x-scroll lg:hidden",
-					className,
-				)}
-				ref={containerRef}
-			>
-				<div
-					style={{
-						animation: hasAnimated
-							? "moveLeftAndBack 0.7s ease-in-out"
-							: "none",
-					}}
-					className="flex"
-				>
-					{...cards}
-				</div>
-			</div>
-		</>
-	);
+  return (
+    <div
+      ref={containerRef}
+      className={cn(
+        "w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6",
+        shouldAnimate && hasAnimated && "animate-fade-in",
+        className
+      )}
+    >
+      {cards.map((card, index) => (
+        <div
+          key={index}
+          className={cn(
+            "transition-all duration-300",
+            shouldAnimate && hasAnimated && "animate-slide-in"
+          )}
+          style={{
+            animationDelay: shouldAnimate ? `${index * 0.1}s` : "0s",
+          }}
+        >
+          {card}
+        </div>
+      ))}
+    </div>
+  );
 };
 
 export default CardListWrapper;

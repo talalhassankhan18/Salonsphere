@@ -1,10 +1,10 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import toast from "react-hot-toast";
 
-export default function ErrorPage() {
+function ErrorPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const error = searchParams.get("error");
@@ -25,5 +25,14 @@ export default function ErrorPage() {
         <p className="text-gray-600">{error || "An error occurred. Redirecting to login..."}</p>
       </div>
     </div>
+  );
+}
+
+// useSearchParams() must sit under a Suspense boundary for static prerendering.
+export default function ErrorPage() {
+  return (
+    <Suspense fallback={null}>
+      <ErrorPageContent />
+    </Suspense>
   );
 }

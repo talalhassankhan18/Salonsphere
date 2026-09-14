@@ -6,8 +6,7 @@ import {
   AreaType,
   ProductType,
   ReviewType,
-  SalonType,
-  SelfcareItemsType,
+  SalonCardType,
 } from "../../types";
 import salon1 from "@/assets/salons/salon-1.png";
 import salon2 from "@/assets/salons/salon-2.png";
@@ -19,7 +18,38 @@ import review3 from "@/assets/reviews/review-img-3.png";
 import review4 from "@/assets/reviews/review-img-4.png";
 import { faker } from "@faker-js/faker";
 
-const generateProduct = (img: string, addVariation: boolean): ProductType => ({
+type MockProduct = Pick<
+  ProductType,
+  | "_id"
+  | "title"
+  | "description"
+  | "image"
+  | "howToUse"
+  | "maxAllowedInCart"
+  | "rating"
+  | "price"
+  | "discountPercent"
+  | "salonRefId"
+  | "variations"
+>;
+
+const MOCK_TIMESTAMP = "2025-01-01T00:00:00.000Z";
+
+const withProductDefaults = (p: MockProduct): ProductType => ({
+  ...p,
+  subtitle: "",
+  discountedPrice: p.discountPercent
+    ? Math.round(p.price * (1 - p.discountPercent / 100))
+    : null,
+  sold: 0,
+  status: "active",
+  imageUrls: [p.image],
+  createdAt: MOCK_TIMESTAMP,
+  updatedAt: MOCK_TIMESTAMP,
+});
+
+const generateProduct = (img: string, addVariation: boolean): ProductType =>
+  withProductDefaults({
   title: faker.commerce.productName(),
   description: faker.commerce.productDescription(),
   image: img,
@@ -42,7 +72,7 @@ const generateProduct = (img: string, addVariation: boolean): ProductType => ({
         },
       ]
     : [],
-});
+  });
 function getSelfCareProducts() {
   return Array.from({ length: 10 }, (_, i) => {
     const img =
@@ -57,7 +87,7 @@ function getSelfCareProducts() {
     return generateProduct(img, addVariation);
   });
 }
-const alreadyGeneratedscProducts: ProductType[] = [
+const alreadyGeneratedscProducts: ProductType[] = ([
   {
     title: "Licensed Granite Pizza",
     description:
@@ -242,59 +272,59 @@ const alreadyGeneratedscProducts: ProductType[] = [
     _id: "f89c999d-f37a-4976-b498-20ee4020e84e",
     variations: [],
   },
-];
+] as MockProduct[]).map(withProductDefaults);
 export const SelfCareProductsData: ProductType[] = alreadyGeneratedscProducts;
 export const BestSellersData: ProductType[] = SelfCareProductsData;
 export const NewArrivalsData: ProductType[] = SelfCareProductsData;
 export const BudgetFriendlyData: ProductType[] = SelfCareProductsData;
 
-export const SalonsData: SalonType[] = [
+export const SalonsData: SalonCardType[] = [
   {
     name: "salon 1",
     address: "Address 1",
-    rating: 4.5,
+    ratings: 4.5,
     image: salon1.src,
   },
   {
     name: "salon 2",
     address: "Address 2",
-    rating: 4.5,
+    ratings: 4.5,
     image: salon2.src,
   },
   {
     name: "salon 3",
     address: "Address 3",
-    rating: 4.5,
+    ratings: 4.5,
     image: salon3.src,
   },
   {
     name: "salon 4",
     address: "Address 4",
-    rating: 4.5,
+    ratings: 4.5,
     image: salon4.src,
   },
   {
     name: "salon 5",
     address: "Address 1",
-    rating: 4.5,
+    ratings: 4.5,
     image: salon1.src,
   },
   {
     name: "salon 6",
     address: "Address 2",
-    rating: 4.5,
+    ratings: 4.5,
     image: salon2.src,
   },
   {
     name: "salon 7",
     address: "Address 3",
-    rating: 4.5,
+    ratings: 4.5,
     image: salon3.src,
   },
   {
     name: "salon 8",
     address: "Address 4",
-    rating: 4.5,
+    ratings: 4.5,
     image: salon4.src,
   },
 ];

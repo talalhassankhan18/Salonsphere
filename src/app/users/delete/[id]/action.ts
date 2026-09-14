@@ -4,8 +4,12 @@
 import { revalidatePath } from "next/cache";
 import dbConnect from "@/lib/mongoose";
 import User from "@/mongoose-models/User";
+import { isSuperAdminRequest } from "@/lib/auth/guards";
 
 export async function deleteUser(id: string) {
+  if (!(await isSuperAdminRequest())) {
+    throw new Error("Unauthorized: super-admin login required");
+  }
   try {
     // Connect to the database
     await dbConnect();

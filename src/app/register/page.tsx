@@ -99,7 +99,10 @@ export default function RegisterPage() {
 
       setLoading(false);
 
-      const response = await createUser({}, formData);
+      const payload = new FormData();
+      payload.append("email", formData.email);
+      payload.append("password", formData.password);
+      const response = await createUser({}, payload);
       if (response.success) {
         setEmail(formData.email); // Store email in context
         router.push("/order-tracking"); // Redirect to next form

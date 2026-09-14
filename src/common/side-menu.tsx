@@ -1,57 +1,79 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { FaArrowRight } from "react-icons/fa";
-import DefaultAvatar from "@/assets/images/default-avatar.png";
 import { MdClose } from "react-icons/md";
+import DefaultAvatar from "@/assets/images/default-avatar.png";
 
-const SideMenu = ({
-  isLoggedIn,
-  handleLogout,
-}: { isLoggedIn: boolean; handleLogout: () => void }) => {
+// Define the props interface
+interface SideMenuProps {
+  isLoggedIn: boolean;
+  handleLogout: () => void;
+}
+
+const SideMenu: React.FC<SideMenuProps> = ({ isLoggedIn, handleLogout }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
-  const handleToggle = () => setIsOpen(!isOpen);
+  const handleToggle = () => setIsOpen((prev) => !prev);
   const closeMenu = () => setIsOpen(false);
 
-  // Close mobile menu when clicking outside
+  // Close when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      const menu = document.getElementById("mobile-menu");
-      if (menu && !menu.contains(event.target as Node)) {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(event.target as HTMLElement)
+      ) {
         closeMenu();
       }
     };
 
     if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside);
-    } else {
-      document.removeEventListener("mousedown", handleClickOutside);
     }
 
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, [isOpen]);
 
-  const Menu = ({ className }: { className?: string }) => (
+  const Menu = ({ className = "" }: { className?: string }) => (
     <ul className={`space-y-3 ${className}`}>
       <li>
-        <Link href="/" className="flex items-center gap-2 text-base" onClick={closeMenu}>
+        <Link
+          href="/"
+          onClick={closeMenu}
+          className="flex items-center gap-2 text-base"
+        >
           <FaArrowRight className="text-xl" /> Home
         </Link>
       </li>
       <li>
-        <Link href="/salons" className="flex items-center gap-2 text-base" onClick={closeMenu}>
+        <Link
+          href="/salons"
+          onClick={closeMenu}
+          className="flex items-center gap-2 text-base"
+        >
           <FaArrowRight className="text-xl" /> Salons
         </Link>
       </li>
       <li>
-        <Link href="/selfcare-products" className="flex items-center gap-2 text-base" onClick={closeMenu}>
+        <Link
+          href="/selfcare-products"
+          onClick={closeMenu}
+          className="flex items-center gap-2 text-base"
+        >
           <FaArrowRight className="text-xl" /> Products
         </Link>
       </li>
       <li>
-        <Link href="/register" className="flex items-center gap-2 text-base" onClick={closeMenu}>
+        <Link
+          href="/register"
+          onClick={closeMenu}
+          className="flex items-center gap-2 text-base"
+        >
           <FaArrowRight className="text-xl" /> Register Your Salon
         </Link>
       </li>
@@ -62,30 +84,50 @@ const SideMenu = ({
               handleLogout();
               closeMenu();
             }}
-            className="flex items-center gap-2 text-base w-full text-left cursor-pointer"
+            className="flex items-center gap-2 text-base w-full text-left"
           >
-            <img alt="User Avatar" src={DefaultAvatar.src} className="w-7 rounded-full" />
+            <img
+              src={DefaultAvatar.src}
+              alt="User Avatar"
+              className="w-7 rounded-full"
+            />
             Logout
           </button>
         ) : (
-          <Link href="/login" className="flex items-center gap-2 text-base" onClick={closeMenu}>
+          <Link
+            href="/login"
+            onClick={closeMenu}
+            className="flex items-center gap-2 text-base"
+          >
             <FaArrowRight className="text-xl" /> Login as Salon
           </Link>
         )}
       </li>
       <li>
-        <Link href="/ContactUs" className="flex items-center gap-2 text-base" onClick={closeMenu}>
+        <Link
+          href="/ContactUs"
+          onClick={closeMenu}
+          className="flex items-center gap-2 text-base"
+        >
           <FaArrowRight className="text-xl" /> Contact Us
         </Link>
       </li>
       <li>
-        <Link href="/Vendor" className="flex items-center gap-2 text-base" onClick={closeMenu}>
+        <Link
+          href="/Vendor"
+          onClick={closeMenu}
+          className="flex items-center gap-2 text-base"
+        >
           <FaArrowRight className="text-xl" /> For Business
         </Link>
       </li>
       <li>
-        <Link href="/cart" className="flex items-center gap-2 text-base" onClick={closeMenu}>
-          <FaArrowRight className="text-xl" />View Cart
+        <Link
+          href="/cart"
+          onClick={closeMenu}
+          className="flex items-center gap-2 text-base"
+        >
+          <FaArrowRight className="text-xl" /> View Cart
         </Link>
       </li>
     </ul>
@@ -94,7 +136,7 @@ const SideMenu = ({
   return (
     <>
       {/* Desktop Menu */}
-      <div className="hidden md:block relative">
+      <div className="hidden md:block relative" ref={menuRef}>
         <button
           onClick={handleToggle}
           className="btn btn-ghost btn-circle avatar"
@@ -110,7 +152,7 @@ const SideMenu = ({
       </div>
 
       {/* Mobile Drawer Menu */}
-      <div className="md:hidden">
+      <div className="md:hidden" ref={menuRef}>
         <button
           onClick={handleToggle}
           className="btn btn-ghost btn-circle avatar"
@@ -119,19 +161,22 @@ const SideMenu = ({
           <GiHamburgerMenu className="text-2xl" />
         </button>
         {isOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex" id="mobile-menu">
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 z-50 flex"
+            id="mobile-menu"
+          >
             <div className="w-80 min-h-full bg-white shadow-lg p-4 overflow-y-auto">
-              <Menu />
-              <div className="flex items-center space-x-2">
+              <div className="flex justify-between items-center mb-4">
+                <span className="text-lg font-semibold">Menu</span>
                 <button
                   onClick={closeMenu}
-                  className="flex items-center space-x-2 p-2 bg-transparent hover:bg-gray-200 rounded-full focus:outline-none"
                   aria-label="Close menu"
+                  className="p-2 hover:bg-gray-200 rounded-full"
                 >
                   <MdClose size={24} className="text-primary" />
-                  <span className="text-primary font-bold">Close</span>
                 </button>
               </div>
+              <Menu />
             </div>
           </div>
         )}

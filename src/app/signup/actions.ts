@@ -4,7 +4,7 @@ import dbConnect from "@/lib/mongoose";
 import Vendor from "@/mongoose-models/Vendor"; // Updated to use Vendor
 import bcrypt from "bcryptjs";
 import { z } from "zod";
-import { createSession, verifySession } from "@/lib/session";
+import { createSession, verifySession } from "@/lib/session.server";
 import { redirect } from "next/navigation";
 import crypto from "crypto"; // For generating unique registration numbers
 

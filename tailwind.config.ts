@@ -1,5 +1,7 @@
 import type { Config } from "tailwindcss";
 import daisyui from "daisyui";
+import tailwindcssAnimate from "tailwindcss-animate";
+import typography from "@tailwindcss/typography";
 
 // TailwindCSS Configuration
 const config: Config = {
@@ -116,11 +118,7 @@ const config: Config = {
       },
     },
   },
-  plugins: [
-    require("tailwindcss-animate"),
-    require("daisyui"),
-    require("@tailwindcss/typography"),
-  ],
+  plugins: [tailwindcssAnimate, daisyui, typography],
   daisyui: {
     themes: [
       // Light Theme

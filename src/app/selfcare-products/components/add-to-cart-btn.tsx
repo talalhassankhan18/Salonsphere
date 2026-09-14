@@ -1,22 +1,22 @@
 "use client";
 import { mapProductToCartItem } from "@/store/cartStore";
 import { useCartStoreContext } from "@/store/cartStoreContext";
-import { ProductType } from "../../../../types";
+import { AddToCartBtnProps } from "../../../../types";
 import { RiShoppingCart2Line } from "react-icons/ri";
 
-const AddToCartBtn = ({ product }: { product: ProductType }) => {
-	const { cartItems, updateQuantity, removeItem, totalPrice, addItem } =
-		useCartStoreContext();
+const AddToCartBtn = ({ product, disabled = false }: AddToCartBtnProps) => {
+	const { addItem } = useCartStoreContext();
 
 	return (
 		<button
 			className="btn btn-secondary btn-block capitalize"
+			disabled={disabled}
 			onClick={() => {
 				addItem(mapProductToCartItem(product));
 			}}
 		>
 			<RiShoppingCart2Line className="mb-0.5 size-4" />
-			add to cart
+			{disabled ? "out of stock" : "add to cart"}
 		</button>
 	);
 };

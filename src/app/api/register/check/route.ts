@@ -18,7 +18,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ exists: false });
   } catch (error: any) {
-    console.error("Check error:", { error: error.message, email: req.body?.email });
+    console.error("Check error:", { error: error.message });
     return NextResponse.json({ error: "Failed to check registration" }, { status: 500 });
   }
 }

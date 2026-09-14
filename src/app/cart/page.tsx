@@ -8,7 +8,7 @@ const Page = async () => {
   // if (!session) {
   //   return redirect("/login");
   // }
-  return <Cart />;
+  return <Cart dataType="product" />;
 };
 
 export default Page;

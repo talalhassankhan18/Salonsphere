@@ -11,7 +11,7 @@ const GymBanner = ({ srcs = [] }: Props) => {
 
 	return (
 		<div className="mb-6 md:mb-14">
-			<AutoSlider delay={null} srcs={_srcs} />
+			<AutoSlider srcs={_srcs} />
 		</div>
 	);
 };

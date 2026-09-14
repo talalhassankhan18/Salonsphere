@@ -1,23 +1,43 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Elements } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
 import RegistrationStepper from "../../components/RegistrationStepper";
 import LoadingSpinner from "@/common/LoadingSpinner";
-import toast from "react-hot-toast";
-import { getSession, setSession, clearAllRegistrationSessions } from "@/lib/session";
+import { toast } from "sonner";
+import {
+  getSession,
+  setSession,
+  clearAllRegistrationSessions,
+} from "@/lib/session";
+import convertToSubcurrency from "@/lib/ConvertToSubcurrency";
+import CheckoutPage from "../../components/CheckoutPage";
+import BillingAddressForm from "@/app/Payment/Checkout/components/BillingAddress";
+import {
+  FaCcVisa,
+  FaCcMastercard,
+  FaCcAmex,
+  FaCcDiscover,
+  FaPaypal,
+  FaGooglePay,
+  FaLock,
+} from "react-icons/fa";
+
+// Initialize Stripe
+if (process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY === undefined) {
+  throw new Error("NEXT_PUBLIC_STRIPE_PUBLIC_KEY is not defined");
+}
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY);
 
 interface PlanData {
   name: string;
-  price: string;
+  monthlyPrice: number; // Price in PKR
+  yearlyPrice: number;
   productLimit: number;
-  billingCycle: string;
-}
-
-interface PaymentFormData {
-  cardNumber: string;
-  expiry: string;
-  cvv: string;
+  features: string[];
+  isActive: boolean;
 }
 
 interface SalonDetails {
@@ -25,15 +45,10 @@ interface SalonDetails {
   ownerName: string;
 }
 
-export default function PaymentPage() {
+function PaymentPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [plan, setPlan] = useState<PlanData | null>(null);
-  const [formData, setFormData] = useState<PaymentFormData>({
-    cardNumber: "",
-    expiry: "",
-    cvv: "",
-  });
   const [isLoading, setIsLoading] = useState(false);
   const [isPlanLoading, setIsPlanLoading] = useState(true);
   const [email, setEmail] = useState("");
@@ -42,197 +57,249 @@ export default function PaymentPage() {
   const hasShownToast = useRef(false);
 
   useEffect(() => {
-    const sessionEmail = getSession("salon_registration_email");
-    const paramsEmail = searchParams.get("email") || "";
+    const initializePayment = async () => {
+      const paramsEmail = searchParams.get("email");
+      const sessionEmail = getSession("salon_registration_email");
+      const action = searchParams.get("action") || "set";
 
-    if (sessionEmail) {
-      setEmail(sessionEmail);
-      console.log("PaymentPage: Email from session:", sessionEmail);
-    } else if (paramsEmail) {
-      setEmail(paramsEmail);
-      setSession("salon_registration_email", paramsEmail);
-      console.log("PaymentPage: Email from params:", paramsEmail);
-    } else {
-      toast.error("Email is required to proceed with payment.");
-      router.push("/salon/register/basic-info");
-      return;
-    }
+      console.log("PaymentPage: Query param email:", paramsEmail);
+      console.log("PaymentPage: Session email:", sessionEmail);
+      console.log("PaymentPage: Action:", action);
 
-    const checkProgress = async () => {
-      try {
-        const response = await fetch("/api/salon/progress", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: sessionEmail || paramsEmail }),
-        });
-        const data = await response.json();
-        console.log("PaymentPage: Progress check response:", data);
+      const userEmail = paramsEmail || sessionEmail;
 
-        if (data.error) {
-          throw new Error(data.error);
-        }
+      if (!userEmail) {
+        console.error("PaymentPage: No email found in query params or session");
+        toast.error("Email is required to proceed with payment.");
+        router.push("/salon/register/basic-info");
+        return;
+      }
 
-        if (data.paymentStatus === "completed" && data.isActive) {
-          toast.success("Registration already completed. Please log in.", {
-            duration: 5000,
+      setEmail(userEmail);
+      if (!sessionEmail && paramsEmail) {
+        setSession("salon_registration_email", userEmail);
+        console.log("PaymentPage: Set session email:", userEmail);
+      }
+
+      const checkProgress = async () => {
+        try {
+          const response = await fetch("/api/salon/progress", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-action": action,
+            },
+            body: JSON.stringify({ email: userEmail }),
           });
-          clearAllRegistrationSessions();
-          router.push(`/salon/login?email=${encodeURIComponent(sessionEmail || paramsEmail)}`);
-          return;
-        }
+          const data = await response.json();
+          console.log("PaymentPage: Progress check response:", data);
 
-        // Normalize nextStep to lowercase for comparison
-        const normalizedNextStep = data.nextStep?.toLowerCase();
-        if (normalizedNextStep !== "/salon/register/payment") {
-          if (!hasShownToast.current) {
-            console.log("Redirecting to nextStep from /api/salon/progress:", data.nextStep);
-            toast(`Complete payment to proceed to ${data.nextStep.replace("/salon/register/", "")}`, {
-              icon: "👋",
-              duration: 5000,
-            });
-            hasShownToast.current = true;
+          if (!response.ok || data.error) {
+            throw new Error(data.error || "Failed to check progress");
           }
-          router.push(`${data.nextStep}?email=${encodeURIComponent(sessionEmail || paramsEmail)}`);
-          return;
-        }
 
-        if (data.exists) {
-          let selectedPlan = data.plan;
-          // Fallback to localStorage if plan is missing
+          if (
+            data.paymentStatus === "completed" &&
+            data.isActive &&
+            action !== "upgrade"
+          ) {
+            if (!hasShownToast.current) {
+              toast.success("Registration already completed. Please log in.", {
+                duration: 5000,
+              });
+              hasShownToast.current = true;
+            }
+            clearAllRegistrationSessions();
+            router.push(`/salon/login?email=${encodeURIComponent(userEmail)}`);
+            return;
+          }
+
+          const normalizedNextStep = data.nextStep?.toLowerCase();
+          if (normalizedNextStep !== "/salon/register/payment") {
+            if (!hasShownToast.current) {
+              console.log(
+                "PaymentPage: Redirecting to nextStep:",
+                data.nextStep
+              );
+              toast.info(
+                `Please complete the ${data.nextStep.replace(
+                  "/salon/register/",
+                  ""
+                )} step`,
+                {
+                  duration: 5000,
+                }
+              );
+              hasShownToast.current = true;
+            }
+            router.push(
+              `${data.nextStep}?email=${encodeURIComponent(userEmail)}`
+            );
+            return;
+          }
+
+          let selectedPlan: PlanData | null = null;
+          if (action === "upgrade" && data.pendingPlan) {
+            selectedPlan = validatePlan(data.pendingPlan);
+          } else if (data.plan) {
+            selectedPlan = validatePlan(data.plan);
+          }
+
           if (!selectedPlan) {
             const storedPlan = localStorage.getItem("selectedPlan");
             if (storedPlan) {
-              selectedPlan = JSON.parse(storedPlan);
-              console.log("PaymentPage: Using plan from localStorage:", selectedPlan);
+              try {
+                const parsedPlan = JSON.parse(storedPlan);
+                selectedPlan = validatePlan(parsedPlan);
+                console.log(
+                  "PaymentPage: Using plan from localStorage:",
+                  selectedPlan
+                );
+              } catch (err) {
+                console.error("PaymentPage: Failed to parse stored plan:", err);
+              }
             }
           }
 
-          // Re-fetch plan from /api/register/plan-selection if still missing
           if (!selectedPlan) {
-            console.log("PaymentPage: Re-fetching plan for", sessionEmail || paramsEmail);
+            console.log("PaymentPage: Re-fetching plan for", userEmail);
             const planResponse = await fetch("/api/register/plan-selection", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ email: sessionEmail || paramsEmail, action: "get" }),
+              body: JSON.stringify({ email: userEmail, action: "get" }),
             });
             const planData = await planResponse.json();
             console.log("PaymentPage: Plan re-fetch response:", planData);
             if (planResponse.ok && planData.plan) {
-              selectedPlan = planData.plan;
-              localStorage.setItem("selectedPlan", JSON.stringify(selectedPlan));
+              selectedPlan = validatePlan(planData.plan);
+              localStorage.setItem(
+                "selectedPlan",
+                JSON.stringify(selectedPlan)
+              );
+            } else {
+              throw new Error("No plan selected. Please choose a plan.");
             }
           }
 
-          if (selectedPlan) {
-            setPlan(selectedPlan);
-            localStorage.setItem("selectedPlan", JSON.stringify(selectedPlan));
-            const salonResponse = await fetch("/api/salon/details", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ email: sessionEmail || paramsEmail }),
+          setPlan(selectedPlan);
+
+          const salonResponse = await fetch("/api/salon/details", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: userEmail }),
+          });
+          const salonData = await salonResponse.json();
+          console.log("PaymentPage: Salon details response:", salonData);
+
+          if (!salonResponse.ok || salonData.error) {
+            throw new Error(salonData.error || "Failed to load salon details");
+          }
+
+          if (salonData.isActive && salonData.paymentStatus === "completed") {
+            setPaymentCompleted(true);
+            setSalonDetails({
+              salonName: salonData.salonName,
+              ownerName: salonData.name,
             });
-            const salonData = await salonResponse.json();
-            if (salonResponse.ok) {
-              if (salonData.isActive) {
-                setPaymentCompleted(true);
-                setSalonDetails({
-                  salonName: salonData.salonName,
-                  ownerName: salonData.name,
-                });
-                if (!hasShownToast.current) {
-                  toast("Your payment is completed!", {
-                    icon: "🎉",
-                    duration: 5000,
-                  });
-                  hasShownToast.current = true;
-                }
-              } else {
-                if (!hasShownToast.current) {
-                  toast("Welcome back! Please complete your payment to continue", {
-                    icon: "👋",
-                    duration: 5000,
-                  });
-                  hasShownToast.current = true;
-                }
-              }
-            } else {
-              throw new Error("Failed to load salon details");
+            if (!hasShownToast.current) {
+              toast.success("Your payment is completed!", {
+                duration: 5000,
+              });
+              hasShownToast.current = true;
             }
           } else {
-            throw new Error("No plan selected. Please choose a plan.");
+            if (!hasShownToast.current) {
+              toast.info("Please complete your payment to continue", {
+                duration: 5000,
+              });
+              hasShownToast.current = true;
+            }
           }
-        } else {
-          throw new Error("Salon not found");
+        } catch (err: any) {
+          console.error("PaymentPage: Progress check failed:", err);
+          toast.error(
+            err.message || "Failed to load payment details. Please try again."
+          );
+          router.push(
+            `/salon/register/plan-selection?email=${encodeURIComponent(
+              userEmail
+            )}`
+          );
+        } finally {
+          setIsPlanLoading(false);
         }
-      } catch (err: any) {
-        console.error("PaymentPage: Progress check failed:", err);
-        toast.error(err.message || "Failed to check your progress. Please select a plan.");
-        router.push(`/salon/register/plan-selection?email=${encodeURIComponent(sessionEmail || paramsEmail)}`);
-      } finally {
-        setIsPlanLoading(false);
-      }
+      };
+
+      checkProgress();
     };
 
-    if (sessionEmail || paramsEmail) {
-      checkProgress();
-    }
+    initializePayment();
   }, [router, searchParams]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  // Validate plan object and provide defaults for missing fields
+  const validatePlan = (plan: any): PlanData => {
+    if (!plan || typeof plan !== "object") {
+      console.warn("Invalid plan object, using default values:", plan);
+      return {
+        name: "Unknown",
+        monthlyPrice: 0,
+        yearlyPrice: 0,
+        productLimit: 0,
+        features: ["No features available"],
+        isActive: false,
+      };
+    }
+
+    return {
+      name: plan.name || "Unknown",
+      monthlyPrice:
+        typeof plan.monthlyPrice === "number" ? plan.monthlyPrice : 0,
+      yearlyPrice: typeof plan.yearlyPrice === "number" ? plan.yearlyPrice : 0,
+      productLimit:
+        typeof plan.productLimit === "number" ? plan.productLimit : 0,
+      features: Array.isArray(plan.features)
+        ? plan.features
+        : ["No features available"],
+      isActive: typeof plan.isActive === "boolean" ? plan.isActive : false,
+    };
   };
 
-  const validateForm = () => {
-    if (!formData.cardNumber || formData.cardNumber.replace(/\D/g, "").length !== 16) {
-      return "Invalid card number (16 digits required)";
-    }
-    if (!formData.expiry || !/^\d{2}\/\d{2}$/.test(formData.expiry)) {
-      return "Invalid expiry date (MM/YY format)";
-    }
-    if (!formData.cvv || formData.cvv.length !== 3) {
-      return "Invalid CVV (3 digits required)";
-    }
-    return null;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handlePaymentSuccess = async (paymentIntent: any) => {
     if (isLoading) {
       toast.error("Please wait, payment in progress...");
       return;
     }
 
-    const validationError = validateForm();
-    if (validationError) {
-      toast.error(validationError);
-      return;
-    }
-
     setIsLoading(true);
-    const toastId = toast.loading("Processing payment...");
 
     try {
+      const action = searchParams.get("action") || "set";
       const response = await fetch("/api/register/payment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email,
           plan,
-          cardNumber: formData.cardNumber,
-          expiry: formData.expiry,
-          cvv: formData.cvv,
+          paymentIntentId: paymentIntent.id,
+          action,
         }),
       });
 
       const data = await response.json();
-      console.log("Payment API response:", data);
+      console.log("PaymentPage: Payment API response:", data);
 
       if (!response.ok) {
-        throw new Error(data.error || "Payment failed");
+        throw new Error(data.error || "Payment processing failed");
       }
 
-      toast.success("Your payment is completed! Salon activated successfully", { id: toastId, duration: 5000 });
+      toast.success(
+        `Your payment is completed! Salon ${
+          action === "upgrade" ? "upgraded" : "activated"
+        } successfully`,
+        {
+          duration: 5000,
+        }
+      );
       setPaymentCompleted(true);
 
       const salonResponse = await fetch("/api/salon/details", {
@@ -250,7 +317,7 @@ export default function PaymentPage() {
         toast.error("Failed to load salon details");
       }
     } catch (err: any) {
-      toast.error(err.message || "Failed to process payment", { id: toastId });
+      toast.error(err.message || "Failed to process payment");
     } finally {
       setIsLoading(false);
     }
@@ -278,7 +345,8 @@ export default function PaymentPage() {
             Congratulations!
           </h1>
           <p className="text-lg text-gray-600">
-            Welcome {salonDetails.ownerName}, your salon <strong>{salonDetails.salonName}</strong> is active now!
+            Welcome {salonDetails.ownerName}, your salon{" "}
+            <strong>{salonDetails.salonName}</strong> is active now!
           </p>
           <button
             onClick={handleProceedFurther}
@@ -299,9 +367,12 @@ export default function PaymentPage() {
     );
   }
 
+  // Convert PKR to USD (approximate exchange rate: 1 USD = 280 PKR)
+  const amountInUSD = plan.monthlyPrice / 280;
+
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+      <div className="max-w-4xl w-full space-y-8">
         <div className="text-center">
           <h1 className="text-4xl font-extrabold text-gray-900 sm:text-5xl">
             Payment Details
@@ -315,82 +386,82 @@ export default function PaymentPage() {
 
         <div className="bg-white shadow-md rounded-lg p-6">
           <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-900">Selected Plan</h3>
-            <p className="text-gray-600">{plan.name} - {plan.price}</p>
+            <h3 className="text-lg font-semibold text-gray-900">
+              Selected Plan
+            </h3>
+            <p className="text-gray-600">Plan: {plan.name}</p>
+            <p className="text-gray-600">
+              Monthly Price: ₨{plan.monthlyPrice} (~${amountInUSD.toFixed(2)})
+            </p>
+            <p className="text-gray-600">Yearly Price: ₨{plan.yearlyPrice}</p>
             <p className="text-gray-600">Product Limit: {plan.productLimit}</p>
-            <p className="text-gray-600">Billing Cycle: {plan.billingCycle}</p>
+            <p className="text-gray-600">
+              Features:{" "}
+              {plan.features.length > 0 ? plan.features.join(", ") : "None"}
+            </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="cardNumber" className="block text-sm font-medium text-gray-700">
-                Card Number <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="cardNumber"
-                value={formData.cardNumber}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/\D/g, "").slice(0, 16);
-                  setFormData((prev) => ({ ...prev, cardNumber: value }));
-                }}
-                className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#B4004E] focus:border-transparent transition-all"
-                required
-                maxLength={16}
-                placeholder="1234 5678 9012 3456"
-              />
-            </div>
+          <h3 className="mb-2 md:mb-3 relative text-secondary font-semibold text-lg bg-base-100">
+            <span className="absolute left-0 top-1/2 -translate-y-1/2 w-2 h-8 bg-primary rounded-sm"></span>
+            <span className="pl-4">Billing Address</span>
+          </h3>
+          <BillingAddressForm />
 
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <label htmlFor="expiry" className="block text-sm font-medium text-gray-700">
-                  Expiry (MM/YY) <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="expiry"
-                  value={formData.expiry}
-                  onChange={(e) => {
-                    let value = e.target.value.replace(/\D/g, "").slice(0, 4);
-                    if (value.length >= 2) value = `${value.slice(0, 2)}/${value.slice(2)}`;
-                    setFormData((prev) => ({ ...prev, expiry: value }));
-                  }}
-                  className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#B4004E] focus:border-transparent transition-all"
-                  required
-                  maxLength={5}
-                  placeholder="MM/YY"
-                />
-              </div>
-              <div className="flex-1">
-                <label htmlFor="cvv" className="block text-sm font-medium text-gray-700">
-                  CVV <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="cvv"
-                  value={formData.cvv}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/\D/g, "").slice(0, 3);
-                    setFormData((prev) => ({ ...prev, cvv: value }));
-                  }}
-                  className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#B4004E] focus:border-transparent transition-all"
-                  required
-                  maxLength={3}
-                  placeholder="123"
-                />
-              </div>
-            </div>
+          <div className="ml-10">
+            <h3 className="ml-28 mt-6 mb-2 md:mb-3 relative text-secondary font-semibold text-lg bg-base-100">
+              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-2 h-8 bg-primary rounded-sm"></span>
+              <span className="pl-4">Payment</span>
+            </h3>
+          </div>
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-[#B4004E] text-white py-3 rounded-lg font-medium hover:bg-[#9a0042] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#B4004E] disabled:opacity-50 transition-all"
+          <div className="pt-6 mt-6 max-w-4xl mx-auto p-6 bg-white rounded-xl shadow-md border border-gray-200">
+            <Elements
+              stripe={stripePromise}
+              options={{
+                mode: "payment",
+                amount: convertToSubcurrency(amountInUSD),
+                currency: "usd",
+              }}
             >
-              {isLoading ? "Processing..." : "Process Payment"}
-            </button>
-          </form>
+              <CheckoutPage
+                amount={amountInUSD}
+                onPaymentSuccess={handlePaymentSuccess}
+              />
+            </Elements>
+            <div className="flex gap-2 mt-3 text-gray-500">
+              <FaCcVisa size={24} />
+              <FaCcMastercard size={24} />
+              <FaCcAmex size={24} />
+              <FaCcDiscover size={24} />
+              <FaPaypal size={24} />
+              <FaGooglePay size={24} />
+            </div>
+            <div className="flex items-center text-xs text-gray-500 mt-3">
+              <FaLock className="mr-2" /> Encrypted and secure payments
+            </div>
+            <p className="text-xs text-gray-500 mt-3">
+              By checking out you agree with our{" "}
+              <a href="#" className="underline font-medium">
+                Terms of Service
+              </a>{" "}
+              and confirm that you have read our{" "}
+              <a href="#" className="underline font-medium">
+                Privacy Policy
+              </a>
+              . You can cancel recurring payments at any time.
+            </p>
+          </div>
         </div>
       </div>
     </div>
+  );
+}
+
+// useSearchParams() must sit under a Suspense boundary for static prerendering.
+export default function PaymentPage() {
+  return (
+    <Suspense fallback={null}>
+      <PaymentPageContent />
+    </Suspense>
   );
 }

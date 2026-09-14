@@ -3,6 +3,7 @@
 
 import dbConnect from "@/lib/mongoose";
 import User from "@/mongoose-models/User";
+import { isSuperAdminRequest } from "@/lib/auth/guards";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 
@@ -10,6 +11,9 @@ export async function updateUser(
   id: string,
   formData: FormData
 ): Promise<void> {
+  if (!(await isSuperAdminRequest())) {
+    throw new Error("Unauthorized: super-admin login required");
+  }
   const schema = z.object({
     name: z.string().min(1, "Name is required"),
     email: z.string().email("Invalid email address"),

@@ -1,13 +1,14 @@
+// src/app/salon/register/verification.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import RegistrationStepper from "../../components/RegistrationStepper";
 import LoadingSpinner from "@/common/LoadingSpinner";
 import toast from "react-hot-toast";
 import { getSession, setSession } from "@/lib/session";
 
-export default function VerificationPage() {
+function VerificationPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState<string>("");
@@ -49,11 +50,21 @@ export default function VerificationPage() {
         }
 
         if (data.nextStep !== "/salon/register/verification") {
-          toast(`Welcome back! You left off at ${data.nextStep.replace("/salon/register/", "")}`, {
-            icon: "👋",
-            duration: 5000,
-          });
-          router.push(`${data.nextStep}?email=${encodeURIComponent(sessionEmail || paramsEmail)}`);
+          toast(
+            `Welcome back! You left off at ${data.nextStep.replace(
+              "/salon/register/",
+              ""
+            )}`,
+            {
+              icon: "👋",
+              duration: 5000,
+            }
+          );
+          router.push(
+            `${data.nextStep}?email=${encodeURIComponent(
+              sessionEmail || paramsEmail
+            )}`
+          );
         } else if (!data.exists) {
           toast.error("Please complete the basic information step first.");
           router.push("/salon/register/basic-info");
@@ -61,7 +72,10 @@ export default function VerificationPage() {
           const sendCodeResponse = await fetch("/api/register/verify", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email: sessionEmail || paramsEmail, action: "send" }),
+            body: JSON.stringify({
+              email: sessionEmail || paramsEmail,
+              action: "send",
+            }),
           });
 
           const sendCodeData = await sendCodeResponse.json();
@@ -69,25 +83,35 @@ export default function VerificationPage() {
 
           if (!sendCodeResponse.ok || sendCodeData.error) {
             if (sendCodeResponse.status === 429) {
-              const waitTime = parseInt(sendCodeData.error.match(/\d+/)[0], 10) || 30;
+              const waitTime =
+                parseInt(sendCodeData.error.match(/\d+/)[0], 10) || 30;
               setResendCooldown(waitTime);
-              toast.error(`Please wait ${waitTime} seconds before requesting a new code.`, {
-                duration: 5000,
-              });
+              toast.error(
+                `Please wait ${waitTime} seconds before requesting a new code.`,
+                {
+                  duration: 5000,
+                }
+              );
             } else {
-              throw new Error(sendCodeData.error || "Failed to send verification code");
+              throw new Error(
+                sendCodeData.error || "Failed to send verification code"
+              );
             }
           } else {
             setIsCodeSent(true);
-            toast.success("Verification code sent to your email! Check your inbox or spam folder.", {
-              duration: 5000,
-            });
+            toast.success(
+              "Verification code sent to your email! Check your inbox or spam folder.",
+              {
+                duration: 5000,
+              }
+            );
           }
         }
       } catch (err: any) {
         console.error("Progress check or send code failed:", err);
         toast.error(
-          err.message || "Failed to send verification email. Please check your email address or contact support.",
+          err.message ||
+            "Failed to send verification email. Please check your email address or contact support.",
           { duration: 7000 }
         );
         router.push("/salon/register/basic-info");
@@ -102,7 +126,9 @@ export default function VerificationPage() {
   useEffect(() => {
     if (resendCooldown !== null && resendCooldown > 0) {
       const timer = setInterval(() => {
-        setResendCooldown((prev) => (prev !== null && prev > 1 ? prev - 1 : null));
+        setResendCooldown((prev) =>
+          prev !== null && prev > 1 ? prev - 1 : null
+        );
       }, 1000);
       return () => clearInterval(timer);
     }
@@ -115,7 +141,9 @@ export default function VerificationPage() {
     }
 
     if (resendCooldown !== null && resendCooldown > 0) {
-      toast.error(`Please wait ${resendCooldown} seconds before requesting a new code.`);
+      toast.error(
+        `Please wait ${resendCooldown} seconds before requesting a new code.`
+      );
       return;
     }
 
@@ -136,23 +164,32 @@ export default function VerificationPage() {
         if (response.status === 429) {
           const waitTime = parseInt(data.error.match(/\d+/)[0], 10) || 30;
           setResendCooldown(waitTime);
-          throw new Error(`Please wait ${waitTime} seconds before requesting a new code`);
+          throw new Error(
+            `Please wait ${waitTime} seconds before requesting a new code`
+          );
         }
         throw new Error(data.error || "Failed to send verification code");
       }
 
       setIsCodeSent(true);
-      toast.success("Verification code sent to your email! Check your inbox or spam folder.", {
-        id: toastId,
-        duration: 5000,
-      });
+      toast.success(
+        "Verification code sent to your email! Check your inbox or spam folder.",
+        {
+          id: toastId,
+          duration: 5000,
+        }
+      );
     } catch (err: any) {
       console.error("Send code error:", err);
       toast.error(
-        err.message || "Failed to send verification email. Please check your email address or contact support.",
+        err.message ||
+          "Failed to send verification email. Please check your email address or contact support.",
         { id: toastId, duration: 7000 }
       );
-      setError(err.message || "Failed to send verification email. Please try again or contact support.");
+      setError(
+        err.message ||
+          "Failed to send verification email. Please try again or contact support."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -187,8 +224,13 @@ export default function VerificationPage() {
         throw new Error(data.error || "Invalid verification code");
       }
 
-      toast.success("Email verified successfully!", { id: toastId, duration: 5000 });
-      const redirectUrl = `./plan-selection?email=${encodeURIComponent(email)}`;
+      toast.success("Email verified successfully!", {
+        id: toastId,
+        duration: 5000,
+      });
+      const redirectUrl = `/salon/register/plan-selection?email=${encodeURIComponent(
+        email
+      )}`;
       console.log("Redirecting to:", redirectUrl);
       router.push(redirectUrl);
     } catch (err: any) {
@@ -216,8 +258,8 @@ export default function VerificationPage() {
             Verify Your Email
           </h1>
           <p className="mt-4 text-lg text-gray-600">
-            We’ve sent a code to {email}. Check your inbox or spam folder.
-            If you don’t receive it, try resending or contact support.
+            We’ve sent a code to {email}. Check your inbox or spam folder. If
+            you don’t receive it, try resending or contact support.
           </p>
         </div>
 
@@ -234,7 +276,9 @@ export default function VerificationPage() {
             <div className="space-y-6">
               <button
                 onClick={handleSendCode}
-                disabled={isLoading || (resendCooldown !== null && resendCooldown > 0)}
+                disabled={
+                  isLoading || (resendCooldown !== null && resendCooldown > 0)
+                }
                 className="w-full bg-[#B4004E] text-white py-3 rounded-lg font-medium hover:bg-[#9a0042] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#B4004E] disabled:opacity-50 transition-all"
               >
                 {isLoading
@@ -247,7 +291,10 @@ export default function VerificationPage() {
           ) : (
             <div className="space-y-6">
               <div>
-                <label htmlFor="code" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="code"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   Verification Code <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -276,7 +323,9 @@ export default function VerificationPage() {
 
               <button
                 onClick={handleSendCode}
-                disabled={isLoading || (resendCooldown !== null && resendCooldown > 0)}
+                disabled={
+                  isLoading || (resendCooldown !== null && resendCooldown > 0)
+                }
                 className="w-full bg-gray-600 text-white py-3 rounded-lg font-medium hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-600 disabled:opacity-50 transition-all"
               >
                 {isLoading
@@ -290,5 +339,14 @@ export default function VerificationPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// useSearchParams() must sit under a Suspense boundary for static prerendering.
+export default function VerificationPage() {
+  return (
+    <Suspense fallback={null}>
+      <VerificationPageContent />
+    </Suspense>
   );
 }

@@ -80,7 +80,7 @@ export async function POST(req: Request) {
         );
       }
 
-      if (salon.verificationCode !== code || salon.verificationCodeExpires < new Date()) {
+      if (salon.verificationCode !== code || !salon.verificationCodeExpires || salon.verificationCodeExpires < new Date()) {
         return NextResponse.json(
           { error: "Invalid or expired verification code" },
           { status: 400 }
