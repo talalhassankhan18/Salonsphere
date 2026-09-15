@@ -23,6 +23,22 @@ function getDbConfig(): { uri: string; dbName: string } {
   return { uri, dbName };
 }
 
+// The driver's Atlas hint ("...an IP that isn't whitelisted") is printed for
+// *any* server-selection failure against a .mongodb.net host, so pull out the
+// per-server errors (e.g. "SSL alert number 80" = IP not allowlisted, vs a
+// timeout) to make /api/health and the 503 bodies actually diagnostic.
+function describeServerErrors(error: unknown): string {
+  const reason = (error as { reason?: { servers?: Map<string, { error?: { message?: string } | null }> } })
+    ?.reason;
+  if (!reason?.servers) return "";
+  const parts: string[] = [];
+  for (const [address, desc] of reason.servers) {
+    const msg = desc?.error?.message;
+    if (msg) parts.push(`${address}: ${msg.split("\n")[0].slice(0, 160)}`);
+  }
+  return parts.length ? ` [${parts.join("; ")}]` : "";
+}
+
 // Initialize cached connection
 const cached: CachedMongoose = global.mongoose ?? { conn: null, promise: null };
 
@@ -44,10 +60,10 @@ async function dbConnect(): Promise<typeof mongoose> {
       dbName,
       bufferCommands: false, // Disable buffering for failed commands
       maxPoolSize: 10, // Maximum number of socket connections
-      // Fail fast when the DB is unreachable so pages show their error state
-      // in ~3 s instead of hanging 11 s per request (5 s selection × two
-      // address families). Reconnection is handled by the listeners below.
-      serverSelectionTimeoutMS: 3000,
+      // Dev: fail fast (3 s) so a stopped local mongod shows an error state
+      // instead of hanging every request. Prod: a serverless cold start has
+      // to do SRV lookup + TLS to three Atlas shards, so allow 5 s.
+      serverSelectionTimeoutMS: process.env.NODE_ENV === "production" ? 5000 : 3000,
       socketTimeoutMS: 45000, // Timeout for socket inactivity
       connectTimeoutMS: 5000,
       heartbeatFrequencyMS: 10000, // Frequency of server monitoring
@@ -86,7 +102,7 @@ async function dbConnect(): Promise<typeof mongoose> {
         ? error
         : new Error("Unknown MongoDB connection error");
     console.error("MongoDB connection error:", err.message);
-    throw new Error(`Failed to connect to MongoDB: ${err.message}`);
+    throw new Error(`Failed to connect to MongoDB: ${err.message}${describeServerErrors(error)}`);
   }
 
   return cached.conn;
