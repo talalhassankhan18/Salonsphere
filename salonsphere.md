@@ -671,3 +671,11 @@ then threw "Unexpected token <"). New `src/lib/db-guard.ts` → `connectOr503()`
 `503 { error: "Database unavailable", details }`; applied to all 50 sites. `/api/health` now
 performs a real DB check (200 `db: connected` / 503 with the driver's message) so a deployment
 can be diagnosed from one URL. The basic-info page tolerates non-JSON error bodies.
+
+**Addendum (2026-09-15, later):** `dbConnect.ts` re-reviewed — sound. It now appends each
+server's own error to the thrown message, and production uses a 5 s server-selection timeout
+(dev 3 s). With that, `https://salonsphere.vercel.app/api/health` shows the real cause:
+all three shards of `*.o10vagf.mongodb.net` answer **`SSL alert number 80`** — Atlas rejecting
+Vercel's IP at the TLS handshake. Not a timeout, not code. Note this is a *third* cluster
+(`o10vagf`); Compass earlier hit `t7ha2` (same alert 80) and `8ykqyww` (deleted). Whichever
+project holds `o10vagf` needs `0.0.0.0/0` in Network Access.
