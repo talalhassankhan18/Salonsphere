@@ -1,4 +1,5 @@
 import dbConnect from '@/dbConnect';
+import { connectOr503 } from "@/lib/db-guard";
 import Banner from '@/mongoose-models/banners';
 import { NextResponse } from 'next/server';
 import cloudinary from 'cloudinary';
@@ -13,7 +14,8 @@ cloudinary.v2.config({
 
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
   const params = await context.params;
-  await dbConnect();
+  const dbError = await connectOr503();
+  if (dbError) return dbError;
   const id = params.id;
 
   try {
@@ -39,7 +41,8 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
   const denied = await requireSuperAdmin();
   if (denied) return denied;
 
-  await dbConnect();
+  const dbError = await connectOr503();
+  if (dbError) return dbError;
   const id = params.id;
 
   try {
@@ -105,7 +108,8 @@ export async function DELETE(request: Request, context: { params: Promise<{ id: 
   const denied = await requireSuperAdmin();
   if (denied) return denied;
 
-  await dbConnect();
+  const dbError = await connectOr503();
+  if (dbError) return dbError;
   const id = params.id;
 
   try {

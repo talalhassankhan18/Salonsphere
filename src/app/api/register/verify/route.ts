@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/dbConnect";
+import { connectOr503 } from "@/lib/db-guard";
 import Salon from "@/mongoose-models/Salon";
 import { sendVerificationCodeEmail } from "@/lib/email/emailService";
 
 export async function POST(req: Request) {
-  await dbConnect();
+  const dbError = await connectOr503();
+  if (dbError) return dbError;
 
   try {
     const { email, action, code } = await req.json();

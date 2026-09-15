@@ -1,4 +1,5 @@
 import dbConnect from '@/dbConnect';
+import { connectOr503 } from "@/lib/db-guard";
 import Stock from '@/mongoose-models/stock';
 import Product from '@/mongoose-models/product';
 import Attribute from '@/mongoose-models/Attribute';
@@ -9,7 +10,8 @@ export async function GET(request: Request) {
   const denied = await requireSuperAdmin();
   if (denied) return denied;
 
-  await dbConnect();
+  const dbError = await connectOr503();
+  if (dbError) return dbError;
   try {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search') || '';
@@ -42,7 +44,8 @@ export async function POST(request: Request) {
   const denied = await requireSuperAdmin();
   if (denied) return denied;
 
-  await dbConnect();
+  const dbError = await connectOr503();
+  if (dbError) return dbError;
   try {
     const body = await request.json();
     const { productId, stockQuantity, reserved, lowStockThreshold, reorderPoint, warehouse } = body;

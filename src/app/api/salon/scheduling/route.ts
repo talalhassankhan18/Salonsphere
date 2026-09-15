@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/dbConnect";
+import { connectOr503 } from "@/lib/db-guard";
 import Salon from "@/mongoose-models/Salon";
 import { requireSalonAdmin } from "@/lib/auth/guards";
 
@@ -8,7 +9,8 @@ export async function PATCH(req: Request) {
   const admin = await requireSalonAdmin();
   if (admin instanceof NextResponse) return admin;
 
-  await dbConnect();
+  const dbError = await connectOr503();
+  if (dbError) return dbError;
 
   try {
     const { scheduling } = await req.json();

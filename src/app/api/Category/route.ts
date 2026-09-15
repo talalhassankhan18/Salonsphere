@@ -1,4 +1,5 @@
 import dbConnect from '@/dbConnect';
+import { connectOr503 } from "@/lib/db-guard";
 import Category from '@/mongoose-models/categories';
 import { NextResponse } from 'next/server';
 import { requireSuperAdmin } from "@/lib/auth/guards";
@@ -17,7 +18,8 @@ export async function GET(request: Request) {
   const denied = await requireSuperAdmin();
   if (denied) return denied;
 
-  await dbConnect();
+  const dbError = await connectOr503();
+  if (dbError) return dbError;
   try {
     const categories = await Category.find({}).lean() as ICategory[];
     return NextResponse.json(categories);
@@ -31,7 +33,8 @@ export async function POST(request: Request) {
   const denied = await requireSuperAdmin();
   if (denied) return denied;
 
-  await dbConnect();
+  const dbError = await connectOr503();
+  if (dbError) return dbError;
   try {
     const body = await request.json();
     if (!body.name || !body.slug) {

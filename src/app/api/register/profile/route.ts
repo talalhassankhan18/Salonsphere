@@ -2,10 +2,12 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import dbConnect from "@/dbConnect";
+import { connectOr503 } from "@/lib/db-guard";
 import Salon from "@/mongoose-models/Salon";
 
 export async function POST(req: Request) {
-  await dbConnect();
+  const dbError = await connectOr503();
+  if (dbError) return dbError;
 
   const session = await getServerSession(authOptions);
   if (!session || !session.user || !session.user.id) {

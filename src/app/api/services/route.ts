@@ -3,11 +3,13 @@ import mongoose, { Types } from "mongoose";
 import Service, { IService } from "@/mongoose-models/Service";
 import Salon from "@/mongoose-models/Salon";
 import dbConnect from "@/dbConnect";
+import { connectOr503 } from "@/lib/db-guard";
 import { requireSalonAdmin } from "@/lib/auth/guards";
 
 // Ensure DB connection
 async function ensureDbConnection() {
-  await dbConnect();
+  const dbError = await connectOr503();
+  if (dbError) return dbError;
 }
 
 // GET: Fetch all services for a salon

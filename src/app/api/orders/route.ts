@@ -5,6 +5,7 @@ import SalonProduct from "@/mongoose-models/salonProduct";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import dbConnect from "@/dbConnect";
+import { connectOr503 } from "@/lib/db-guard";
 import nodemailer from "nodemailer";
 import {
   IOrder,
@@ -35,7 +36,8 @@ if (process.env.NEXT_PHASE !== "phase-production-build") {
 
 // POST /api/orders - Create Order
 export async function POST(request: NextRequest) {
-  await dbConnect();
+  const dbError = await connectOr503();
+  if (dbError) return dbError;
   const session = await getServerSession(authOptions);
   if (!session || !session.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -221,7 +223,8 @@ export async function POST(request: NextRequest) {
 
 // GET /api/orders - Fetch orders by role
 export async function GET(request: NextRequest) {
-  await dbConnect();
+  const dbError = await connectOr503();
+  if (dbError) return dbError;
   const session = await getServerSession(authOptions);
   if (!session || !session.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });

@@ -1,4 +1,5 @@
 import dbConnect from '@/dbConnect';
+import { connectOr503 } from "@/lib/db-guard";
 import Category from '@/mongoose-models/categories';
 import { NextResponse } from 'next/server';
 import { requireSuperAdmin } from "@/lib/auth/guards";
@@ -18,7 +19,8 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   const denied = await requireSuperAdmin();
   if (denied) return denied;
 
-  await dbConnect();
+  const dbError = await connectOr503();
+  if (dbError) return dbError;
   const id = params.id;
 
   try {
@@ -38,7 +40,8 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
   const denied = await requireSuperAdmin();
   if (denied) return denied;
 
-  await dbConnect();
+  const dbError = await connectOr503();
+  if (dbError) return dbError;
   const id = params.id;
 
   try {
@@ -71,7 +74,8 @@ export async function DELETE(request: Request, context: { params: Promise<{ id: 
   const denied = await requireSuperAdmin();
   if (denied) return denied;
 
-  await dbConnect();
+  const dbError = await connectOr503();
+  if (dbError) return dbError;
   const id = params.id;
 
   try {

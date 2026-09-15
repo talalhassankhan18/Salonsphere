@@ -1,4 +1,5 @@
 import dbConnect from '@/dbConnect';
+import { connectOr503 } from "@/lib/db-guard";
 import Product from '@/mongoose-models/product';
 import Category from '@/mongoose-models/categories';
 import Attribute from '@/mongoose-models/Attribute';
@@ -19,7 +20,8 @@ interface Context {
 }
 
 export async function GET(request: Request, context: Context) {
-  await dbConnect();
+  const dbError = await connectOr503();
+  if (dbError) return dbError;
   const params = await context.params;
   const id = params.id;
 
@@ -55,7 +57,8 @@ export async function PUT(request: Request, context: Context) {
   const denied = await requireSuperAdmin();
   if (denied) return denied;
 
-  await dbConnect();
+  const dbError = await connectOr503();
+  if (dbError) return dbError;
   const params = await context.params;
   const id = params.id;
 
@@ -205,7 +208,8 @@ export async function DELETE(request: Request, context: Context) {
   const denied = await requireSuperAdmin();
   if (denied) return denied;
 
-  await dbConnect();
+  const dbError = await connectOr503();
+  if (dbError) return dbError;
   const params = await context.params;
   const id = params.id;
 

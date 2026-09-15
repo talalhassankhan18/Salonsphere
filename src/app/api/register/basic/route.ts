@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/dbConnect";
+import { connectOr503 } from "@/lib/db-guard";
 import Salon from "@/mongoose-models/Salon";
 import { hash } from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
@@ -7,7 +8,8 @@ import { uploadImage } from "@/lib/cloudinary";
 import { validatePakistaniPhone } from "@/lib/PhoneUtils";
 
 export async function POST(req: Request) {
-  await dbConnect();
+  const dbError = await connectOr503();
+  if (dbError) return dbError;
 
   try {
     const formData = await req.formData();

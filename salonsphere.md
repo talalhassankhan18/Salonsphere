@@ -642,3 +642,32 @@ to *work*; see §5.)
 
 **Note to self / next person:** running `next build` while `npm run dev` is up corrupts the dev
 server's `.next/` state (every route 500s until the dev server is restarted). Stop dev first.
+
+### 9.10 Salon registration on Vercel (2026-09-15) — Nominatim CORS flood + bare 500s
+
+**Symptom:** typing an address on `/salon/register/basic-info` produced a "blocked by CORS
+policy" error per keystroke from `nominatim.openstreetmap.org`, then `POST /api/register/basic`
+returned `500` with no body.
+
+**Cause 1 — geocoding.** The page called Nominatim directly from the browser on *every
+keystroke* (the `setTimeout(1000)` was *after* the request, throttling nothing). Nominatim's
+policy is ≤ 1 req/s with an identifying `User-Agent` (which browsers can't set); it blocks
+violators, and a blocked response has no CORS headers → the browser reports CORS.
+- `GET /api/geocode?q=` — new server-side lookup with `User-Agent`, `countrycodes=pk`, 8 s
+  timeout, `s-maxage` cache header; 404 on no match, 429/502 on upstream trouble. The POST
+  batch backfill now shares the same helper/headers.
+- Page: 700 ms debounce, minimum 3 chars, generation counter drops stale responses. Verified:
+  26 keystrokes → 1 request. Coordinates stay optional on submit.
+
+**Cause 2 — the 500.** The deployed app cannot reach MongoDB Atlas:
+`https://salonsphere.vercel.app/api/salon` → *"Could not connect to any servers in your
+MongoDB Atlas cluster … an IP that isn't whitelisted"*. **Vercel functions have no fixed IP —
+add `0.0.0.0/0` in Atlas → Security → Network Access.** That is the actual fix for
+registration on production; nothing in the repo can substitute for it.
+
+What the code now does about it: `await dbConnect()` sat *outside* `try` in **50 handlers
+across 30 API routes**, so a DB failure became a bare 500 (and the page's `response.json()`
+then threw "Unexpected token <"). New `src/lib/db-guard.ts` → `connectOr503()` returns a JSON
+`503 { error: "Database unavailable", details }`; applied to all 50 sites. `/api/health` now
+performs a real DB check (200 `db: connected` / 503 with the driver's message) so a deployment
+can be diagnosed from one URL. The basic-info page tolerates non-JSON error bodies.

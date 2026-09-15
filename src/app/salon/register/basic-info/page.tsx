@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import RegistrationStepper from "../../components/RegistrationStepper";
 import LoadingSpinner from "@/common/LoadingSpinner";
@@ -68,42 +68,43 @@ export default function BasicInfoPage() {
     setErrors((prev) => ({ ...prev, phone: "" }));
   };
 
-  const handleAddressChange = async (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  // Geocode through our own API (which adds the User-Agent Nominatim requires
+  // and is cacheable), debounced so we don't fire one request per keystroke —
+  // that flood was getting the site blocked, which the browser reported as a
+  // CORS error. A generation counter drops responses from superseded input.
+  const geocodeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const geocodeGeneration = useRef(0);
+
+  const geocodeAddress = async (address: string) => {
+    const generation = ++geocodeGeneration.current;
+    try {
+      const { data } = await axios.get<{ lat: string; lon: string }>(
+        "/api/geocode",
+        { params: { q: address } }
+      );
+      if (generation !== geocodeGeneration.current) return; // stale
+      setFormData((prev) => ({ ...prev, latitude: data.lat, longitude: data.lon }));
+    } catch (error) {
+      if (generation !== geocodeGeneration.current) return;
+      const status = axios.isAxiosError(error) ? error.response?.status : undefined;
+      setErrors((prev) => ({
+        ...prev,
+        address:
+          status === 404
+            ? "Could not find coordinates for this address"
+            : "Could not look up this address right now",
+      }));
+    }
+  };
+
+  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const address = e.target.value;
     setFormData((prev) => ({ ...prev, address, latitude: "", longitude: "" }));
     setErrors((prev) => ({ ...prev, address: "" }));
 
-    if (address.trim()) {
-      try {
-        const query = `${encodeURIComponent(address)}, Pakistan`;
-        const response = await axios.get(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${query}&addressdetails=1&limit=1`
-        );
-        const data = response.data;
-        if (data.length > 0) {
-          setFormData((prev) => ({
-            ...prev,
-            latitude: data[0].lat,
-            longitude: data[0].lon,
-          }));
-        } else {
-          setErrors((prev) => ({
-            ...prev,
-            address: "Could not find coordinates for this address",
-          }));
-        }
-        // Respect Nominatim rate limit (1 request per second)
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      } catch (error) {
-        console.error("Geocoding error:", error);
-        setErrors((prev) => ({
-          ...prev,
-          address: "Failed to geocode address",
-        }));
-      }
-    }
+    if (geocodeTimer.current) clearTimeout(geocodeTimer.current);
+    if (address.trim().length < 3) return;
+    geocodeTimer.current = setTimeout(() => geocodeAddress(address.trim()), 700);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -207,7 +208,11 @@ export default function BasicInfoPage() {
         body: formDataToSend,
       });
 
-      const data = await response.json();
+      // A non-JSON body (proxy/timeout error page) must not turn into an
+      // opaque "Unexpected token <" for the user.
+      const data = await response
+        .json()
+        .catch(() => ({ error: `Request failed (${response.status})` }));
       console.log("Basic Info API response:", data);
 
       if (!response.ok) {

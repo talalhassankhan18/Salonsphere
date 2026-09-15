@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/dbConnect";
+import { connectOr503 } from "@/lib/db-guard";
 import Draft from "@/mongoose-models/Drafts";
 
 export async function POST(req: Request) {
-  await dbConnect();
+  const dbError = await connectOr503();
+  if (dbError) return dbError;
 
   try {
     const { email, type } = await req.json();

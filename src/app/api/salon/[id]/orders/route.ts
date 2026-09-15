@@ -3,13 +3,15 @@ import Order from "@/mongoose-models/order";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import dbConnect from "@/dbConnect";
+import { connectOr503 } from "@/lib/db-guard";
 
 export async function GET(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
   const params = await context.params;
-  await dbConnect();
+  const dbError = await connectOr503();
+  if (dbError) return dbError;
   const session = await getServerSession(authOptions);
   if (!session || !session.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });

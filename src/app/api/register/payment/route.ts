@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import dbConnect from "@/dbConnect";
+import { connectOr503 } from "@/lib/db-guard";
 import Salon, { ISalon } from "@/mongoose-models/Salon";
 import { sendPaymentConfirmationEmail } from "@/lib/email/emailService";
 import { Document } from "mongoose";
@@ -19,7 +20,8 @@ function getStripe(): Stripe {
 
 export async function POST(req: NextRequest) {
   const stripe = getStripe();
-  await dbConnect();
+  const dbError = await connectOr503();
+  if (dbError) return dbError;
 
   try {
     const { email, plan, paymentIntentId, action } = await req.json();

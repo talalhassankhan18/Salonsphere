@@ -1,4 +1,5 @@
 import dbConnect from '@/dbConnect';
+import { connectOr503 } from "@/lib/db-guard";
 import Product from '@/mongoose-models/product';
 import Category from '@/mongoose-models/categories';
 import Attribute from '@/mongoose-models/Attribute';
@@ -14,7 +15,8 @@ cloudinary.v2.config({
 });
 
 export async function GET(request: Request) {
-  await dbConnect();
+  const dbError = await connectOr503();
+  if (dbError) return dbError;
   try {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search') || '';
@@ -44,7 +46,8 @@ export async function POST(request: Request) {
   const denied = await requireSuperAdmin();
   if (denied) return denied;
 
-  await dbConnect();
+  const dbError = await connectOr503();
+  if (dbError) return dbError;
   try {
     const formData = await request.formData();
     const name = formData.get('name') as string;

@@ -1,4 +1,5 @@
 import dbConnect from "@/dbConnect";
+import { connectOr503 } from "@/lib/db-guard";
 import Product from "@/mongoose-models/product";
 import Salon from "@/mongoose-models/Salon";
 import SalonProduct from "@/mongoose-models/salonProduct";
@@ -36,7 +37,8 @@ interface PopulatedSalonProduct {
 }
 
 export async function GET(request: Request): Promise<NextResponse> {
-  await dbConnect();
+  const dbError = await connectOr503();
+  if (dbError) return dbError;
   try {
     const { searchParams } = new URL(request.url);
     const salonId = searchParams.get("salonId");
@@ -195,7 +197,8 @@ export async function POST(request: Request) {
   const admin = await requireSalonAdmin();
   if (admin instanceof NextResponse) return admin;
 
-  await dbConnect();
+  const dbError = await connectOr503();
+  if (dbError) return dbError;
   try {
     const { productId, desiredStock } = await request.json();
     const salonId = admin.salonId;
@@ -299,7 +302,8 @@ export async function PUT(request: Request) {
   const admin = await requireSalonAdmin();
   if (admin instanceof NextResponse) return admin;
 
-  await dbConnect();
+  const dbError = await connectOr503();
+  if (dbError) return dbError;
   try {
     const { salonProductId, stock } = await request.json();
     const salonId = admin.salonId;
@@ -366,7 +370,8 @@ export async function DELETE(request: Request) {
   const admin = await requireSalonAdmin();
   if (admin instanceof NextResponse) return admin;
 
-  await dbConnect();
+  const dbError = await connectOr503();
+  if (dbError) return dbError;
   try {
     const { salonProductId } = await request.json();
 
