@@ -66,7 +66,7 @@ types/              next-auth module augmentation + shared TS types
 
 | # | Issue |
 |---|---|
-| R1 | **Nested git repo** at `src/app/.git` (0 commits, no remote). Hides `src/app` changes from the main repo and pollutes searches. |
+| R1 | **Nested git repo** at `src/app/.git` (0 commits, no remote). Hides `src/app` changes from the main repo and pollutes searches. *Removed 2026-09-15 — it showed up in VS Code as a second "app" repository with 407 phantom staged files; its index only held files the real repo already tracks plus the Vite leftovers deleted in R2.* |
 | R2 | Vite/Lovable leftovers: `vite.config.ts`, `tsconfig.app.json`, `tsconfig.node.json`, `*/vite-env.d.ts`, `*/App.tsx` (react-router `<BrowserRouter>` trees), `App.css`, `index.css`, Vite-style `eslint.config.js` (Next plugin not detected). |
 | R3 | `react-router-dom` used in 3 files inside a Next.js app (`starting.tsx` `<Link to>`, Superadmin `Index/page.tsx` `useNavigate`, Superadmin `App.tsx`). `<Link>` outside a Router throws at runtime. |
 | R4 | Root `layout.tsx` is `"use client"` → no server `metadata` export, manual `<head>`, `title` attr on `<html>`. Separate `src/app/metadata.ts` exports "Create Next App" and is unused. |
