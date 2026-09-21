@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getBaseUrl } from "@/lib/base-url";
 import { hash } from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
 import dbConnect from "@/dbConnect";
@@ -49,9 +50,7 @@ export async function POST(request: Request) {
     console.log("Created customer with token:", customer.verificationToken); // Debug log
 
     const emailResponse = await fetch(
-      `${
-        process.env.NEXTAUTH_URL
-      }/api/send-verification-email`,
+      `${getBaseUrl()}/api/send-verification-email`,
       {
         method: "POST",
         headers: {

@@ -1,5 +1,6 @@
 // src/lib/email/emailService.ts
 import nodemailer from "nodemailer";
+import { getBaseUrl } from "@/lib/base-url";
 
 interface EmailOptions {
   to: string;
@@ -31,9 +32,6 @@ export async function sendVerificationCodeEmail({
       "Email configuration missing: EMAIL_USER or EMAIL_PASS not set"
     );
   }
-  if (!process.env.NEXTAUTH_URL) {
-    throw new Error("NEXTAUTH_URL not set in environment variables");
-  }
 
   // Create transporter with Gmail SMTP settings
   const transporter = nodemailer.createTransport({
@@ -60,9 +58,7 @@ export async function sendVerificationCodeEmail({
         <p>Hello ${name},</p>
         <p>Your verification code is: <strong style="font-size: 1.2em;">${code}</strong></p>
         <p>This code will expire in 15 minutes.</p>
-        <p>Click <a href="${
-          process.env.NEXTAUTH_URL
-        }/salon/register/verification?email=${encodeURIComponent(
+        <p>Click <a href="${getBaseUrl()}/salon/register/verification?email=${encodeURIComponent(
       to
     )}" style="color: #B4004E;">here</a> to enter your code.</p>
         <p>If you didn't request this, please ignore this email.</p>
@@ -73,9 +69,7 @@ export async function sendVerificationCodeEmail({
       Hello ${name},\n\n
       Your verification code is: ${code}\n
       This code will expire in 15 minutes.\n
-      Visit ${
-        process.env.NEXTAUTH_URL
-      }/salon/register/verification?email=${encodeURIComponent(
+      Visit ${getBaseUrl()}/salon/register/verification?email=${encodeURIComponent(
       to
     )} to enter your code.\n\n
       If you didn't request this, please ignore this email.\n\n
@@ -128,9 +122,6 @@ export async function sendPasswordResetEmail({
       "Email configuration missing: EMAIL_USER or EMAIL_PASS not set"
     );
   }
-  if (!process.env.NEXT_PUBLIC_BASE_URL) {
-    throw new Error("NEXT_PUBLIC_BASE_URL not set in environment variables");
-  }
 
   // Create transporter with Gmail SMTP settings
   const transporter = nodemailer.createTransport({
@@ -147,7 +138,7 @@ export async function sendPasswordResetEmail({
   });
 
   // Email options
-  const resetUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/salon/reset-password?token=${resetToken}`;
+  const resetUrl = `${getBaseUrl()}/salon/reset-password?token=${resetToken}`;
   const mailOptions = {
     from: `"SalonSphere Team" <${process.env.EMAIL_USER}>`,
     to,
@@ -219,9 +210,6 @@ export async function sendPaymentConfirmationEmail({
       "Email configuration missing: EMAIL_USER or EMAIL_PASS not set"
     );
   }
-  if (!process.env.NEXT_PUBLIC_BASE_URL) {
-    throw new Error("NEXT_PUBLIC_BASE_URL not set in environment variables");
-  }
 
   // Create transporter with Gmail SMTP settings
   const transporter = nodemailer.createTransport({
@@ -238,7 +226,7 @@ export async function sendPaymentConfirmationEmail({
   });
 
   // Email options
-  const dashboardUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/salon/dashboard`;
+  const dashboardUrl = `${getBaseUrl()}/salon/dashboard`;
   const mailOptions = {
     from: `"SalonSphere Team" <${process.env.EMAIL_USER}>`,
     to,

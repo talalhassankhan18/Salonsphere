@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getBaseUrl } from "@/lib/base-url";
 import mongoose from "mongoose";
 import dbConnect from "@/dbConnect";
 import Booking from "@/mongoose-models/Booking";
@@ -89,9 +90,7 @@ export async function POST(req: NextRequest) {
           reviewTokenExpires,
         });
 
-        const reviewFormUrl = `${
-          process.env.NEXTAUTH_URL
-        }/review?bookingId=${bookingId}&token=${encodeURIComponent(
+        const reviewFormUrl = `${getBaseUrl()}/review?bookingId=${bookingId}&token=${encodeURIComponent(
           reviewToken
         )}`;
 

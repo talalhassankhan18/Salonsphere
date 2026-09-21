@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getBaseUrl } from "@/lib/base-url";
 import mongoose, { Document } from "mongoose"; // Updated import
 import dbConnect from "@/dbConnect";
 import Booking from "@/mongoose-models/Booking";
@@ -396,7 +397,7 @@ export async function POST(req: NextRequest) {
           customerInfo.email
         }, ${formattedPhone}) awaits approval`;
 
-        await fetch(`${process.env.NEXTAUTH_URL}/api/notifications/email`, {
+        await fetch(`${getBaseUrl()}/api/notifications/email`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

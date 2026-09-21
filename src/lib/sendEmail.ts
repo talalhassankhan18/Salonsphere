@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { getBaseUrl } from "@/lib/base-url";
 
 interface EmailOptions {
   to: string;
@@ -160,7 +161,7 @@ const generateProfessionalEmail = (
             Need help? <a href="mailto:${
               process.env.EMAIL_USER
             }">Email us</a> | 
-            <a href="${process.env.NEXTAUTH_URL || "#"}">Visit our website</a>
+            <a href="${getBaseUrl()}">Visit our website</a>
           </p>
         </div>
       </div>
@@ -193,7 +194,7 @@ The ${salonName} Team
 ${salonName} | Email: ${
     process.env.EMAIL_USER
   } | © ${new Date().getFullYear()} All rights reserved.
-Visit our website: ${process.env.NEXTAUTH_URL || "our website"}
+Visit our website: ${getBaseUrl()}
   `;
 };
 

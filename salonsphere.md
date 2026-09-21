@@ -679,3 +679,25 @@ all three shards of `*.o10vagf.mongodb.net` answer **`SSL alert number 80`** —
 Vercel's IP at the TLS handshake. Not a timeout, not code. Note this is a *third* cluster
 (`o10vagf`); Compass earlier hit `t7ha2` (same alert 80) and `8ykqyww` (deleted). Whichever
 project holds `o10vagf` needs `0.0.0.0/0` in Network Access.
+
+### 9.11 "Continue with Google" on production redirected to localhost (2026-09-21)
+
+`https://salonsphere.vercel.app/api/auth/providers` reported `callbackUrl:
+"http://localhost:3000/api/auth/callback/google"` — NextAuth builds the OAuth `redirect_uri`
+from `NEXTAUTH_URL`, and the **Vercel dashboard had `NEXTAUTH_URL=http://localhost:3000`**
+(the local `.env` pasted in). Google then returned the browser to that localhost URL. The same
+value put localhost links into production verification / reset / review emails.
+
+- **Dashboard (you):** Vercel → Settings → Environment Variables → `NEXTAUTH_URL` =
+  `https://salonsphere.vercel.app` for Production (and `NEXT_PUBLIC_BASE_URL` likewise, or
+  delete it) → redeploy. Google Cloud Console → Credentials → the OAuth client → *Authorized
+  redirect URIs* must include `https://salonsphere.vercel.app/api/auth/callback/google`.
+- **Code (done):** `src/lib/base-url.ts` → `getBaseUrl()` is the single source for the public
+  origin: uses `NEXTAUTH_URL` unless it points at localhost while on Vercel, then falls back to
+  `VERCEL_PROJECT_PRODUCTION_URL` / `VERCEL_URL`. `ensureNextAuthUrl()` runs at module scope of
+  `api/auth/[...nextauth]/route.ts` and corrects `process.env.NEXTAUTH_URL` before NextAuth
+  reads it (v4 offers no option to inject it). All 9 URL-building sites (`emailService`,
+  `sendEmail`, `registercustomer`, `send-verification-email`, `bookings`, `bookings/update-status`)
+  now call `getBaseUrl()`; the two `throw` guards on missing env are gone. Stripe checkout
+  `return_url` was hardcoded to `http://www.localhost:3000` → `window.location.origin`.
+  Decision table tested (6 cases + the env rewrite); local dev still resolves to localhost.

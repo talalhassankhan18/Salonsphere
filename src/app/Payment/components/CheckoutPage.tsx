@@ -47,7 +47,8 @@ const CheckoutPage = ({ amount }: { amount: number }) => {
       elements,
       clientSecret,
       confirmParams: {
-        return_url: `http://www.localhost:3000/payment-success?amount=${amount}`,
+        // Stripe sends the customer back here; must be this deployment, not localhost.
+        return_url: `${window.location.origin}/payment-success?amount=${amount}`,
       },
     });
 

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getBaseUrl } from "@/lib/base-url";
 import nodemailer from "nodemailer";
 
 export async function POST(request: Request) {
@@ -31,7 +32,7 @@ export async function POST(request: Request) {
       },
     });
 
-    const verificationUrl = `${process.env.NEXTAUTH_URL}/auth/verify?token=${token}`;
+    const verificationUrl = `${getBaseUrl()}/auth/verify?token=${token}`;
 
     await transporter.sendMail({
       from: `"${process.env.EMAIL_FROM_NAME}" <${process.env.EMAIL_FROM}>`, // "SalonSphere" <akhterhifza@gmail.com>
